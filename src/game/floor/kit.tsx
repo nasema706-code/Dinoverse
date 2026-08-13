@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { ContactShadows, Environment, Sparkles } from "@react-three/drei";
+import type { Group, Texture } from "three";
+import { DoubleSide } from "three";
 import { usePhoto } from "../textures";
 import type { FloorDesk } from "./layout";
 
@@ -33,8 +38,8 @@ export function Box({
         color={color}
         metalness={metal}
         roughness={rough}
-        emissive={emissive ?? color}
-        emissiveIntensity={eInt > 0 ? eInt : 0.28}
+        emissive={eInt > 0 ? (emissive ?? color) : "#000000"}
+        emissiveIntensity={eInt}
       />
     </mesh>
   );
@@ -185,9 +190,10 @@ export function Plant({ position }: { position: [number, number, number] }) {
 export function Column({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <Box position={[0, 2.1, 0]} size={[0.48, 4.2, 0.48]} color="#2a2d33" metal={0.35} rough={0.4} />
+      <Box position={[0, 6.1, 0]} size={[0.48, 12.2, 0.48]} color="#2a2d33" metal={0.35} rough={0.4} />
       <Box position={[0, 0.08, 0]} size={[0.62, 0.16, 0.62]} color={STONE} />
-      <Box position={[0, 4.12, 0]} size={[0.62, 0.12, 0.62]} color={STONE} />
+      <Box position={[0, 6.05, 0]} size={[0.7, 0.1, 0.7]} color={STONE} />
+      <Box position={[0, 12.05, 0]} size={[0.62, 0.12, 0.62]} color={STONE} />
     </group>
   );
 }
@@ -287,12 +293,235 @@ export function BoardScreen({
 export function Lights(): ReactNode {
   return (
     <>
-      <color attach="background" args={["#0a0c10"]} />
-      <fog attach="fog" args={["#1a1d24", 40, 80]} />
-      <hemisphereLight args={["#e8eef6", "#4a4d52", 1.15]} />
+      <color attach="background" args={["#8ec4ea"]} />
+      <fog attach="fog" args={["#b9d6ee", 58, 175]} />
+      <hemisphereLight args={["#fff6dd", "#8aaeb8", 0.95]} />
       <ambientLight intensity={0.72} />
-      <directionalLight position={[-2, 12, -14]} intensity={1.6} color="#f2f6fb" />
-      <directionalLight position={[4, 7, 10]} intensity={0.7} color="#d5e0d8" />
+      <directionalLight
+        position={[32, 48, 22]}
+        intensity={3.6}
+        color="#fff1c8"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-near={4}
+        shadow-camera-far={110}
+        shadow-camera-left={-42}
+        shadow-camera-right={42}
+        shadow-camera-top={42}
+        shadow-camera-bottom={-42}
+      />
+      <directionalLight position={[-24, 22, -16]} intensity={1.05} color="#c5dff2" />
+      <Environment preset="sunset" environmentIntensity={1.15} />
+      <Sparkles count={48} scale={[28, 14, 28]} size={1.6} speed={0.18} color="#fff6d6" opacity={0.4} />
+      <ContactShadows position={[0, 0.03, 2]} opacity={0.28} scale={56} blur={2.8} far={14} />
     </>
+  );
+}
+
+export function LampPost({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 1.6, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.08, 3.2, 8]} />
+        <meshStandardMaterial color="#1c2228" metalness={0.7} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 3.28, 0]}>
+        <sphereGeometry args={[0.16, 10, 8]} />
+        <meshStandardMaterial color="#ffe7b0" emissive="#ffe7b0" emissiveIntensity={2.2} />
+      </mesh>
+      <pointLight position={[0, 3.1, 0]} intensity={1.1} distance={9} color="#ffd9a0" />
+    </group>
+  );
+}
+
+export function GlassCurtain({
+  position,
+  size,
+  rotY = 0,
+}: {
+  position: [number, number, number];
+  size: [number, number];
+  rotY?: number;
+}) {
+  const [w, h] = size;
+  const cols = Math.max(3, Math.round(w / 2.4));
+  const rows = Math.max(2, Math.round(h / 3.2));
+  return (
+    <group position={position} rotation={[0, rotY, 0]}>
+      <mesh>
+        <planeGeometry args={[w, h]} />
+        <meshPhysicalMaterial
+          color="#d7eefc"
+          transmission={0.92}
+          thickness={0.18}
+          ior={1.45}
+          roughness={0.03}
+          metalness={0.02}
+          transparent
+          opacity={0.16}
+          envMapIntensity={1.8}
+          side={DoubleSide}
+        />
+      </mesh>
+      {Array.from({ length: cols + 1 }, (_, i) => (
+        <Box
+          key={`mullion-${i}`}
+          position={[-w / 2 + (i * w) / cols, 0, 0]}
+          size={[0.07, h, 0.07]}
+          color="#c9d4dc"
+          metal={0.82}
+          rough={0.22}
+        />
+      ))}
+      {Array.from({ length: rows + 1 }, (_, i) => (
+        <Box
+          key={`rail-${i}`}
+          position={[0, -h / 2 + (i * h) / rows, 0]}
+          size={[w, 0.06, 0.07]}
+          color="#c9d4dc"
+          metal={0.82}
+          rough={0.22}
+        />
+      ))}
+    </group>
+  );
+}
+
+export function GlassFacade({
+  position,
+  size,
+}: {
+  position: [number, number, number];
+  size: [number, number, number];
+}) {
+  const [sx, sy, sz] = size;
+  const alongX = sx >= sz;
+  return (
+    <GlassCurtain
+      position={position}
+      size={alongX ? [sx, sy] : [sz, sy]}
+      rotY={alongX ? 0 : Math.PI / 2}
+    />
+  );
+}
+
+export function HoloPlate({
+  map,
+  position,
+  rotY = 0,
+  w = 2.4,
+  h = 1.5,
+}: {
+  map: Texture | null;
+  position: [number, number, number];
+  rotY?: number;
+  w?: number;
+  h?: number;
+}) {
+  return (
+    <mesh position={position} rotation={[0, rotY, 0]}>
+      <planeGeometry args={[w, h]} />
+      <meshBasicMaterial
+        map={map ?? undefined}
+        color={map ? "#ffffff" : "#7ec8ff"}
+        transparent
+        opacity={0.78}
+        toneMapped={false}
+        side={2}
+      />
+    </mesh>
+  );
+}
+
+export function ElevatorCore({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 6, 0]}>
+        <cylinderGeometry args={[0.72, 0.72, 12, 16]} />
+        <meshPhysicalMaterial color="#9ec8dc" transmission={0.55} roughness={0.08} transparent opacity={0.35} />
+      </mesh>
+      <mesh position={[0, 6, 0]}>
+        <cylinderGeometry args={[0.78, 0.78, 12, 8, 1, true]} />
+        <meshStandardMaterial color="#4a5560" metalness={0.7} roughness={0.3} wireframe />
+      </mesh>
+    </group>
+  );
+}
+
+function Rotor({ position }: { position: [number, number, number] }) {
+  const ref = useRef<Group>(null);
+  useFrame((_, dt) => {
+    if (ref.current) ref.current.rotation.y += dt * 18;
+  });
+  return (
+    <group position={position}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.38, 0.38, 0.08, 12]} />
+        <meshStandardMaterial color="#2a2d33" metalness={0.6} roughness={0.3} />
+      </mesh>
+      <group ref={ref}>
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+          <boxGeometry args={[0.72, 0.02, 0.06]} />
+          <meshStandardMaterial color="#c5ccd4" metalness={0.5} roughness={0.25} />
+        </mesh>
+        <mesh rotation={[Math.PI / 2, 0, Math.PI / 2]} position={[0, 0.06, 0]}>
+          <boxGeometry args={[0.72, 0.02, 0.06]} />
+          <meshStandardMaterial color="#c5ccd4" metalness={0.5} roughness={0.25} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+export function Evtol({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+        <circleGeometry args={[2.1, 32]} />
+        <meshStandardMaterial color="#1a1c20" metalness={0.4} roughness={0.5} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+        <ringGeometry args={[1.72, 1.92, 32]} />
+        <meshStandardMaterial color="#d4af6a" emissive="#d4af6a" emissiveIntensity={0.85} />
+      </mesh>
+      <Box position={[0, 0.55, 0]} size={[1.6, 0.45, 2.1]} color="#1c1e22" metal={0.55} />
+      <mesh position={[0, 0.95, 0.1]}>
+        <sphereGeometry args={[0.42, 12, 10, 0, Math.PI * 2, 0, 1.4]} />
+        <meshPhysicalMaterial color="#89c4e8" transmission={0.5} roughness={0.1} transparent opacity={0.45} />
+      </mesh>
+      {(
+        [
+          [-1.15, 0.7, -0.85],
+          [1.15, 0.7, -0.85],
+          [-1.15, 0.7, 0.85],
+          [1.15, 0.7, 0.85],
+        ] as [number, number, number][]
+      ).map((p) => (
+        <Rotor key={p.join()} position={p} />
+      ))}
+    </group>
+  );
+}
+
+export function SuitNpc({
+  position,
+  color = "#2c3340",
+  scale = 1,
+}: {
+  position: [number, number, number];
+  color?: string;
+  scale?: number;
+}) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0.95, 0]}>
+        <capsuleGeometry args={[0.28, 1.05, 4, 8]} />
+        <meshStandardMaterial color={color} roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 1.72, 0.02]}>
+        <sphereGeometry args={[0.22, 10, 8]} />
+        <meshStandardMaterial color="#6b5a48" roughness={0.7} />
+      </mesh>
+    </group>
   );
 }

@@ -10,7 +10,7 @@ import {
 
 export type Vec3 = [number, number, number];
 
-export type Collider = { x: number; z: number; w: number; d: number };
+export type Collider = { x: number; z: number; w: number; d: number; minY?: number; maxY?: number };
 
 export type ScreenWall = {
   src: string;
@@ -54,26 +54,32 @@ const B = { minX: -15, maxX: 15, minZ: -13, maxZ: 13 };
 export const DISTRICTS_3D: Record<WorldId, District3D> = {
   forum: {
     id: "forum",
-    fog: "#12141a",
-    fogFar: 58,
-    ambient: "#c5d0dc",
-    ground: "#1a1b20",
-    sky: "#0a0c10",
+    fog: "#b9d6ee",
+    fogFar: 175,
+    ambient: "#fff6dd",
+    ground: "#1a1d22",
+    sky: "#8ec4ea",
     indoor: true,
     spawn: FLOOR_SPAWN,
-    backdrop: { src: "/life/hq.jpg", position: [0, 2.3, -18], rotY: 0, w: 22, h: 8 },
+    backdrop: { src: "/life/hq.jpg", position: [0, 8, -48], rotY: 0, w: 40, h: 16 },
     screens: [],
     props: [],
     portals: [
-      { to: "mart", x: 10.9, z: 10.2, w: 1.4, d: 2.2, label: "Dino Mart", yaw: -Math.PI / 2 },
-      { to: "canopy", x: -10.9, z: 10.2, w: 1.4, d: 2.2, label: "The Mall", yaw: Math.PI / 2 },
-      { to: "crater", x: 0, z: 11.35, w: 2.4, d: 1.1, label: "The Arena", yaw: Math.PI },
+      { to: "mart", x: 20.4, z: 24.2, w: 1.6, d: 2.4, label: "Dino Mart", yaw: -Math.PI / 2 },
+      { to: "canopy", x: -20.4, z: 24.2, w: 1.6, d: 2.4, label: "The Mall", yaw: Math.PI / 2 },
+      { to: "crater", x: 0, z: 32.2, w: 2.6, d: 1.3, label: "The Arena", yaw: Math.PI },
     ],
     shards: [
-      { id: "forum-a", position: [-9.6, 1.15, -10.4] },
-      { id: "forum-b", position: [9.4, 1.15, -3.2] },
+      { id: "forum-a", position: [-16.6, 1.15, -26.4] },
+      { id: "forum-b", position: [9.8, 1.15, -6.2] },
+      { id: "mart-a", position: [17.2, 1.15, 20.6] },
+      { id: "mart-b", position: [-17.2, 1.15, 20.6] },
+      { id: "canopy-a", position: [2.8, 1.15, 30.4] },
+      { id: "canopy-b", position: [-12.4, 1.15, 22.2] },
+      { id: "crater-a", position: [12.6, 1.15, 8.4] },
+      { id: "crater-b", position: [-2.2, 1.15, -8.4] },
     ],
-    npcs: [],
+    npcs: [{ id: "kael", position: [2.2, 0, 11.4] }],
     inspect: FLOOR_INSPECT,
     seats: FLOOR_SEATS,
     extraColliders: FLOOR_COLLIDERS,
@@ -216,7 +222,9 @@ export const DISTRICTS_3D: Record<WorldId, District3D> = {
   },
 };
 
-export function hitAABB(x: number, z: number, r: number, c: Collider) {
+export function hitAABB(x: number, z: number, r: number, c: Collider, y = 0) {
+  if (c.minY != null && y + 1.55 < c.minY) return false;
+  if (c.maxY != null && y > c.maxY) return false;
   const nx = Math.max(c.x - c.w / 2, Math.min(x, c.x + c.w / 2));
   const nz = Math.max(c.z - c.d / 2, Math.min(z, c.z + c.d / 2));
   const dx = x - nx;

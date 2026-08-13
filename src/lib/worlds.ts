@@ -24,7 +24,7 @@ export const WORLDS: World[] = [
     cinematic: "/life/corporate.jpg",
     map: "/worlds/forum/map.jpg",
     summary:
-      "Glass towers, ticker walls, and a T-rex with a coffee walking the lobby like he owns the tape. He does.",
+      "A glass HQ. Sun on the tape, city in every window, and a raptor with a coffee walking the lobby like he owns the floor. He does.",
     stills: [
       { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Open" },
       { src: "/life/finance.jpg", alt: "Boardroom briefing under a Dinoverse Financial Group hologram", caption: "The tape" },
@@ -356,6 +356,31 @@ export function isWorldId(value: string | null | undefined): value is WorldId {
   return value === "mart" || value === "canopy" || value === "crater" || value === "forum";
 }
 
+export function isDistrictOpen(id: WorldId): id is "forum" {
+  return id === "forum";
+}
+
+export const CONSTRUCTION_LINE: Record<Exclude<WorldId, "forum">, Record<CharacterId, string>> = {
+  mart: {
+    rex: "Dino Mart is still pouring the slab. The plates are live. The walk is not. Come back when the kale tags are honest.",
+    vex: "Pretty doors. Dead uplink. I am not walking a market that is not finished spoofing its prices.",
+    tria: "They have not stocked the pots. I do not tour an empty stall. Eat first — later.",
+    ptera: "Too many roofs, and they are still hanging them. I will wait for the patio.",
+  },
+  canopy: {
+    rex: "The Mega Mall is a pretty promise. The lift is not certified. We list rooms that exist.",
+    vex: "The holo-fit booth is still a jpeg. I do not log into scaffolding.",
+    tria: "No bread court yet. I brought extra anyway. We wait.",
+    ptera: "They have not cut the sky into the glass. A mall without a drop is just a hallway.",
+  },
+  crater: {
+    rex: "The Arena is still chalking the lines. Sweat later. The Floor is the listing today.",
+    vex: "Those scoreboards are props. I will tell you which ones are real when they are actually on.",
+    tria: "I packed snacks for a bench that is not built. Patience is also a meal.",
+    ptera: "The Coliseum still has a roof in the plans. I do not fly a drawing.",
+  },
+};
+
 export const LIFE_SCENES: Still[] = WORLDS.flatMap((w) => w.stills);
 
 export const COLLECT_LINES: Record<CharacterId, string[]> = {
@@ -526,6 +551,28 @@ export const INSPECT_COPY: Record<
       vex: "The machine is offline-first. Finally, a kettle with principles.",
       tria: "I stocked the beans. If they are drinking the cheap bag, I will know.",
       ptera: "Hot. Good. The plaza wind will steal the rest.",
+    },
+  },
+  "forum-stairs": {
+    title: "Atrium stair",
+    action: "Take the spiral",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "Up. The second floor is where the book gets quiet and the view gets honest.",
+      vex: "Helix, glass core, one landing. Nobody hid a badge reader in the rail. Fine.",
+      tria: "I timed it. Forty-eight seconds if you do not stop for coffee. I stop for coffee.",
+      ptera: "A ramp with manners. I would rather fly, but this will do.",
+    },
+  },
+  "forum-mezz": {
+    title: "Mezzanine",
+    action: "Look down",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "The Floor from above. If the tape is loud down there, it is already too late.",
+      vex: "Good sightline on the east board. Bad sightline on whoever is stealing lunch.",
+      tria: "I put plants up here so people remember to breathe. They still do not.",
+      ptera: "Glass, sky, a city that does not end. This is the floor I wanted.",
     },
   },
   "trade-1": {

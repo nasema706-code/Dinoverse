@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import * as THREE from "three";
 import type { CharacterId } from "@/lib/characters";
 import { CHARACTER_BY_ID } from "@/lib/characters";
-import { COLLECT_LINES, INSPECT_COPY, NPC_LINES, WORLD_BY_ID, type WorldId } from "@/lib/worlds";
+import { COLLECT_LINES, CONSTRUCTION_LINE, INSPECT_COPY, NPC_LINES, WORLD_BY_ID, isDistrictOpen, type WorldId } from "@/lib/worlds";
 import { useDinoverse } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +14,13 @@ import {
   type ScreenWall,
 } from "./districts3d";
 import { FloorScene } from "./floor/FloorScene";
+import { floorHeightAt } from "./floor/levels";
 import { ShardOrb } from "./shard-orb";
 import { usePhoto } from "./textures";
+
+function groundY(district: District3D, x: number, z: number, prevY = 0) {
+  return district.id === "forum" ? floorHeightAt(x, z, prevY) : 0;
+}
 
 type Prompt =
   | { kind: "npc" | "inspect" | "portal" | "sit" | "stand"; id: string; label: string }
@@ -63,6 +68,39 @@ function PhotoFrame({ wall }: { wall: ScreenWall }) {
   );
 }
 
+function PortalGate({ p }: { p: District3D["portals"][number] }) {
+  const open = isDistrictOpen(p.to);
+  const color = open ? "#3ecf8e" : "#d4af6a";
+  const world = WORLD_BY_ID[p.to];
+  const fx = Math.sin(p.yaw);
+  const fz = Math.cos(p.yaw);
+  return (
+    <group>
+      <mesh position={[p.x, 1.4, p.z]}>
+        <boxGeometry args={[p.w, 2.6, p.d]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={open ? 0.55 : 0.28}
+          transparent
+          opacity={open ? 0.28 : 0.2}
+        />
+      </mesh>
+      {!open ? (
+        <PhotoFrame
+          wall={{
+            src: world.cinematic,
+            position: [p.x + fx * 0.95, 2.85, p.z + fz * 0.95],
+            rotY: p.yaw,
+            w: 2.6,
+            h: 1.55,
+          }}
+        />
+      ) : null}
+    </group>
+  );
+}
+
 function Headlamp() {
   const ref = useRef<THREE.SpotLight>(null);
   const { camera } = useThree();
@@ -78,7 +116,7 @@ function Headlamp() {
   return (
     <spotLight
       ref={ref}
-      intensity={6.5}
+      intensity={2.6}
       distance={24}
       angle={0.72}
       penumbra={0.45}
@@ -90,26 +128,19 @@ function Headlamp() {
 export function DistrictScene({
   district,
   collected,
+  preview = false,
 }: {
   district: District3D;
   collected: string[];
+  preview?: boolean;
 }) {
   if (district.id === "forum") {
     return (
       <>
         <FloorScene collected={collected} />
-        <Headlamp />
+        {preview ? null : <Headlamp />}
         {district.portals.map((p) => (
-          <mesh key={p.to} position={[p.x, 1.4, p.z]}>
-            <boxGeometry args={[p.w, 2.6, p.d]} />
-            <meshStandardMaterial
-              color="#3ecf8e"
-              emissive="#3ecf8e"
-              emissiveIntensity={0.55}
-              transparent
-              opacity={0.28}
-            />
-          </mesh>
+          <PortalGate key={p.to} p={p} />
         ))}
       </>
     );
@@ -145,16 +176,7 @@ export function DistrictScene({
       ))}
 
       {district.portals.map((p) => (
-        <mesh key={p.to} position={[p.x, 1.4, p.z]}>
-          <boxGeometry args={[p.w, 2.6, p.d]} />
-          <meshStandardMaterial
-            color="#3ecf8e"
-            emissive="#3ecf8e"
-            emissiveIntensity={0.55}
-            transparent
-            opacity={0.28}
-          />
-        </mesh>
+        <PortalGate key={p.to} p={p} />
       ))}
 
       {district.shards.map((s) => (
@@ -220,7 +242,7 @@ function Player({
   const lookGrace = useRef(0);
 
   useEffect(() => {
-    pos.current.set(district.spawn.x, EYE, district.spawn.z);
+    pos.current.set(district.spawn.x, groundY(district, district.spawn.x, district.spawn.z) + EYE, district.spawn.z);
     yaw.current = district.spawn.yaw;
     pitch.current = REST_PITCH;
     seated.current = null;
@@ -268,7 +290,7 @@ function Player({
       look.current.dy = 0;
     }
     if (blockedRef.current) {
-      const y = seated.current ? SIT_EYE : EYE;
+      const y = pos.current.y;
       camera.position.set(pos.current.x, y, pos.current.z);
       camera.up.set(0, 1, 0);
       camera.lookAt(
@@ -338,8 +360,13 @@ function Player({
       const tryMove = (nx: number, nz: number) => {
         if (nx < district.bounds.minX + RADIUS || nx > district.bounds.maxX - RADIUS) return false;
         if (nz < district.bounds.minZ + RADIUS || nz > district.bounds.maxZ - RADIUS) return false;
+        const foot = pos.current.y - (seated.current ? SIT_EYE : EYE);
+        const oldH = groundY(district, pos.current.x, pos.current.z, foot);
+        const newH = groundY(district, nx, nz, foot);
+        if (newH - oldH > 0.55) return false;
+        if (oldH - newH > 0.7) return false;
         for (const c of colliders) {
-          if (hitAABB(nx, nz, RADIUS, c)) return false;
+          if (hitAABB(nx, nz, RADIUS, c, newH)) return false;
         }
         return true;
       };
@@ -351,8 +378,10 @@ function Player({
     }
 
     const eye = seated.current ? SIT_EYE : EYE;
+    const ground = groundY(district, pos.current.x, pos.current.z, pos.current.y - eye);
+    pos.current.y = ground + eye;
     const bob = !seated.current && speedRef.current > 0.4 ? Math.sin(performance.now() * 0.012) * 0.035 : 0;
-    const camY = eye + bob;
+    const camY = pos.current.y + bob;
     camera.position.set(pos.current.x, camY, pos.current.z);
     const lookX = pos.current.x + fx * 6;
     const lookZ = pos.current.z + fz * 6;
@@ -376,12 +405,17 @@ function Player({
       next = { kind: "stand", id: "stand", label: "Stand" };
     } else {
       for (const seat of district.seats) {
+        if (ground > 2.8) break;
         if (hitAABB(px, pz, 0.45, seat)) {
           next = { kind: "sit", id: seat.id, label: seat.label };
           break;
         }
       }
       for (const i of district.inspect) {
+        if (ground > 3.5 && i.id !== "forum-window" && i.id !== "forum-ticker" && i.id !== "forum-mezz") {
+          continue;
+        }
+        if (ground < 4 && i.id === "forum-mezz") continue;
         if (hitAABB(px, pz, 0.5, i)) {
           const copy = INSPECT_COPY[i.id];
           next = { kind: "inspect", id: i.id, label: copy?.action ?? `Look · ${copy?.title ?? "look"}` };
@@ -394,7 +428,11 @@ function Player({
       }
       for (const p of district.portals) {
         if (hitAABB(px, pz, 0.55, { x: p.x, z: p.z, w: p.w + 0.6, d: p.d + 0.6 })) {
-          next = { kind: "portal", id: p.to, label: `Enter ${p.label}` };
+          next = {
+            kind: "portal",
+            id: p.to,
+            label: isDistrictOpen(p.to) ? `Enter ${p.label}` : `${p.label} · under construction`,
+          };
         }
       }
     }
@@ -427,6 +465,13 @@ function Player({
         return;
       }
       if (p.kind === "portal" && (p.id === "mart" || p.id === "canopy" || p.id === "crater" || p.id === "forum")) {
+        if (!isDistrictOpen(p.id)) {
+          const world = WORLD_BY_ID[p.id];
+          const line = CONSTRUCTION_LINE[p.id][characterId];
+          visitWorld(p.id);
+          onDialog(`${world.name} · under construction`, line, world.cinematic);
+          return;
+        }
         onPortal(p.id);
         return;
       }
@@ -496,6 +541,7 @@ export function Explorer3D({
   };
 
   const goPortal = (to: WorldId) => {
+    if (!isDistrictOpen(to)) return;
     setFade(1);
     window.setTimeout(() => {
       setDistrictId(to);
@@ -600,10 +646,16 @@ export function Explorer3D({
         }}
       >
         <Canvas
-          camera={{ fov: 68, position: [4.6, EYE, 5.2], near: 0.08, far: 90 }}
+          shadows
+          camera={{ fov: 68, position: [0, EYE, 24], near: 0.08, far: 280 }}
           frameloop="always"
           dpr={[1, 1.5]}
-          gl={{ antialias: true, powerPreference: "high-performance", toneMappingExposure: 1.85 }}
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance",
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.08,
+          }}
         >
           <DistrictScene district={district} collected={collected} />
           <Player
@@ -644,7 +696,7 @@ export function Explorer3D({
               <img
                 src={character.portrait}
                 alt=""
-                className="size-10 rounded-md object-cover object-top"
+                className="size-10 rounded-md object-cover object-[center_18%]"
               />
               <p className="text-sm leading-relaxed">{line}</p>
             </div>
@@ -699,8 +751,9 @@ export function Explorer3D({
             <p className="text-xs tracking-wide text-muted uppercase">{character.name}</p>
             <h1 className="mt-2 font-display text-2xl font-medium">The Floor is open</h1>
             <p className="mt-3 text-sm text-muted">
-              Walk the lobby, sit at a terminal, look out the glass. WASD to walk, mouse to look,
-              E to sit and use things.
+              Walk the lobby, sit at a terminal, look out the glass. Dino Mart, the Mall, and the
+              Arena are still under construction. WASD to walk, mouse to look, E to sit and use
+              things.
             </p>
             <Button
               id="enter-3d"
@@ -740,7 +793,7 @@ export function Explorer3D({
         <div className="absolute inset-x-0 top-20 z-10 mx-auto w-[min(100%-1.5rem,28rem)] rounded-xl border border-accent/40 bg-surface p-4">
           <p className="font-display text-lg">Bag secured</p>
           <p className="mt-1 text-sm text-muted">
-            You walked the four districts as {character.name}. The listing window is watching.
+            You walked The Floor as {character.name} and checked the other three. The listing window is watching.
           </p>
         </div>
       ) : null}
