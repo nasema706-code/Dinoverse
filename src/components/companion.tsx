@@ -11,7 +11,11 @@ export function Companion({ line }: { line: string }) {
       <img
         src={character.portrait}
         alt=""
-        className="size-12 shrink-0 rounded-md object-cover object-top"
+        className={
+          character.id === "rex"
+            ? "size-12 shrink-0 rounded-md object-cover object-[center_18%]"
+            : "size-12 shrink-0 rounded-md object-cover object-top"
+        }
       />
       <div className="min-w-0">
         <p className="text-xs font-medium tracking-wide text-muted uppercase">

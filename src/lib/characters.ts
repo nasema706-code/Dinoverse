@@ -13,6 +13,7 @@ export type Character = {
   tagline: string;
   blurb: string;
   portrait: string;
+  figure?: string;
   walkSheet: string;
   homeKicker: string;
   homeLead: string;
@@ -23,11 +24,12 @@ export const CHARACTERS: Character[] = [
     id: "rex",
     name: "Rex Volt",
     title: "Floor Chief",
-    species: "Tyrannosaurus",
+    species: "Velociraptor",
     tagline: "I don't visit markets. Markets visit me.",
     blurb:
-      "Runs Dinoverse Financial with a handshake and a holographic ledger. Charcoal suit, bone collar, fern circuit seams. Sees every street as a deal waiting to close.",
-    portrait: "/characters/rex/portrait.jpg",
+      "Runs Dinoverse Financial with a handshake and a live tablet. Charcoal three-piece, burgundy tie, coffee in one claw, the tape on glass in the other. Headset on. Always on the floor.",
+    portrait: "/characters/rex/full.png?v=3",
+    figure: "/characters/rex/full.png?v=3",
     walkSheet: "/characters/rex/walk.png",
     homeKicker: "Seen through the Floor Chief",
     homeLead:

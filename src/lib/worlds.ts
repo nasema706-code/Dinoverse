@@ -24,9 +24,9 @@ export const WORLDS: World[] = [
     cinematic: "/life/corporate.jpg",
     map: "/worlds/forum/map.jpg",
     summary:
-      "Glass towers, ticker walls, and a T-rex with a coffee walking the lobby like he owns the tape. He does.",
+      "A glass HQ. Sun on the tape, city in every window, and a raptor with a coffee walking the lobby like he owns the floor. He does.",
     stills: [
-      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Open" },
+      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Preview" },
       { src: "/life/finance.jpg", alt: "Boardroom briefing under a Dinoverse Financial Group hologram", caption: "The tape" },
       { src: "/life/analysis.jpg", alt: "Triceratops analyst at a glass desk of market holograms", caption: "Ops" },
       { src: "/life/office.jpg", alt: "Raptor developers at curved holographic code desks", caption: "Build" },
@@ -356,6 +356,44 @@ export function isWorldId(value: string | null | undefined): value is WorldId {
   return value === "mart" || value === "canopy" || value === "crater" || value === "forum";
 }
 
+/** Forum has a live 3D look. Other districts are plates only. */
+export function isDistrictOpen(id: WorldId): id is "forum" {
+  return id === "forum";
+}
+
+/** First-person walking. Off while HQ is still under construction. */
+export function isDistrictWalkable(_id: WorldId): boolean {
+  return false;
+}
+
+export const FLOOR_PREVIEW_LINE: Record<CharacterId, string> = {
+  rex: "You can look. You cannot clock in yet. Orbit the glass, then come back when the doors actually open.",
+  vex: "Pretty atrium. Dead access. I do not walk a lobby that is still a preview render.",
+  tria: "They have not set the lunch tables. Look from the plaza. Eat later.",
+  ptera: "Nice pad. No clearance. I will fly it when the tower is finished, not when it is a postcard.",
+};
+
+export const CONSTRUCTION_LINE: Record<Exclude<WorldId, "forum">, Record<CharacterId, string>> = {
+  mart: {
+    rex: "Dino Mart is still pouring the slab. The plates are live. The walk is not. Come back when the kale tags are honest.",
+    vex: "Pretty doors. Dead uplink. I am not walking a market that is not finished spoofing its prices.",
+    tria: "They have not stocked the pots. I do not tour an empty stall. Eat first — later.",
+    ptera: "Too many roofs, and they are still hanging them. I will wait for the patio.",
+  },
+  canopy: {
+    rex: "The Mega Mall is a pretty promise. The lift is not certified. We list rooms that exist.",
+    vex: "The holo-fit booth is still a jpeg. I do not log into scaffolding.",
+    tria: "No bread court yet. I brought extra anyway. We wait.",
+    ptera: "They have not cut the sky into the glass. A mall without a drop is just a hallway.",
+  },
+  crater: {
+    rex: "The Arena is still chalking the lines. Sweat later. The Floor is the listing today.",
+    vex: "Those scoreboards are props. I will tell you which ones are real when they are actually on.",
+    tria: "I packed snacks for a bench that is not built. Patience is also a meal.",
+    ptera: "The Coliseum still has a roof in the plans. I do not fly a drawing.",
+  },
+};
+
 export const LIFE_SCENES: Still[] = WORLDS.flatMap((w) => w.stills);
 
 export const COLLECT_LINES: Record<CharacterId, string[]> = {
@@ -421,6 +459,51 @@ export const NPC_LINES: Record<
       ptera: "You brought the horizon with you. Speak if you want. Or just stand there and make us look up.",
     },
   },
+  rex: {
+    name: "Rex Volt",
+    body: {
+      rex: "You already know the tape. Walk it anyway. The city clocks in whether you pose or not.",
+      vex: "Headset on, visor girl. If a screen is lying I want it named before the close.",
+      tria: "Coffee is honest. The tablet is not. Eat later — the Floor does not wait.",
+      ptera: "Pad is yours after ten. Until then, try not to clip the lettering with a wing.",
+    },
+  },
+  knox: {
+    name: "Knox",
+    body: {
+      rex: "Clearance is already on your badge, Chief. I still have to say it. Policy.",
+      vex: "Bags on the scanner. Even the quiet ones. Especially the quiet ones.",
+      tria: "If you brought broth through the plaza again I am logging it as a kindness, not a spill.",
+      ptera: "Craft on the pad is tagged. You are tagged. Everyone is tagged. Welcome to HQ.",
+    },
+  },
+  sela: {
+    name: "Sela",
+    body: {
+      rex: "West doors stay open. East doors stay honest. That is the whole briefing.",
+      vex: "Your visor pinged the rope. Cute. Walk between the posts like a guest.",
+      tria: "Visitor chairs are inside. The plaza benches are for people who already ate.",
+      ptera: "Crosswind after ten. I told Jett. I am telling you. The pad does not care who you are.",
+    },
+  },
+  grav: {
+    name: "Grav",
+    body: {
+      rex: "Check-in is green. The interesting names are already upstairs.",
+      vex: "I see the packet before the badge. Do not make me reprint it.",
+      tria: "The visitor board still has a lunch slot. I left it. Someone should use it.",
+      ptera: "If you are here for the pad, the Chief is in the plaza. If you are here for coffee, left.",
+    },
+  },
+  mica: {
+    name: "Mica",
+    body: {
+      rex: "DINOSE is green because I made it green. Try not to give a speech on my glass.",
+      vex: "Species index lagged eight seconds. I kicked it. You are welcome.",
+      tria: "There is a sandwich under the keyboard. Do not tell Grav. Tell me if it is any good.",
+      ptera: "The tape looks like weather from here. I would rather have your horizon.",
+    },
+  },
 };
 
 export const INSPECT_COPY: Record<
@@ -465,9 +548,9 @@ export const INSPECT_COPY: Record<
     },
   },
   "forum-reception": {
-    title: "Reception",
+    title: "Dino-Sec reception",
     action: "Read the visitor log",
-    image: "/life/hq.jpg",
+    image: "/life/security.jpg",
     body: {
       rex: "The log already has my name. It always does. The floor knows when I am in the building.",
       vex: "Visitor badges, three dead cameras, one intern still signed in. Amateur hour.",
@@ -480,7 +563,7 @@ export const INSPECT_COPY: Record<
     action: "Look out",
     image: "/life/hq.jpg",
     body: {
-      rex: "Headquarters plaza. The eVTOL is late, which means the market is early.",
+      rex: "Headquarters plaza. The bird is on the east pad. If it is idling, someone important is already inside.",
       vex: "I can see three dishes on the opposite tower. Two are decoys. The third is rude.",
       tria: "The plaza looks hungry. That is a lot of glass and not enough benches.",
       ptera: "Wind is mean between those two towers. I would not take off from the east pad.",
@@ -508,7 +591,7 @@ export const INSPECT_COPY: Record<
     },
   },
   "forum-board": {
-    title: "Board screen",
+    title: "Boardroom",
     action: "Watch the tape",
     image: "/life/finance.jpg",
     body: {
@@ -516,6 +599,17 @@ export const INSPECT_COPY: Record<
       vex: "Pretty hologram. The real number is on the analyst desk, two beats fresher.",
       tria: "They dimmed the lights for this. I brought fruit. Priorities.",
       ptera: "A room with one window and one screen. I know which one I trust.",
+    },
+  },
+  "forum-heli": {
+    title: "HQ helicopter",
+    action: "Inspect the bird",
+    image: "/life/hq.jpg",
+    body: {
+      rex: "Company ship. Rotors hot, skids down. If Ptera is not in the left seat, she is already on the floor.",
+      vex: "Transponder is honest. The paint is not. That green stripe is louder than the radio.",
+      tria: "I packed a sandwich for the pilot. They always forget. Gravity does not care about the close.",
+      ptera: "Mine. The east pad has a mean crosswind after ten. I would still take it over a taxi.",
     },
   },
   "forum-coffee": {
@@ -526,6 +620,116 @@ export const INSPECT_COPY: Record<
       vex: "The machine is offline-first. Finally, a kettle with principles.",
       tria: "I stocked the beans. If they are drinking the cheap bag, I will know.",
       ptera: "Hot. Good. The plaza wind will steal the rest.",
+    },
+  },
+  "forum-stairs": {
+    title: "Atrium stair",
+    action: "Take the spiral",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "Up. The second floor is where the book gets quiet and the view gets honest.",
+      vex: "Helix, glass core, one landing. Nobody hid a badge reader in the rail. Fine.",
+      tria: "I timed it. Forty-eight seconds if you do not stop for coffee. I stop for coffee.",
+      ptera: "A ramp with manners. I would rather fly, but this will do.",
+    },
+  },
+  "forum-lift": {
+    title: "Atrium lift",
+    action: "Ride the glass",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "The spiral is for people who want to be seen. The lift is for people who have a close.",
+      vex: "Glass tube, one moving floor, no packet. I still rode it. Curiosity.",
+      tria: "Faster than the stairs. Worse for the calves. I will allow it before lunch.",
+      ptera: "A vertical runway. Short. Clean. I will not complain.",
+    },
+  },
+  "forum-mezz": {
+    title: "Mezzanine",
+    action: "Look down",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "The Floor from above. If the tape is loud down there, it is already too late.",
+      vex: "Good sightline on the east board. Bad sightline on whoever is stealing lunch.",
+      tria: "I put plants up here so people remember to breathe. They still do not.",
+      ptera: "Glass, sky, a city that does not end. This is the floor I wanted.",
+    },
+  },
+  "forum-dinose": {
+    title: "DINOSE hologram",
+    action: "Read the index",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "DINOSE is green. Jurassic is loud. Cretaceous is polite. That is a good morning.",
+      vex: "Pretty floating numbers. The real book is 400ms fresher on the east wall.",
+      tria: "If the index is this bright, someone skipped breakfast. I brought fruit.",
+      ptera: "A sky of numbers. I would rather a sky of weather. Still, it is honest.",
+    },
+  },
+  "forum-q2": {
+    title: "Q2 overview",
+    action: "Read the board",
+    image: "/life/finance.jpg",
+    body: {
+      rex: "Revenue, AUM, outlook bullish. Sit if you want the long version. I already lived it.",
+      vex: "A donut chart is not a proof. The 68% is a costume. The handshake is not.",
+      tria: "They dimmed the lights for this. I still brought fruit. Priorities.",
+      ptera: "One window. One hologram. I know which one I trust.",
+    },
+  },
+  "forum-pad": {
+    title: "East pad",
+    action: "Inspect the pad",
+    image: "/life/hq.jpg",
+    body: {
+      rex: "If the rim is lit, someone important is already inside. Or Ptera is about to be.",
+      vex: "Transponder honest. The gold ring is louder than the radio.",
+      tria: "A lot of plaza and not enough benches. The pad does not feed anyone.",
+      ptera: "Crosswind after ten. I would still take it over a taxi.",
+    },
+  },
+  "forum-hq-sign": {
+    title: "Headquarters mark",
+    action: "Read the sign",
+    image: "/life/hq.jpg",
+    body: {
+      rex: "The lettering still moves. Global Headquarters. The city already clocks in.",
+      vex: "Gold leaf and a looped mark. The interesting part is the dishes on the opposite tower.",
+      tria: "A pretty name on a pretty door. I care about the kitchen behind it.",
+      ptera: "A good building tells the wind where to go. This one does.",
+    },
+  },
+  "forum-directory": {
+    title: "Lobby directory",
+    action: "Read the board",
+    image: "/life/hq.jpg",
+    body: {
+      rex: "Dino-Sec, The Floor, boardroom. The interesting rooms do not need a plaque.",
+      vex: "A map that admits the Mall is still pouring. Honest wayfinding. Rare.",
+      tria: "Coffee is marked. Reception is marked. The kitchen is not. I will allow it.",
+      ptera: "Pad is on the gold ring. That is the only arrow I needed.",
+    },
+  },
+  "forum-office": {
+    title: "Build floor",
+    action: "Look over the desks",
+    image: "/life/office.jpg",
+    body: {
+      rex: "Engineering still signs their commits with a claw. I allow it.",
+      vex: "Three unpatched nodes. I left a note. Courtesy.",
+      tria: "They forget to eat when the build is green. The planters are not lunch.",
+      ptera: "Code is another wind tunnel. I respect a clean line.",
+    },
+  },
+  "forum-command": {
+    title: "Command station",
+    action: "Read the boards",
+    image: "/life/corporate.jpg",
+    body: {
+      rex: "This is the Floor when it is working. Do not clap. Keep walking.",
+      vex: "Three holos, one book, one gossip feed. I cleaned the gossip.",
+      tria: "Someone has been standing here since dawn. There is soup in the kitchen.",
+      ptera: "Too many candles. The plaza is right there.",
     },
   },
   "trade-1": {
@@ -551,14 +755,91 @@ export const INSPECT_COPY: Record<
     },
   },
   "trade-3": {
-    title: "Terminal 06 · Build",
+    title: "Terminal 06 · Tape",
     action: "Use terminal",
+    image: "/life/analysis.jpg",
+    body: {
+      rex: "If it lags, kick the glass. Politely.",
+      vex: "Local book on the left. Gossip on the right. I cleaned the gossip.",
+      tria: "Someone has been staring at this since dawn. There is soup in the kitchen.",
+      ptera: "Too many candles. Not enough sky. I will not sit long.",
+    },
+  },
+  "trade-4": {
+    title: "Terminal 07 · Species",
+    action: "Use terminal",
+    image: "/life/analysis.jpg",
+    body: {
+      rex: "Species index, live. The floor is not a zoo. It is a market.",
+      vex: "The silhouette is decorative. The number is not.",
+      tria: "A dinosaur on a chart is still a person who skipped lunch.",
+      ptera: "I know that outline. It flies better than it sits.",
+    },
+  },
+  "trade-5": {
+    title: "Terminal 08 · Portfolio",
+    action: "Use terminal",
+    image: "/life/analysis.jpg",
+    body: {
+      rex: "74.8% is a costume until the close. Sit anyway.",
+      vex: "Pretty ring. The real allocation is in the gossip feed.",
+      tria: "Rings do not feed people. I do.",
+      ptera: "A circle with a percentage. I prefer a horizon.",
+    },
+  },
+  "trade-6": {
+    title: "Terminal 09 · Trends",
+    action: "Use terminal",
+    image: "/life/analysis.jpg",
+    body: {
+      rex: "Bars going up is not a speech. It is the city clocking in.",
+      vex: "If the bars are this clean, someone already smoothed them.",
+      tria: "Clean desk, loud chart. I do not trust it after the open.",
+      ptera: "Looks like weather. I can fly this.",
+    },
+  },
+  "build-1": {
+    title: "Build desk 01",
+    action: "Read the commit",
     image: "/life/office.jpg",
     body: {
-      rex: "Engineering still signs their commits with a claw. I allow it.",
-      vex: "Three unpatched nodes. I left a note. I also left a back door. Courtesy.",
-      tria: "They forget to eat when the build is green. I do not forget.",
-      ptera: "Code is just another wind tunnel. I respect a clean line.",
+      rex: "claw.sign($DINOVERSE). I allow it.",
+      vex: "Unpatched node. I left a note. I also left a door.",
+      tria: "The mug is empty. That is a problem I can solve.",
+      ptera: "A clean line in the editor is a clean line in the air.",
+    },
+  },
+  "build-2": {
+    title: "Build desk 02",
+    action: "Read the commit",
+    image: "/life/office.jpg",
+    body: {
+      rex: "They still work under plants. Fine. The listing does not care about ficus.",
+      vex: "JSON that thinks it is poetry. Cute.",
+      tria: "Badge on the desk means they meant to come back. I will hold lunch.",
+      ptera: "Wood, glass, a little sky. Better than the pit.",
+    },
+  },
+  "build-3": {
+    title: "Build desk 03",
+    action: "Read the commit",
+    image: "/life/office.jpg",
+    body: {
+      rex: "Engineering is the quiet tape. Do not clap when it goes green.",
+      vex: "book.sync(local, gossip). At least they named the threat.",
+      tria: "Planters are not a salad. I said what I said.",
+      ptera: "I would take this desk if it had a window that opened.",
+    },
+  },
+  "build-4": {
+    title: "Build desk 04",
+    action: "Read the commit",
+    image: "/life/office.jpg",
+    body: {
+      rex: "Four desks, one city. Keep shipping.",
+      vex: "if (lag > 400) kick(glass). Finally, a comment I respect.",
+      tria: "Someone watered the trough. That is the only green I trust.",
+      ptera: "Code, wood, daylight. A decent hangar for a mind.",
     },
   },
 };

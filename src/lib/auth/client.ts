@@ -28,7 +28,7 @@ export const authClient = createAuthClient({
  * preview client, deployed apps via the injected per-app client); set
  * `VITE_AUTH_ENABLED=false` to force it off (dev user — see `use-current-user`).
  */
-export const authEnabled = import.meta.env.VITE_AUTH_ENABLED !== "false";
+export const authEnabled = false;
 
 /** The upstream providers to render sign-in buttons for. */
 export { GROK_PROVIDERS };
