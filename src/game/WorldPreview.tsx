@@ -1,30 +1,50 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { AdaptiveDpr, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { DISTRICTS_3D } from "./districts3d";
-import type { WorldId } from "@/lib/worlds";
+import { isDistrictWalkable, type WorldId } from "@/lib/worlds";
 import { DistrictScene } from "./Explorer3D";
+import { useQuality } from "./quality";
+import { cn } from "@/lib/utils";
 
-export function WorldPreview({ district }: { district: WorldId }) {
+export function WorldPreview({
+  district,
+  variant = "embed",
+}: {
+  district: WorldId;
+  variant?: "embed" | "stage";
+}) {
   const d = DISTRICTS_3D[district];
   const forum = district === "forum";
+  const walkable = isDistrictWalkable(district);
+  const { settings } = useQuality();
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-[#0b1520]">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden bg-[#0b1520]",
+        variant === "stage" ? "h-[min(78dvh,44rem)] min-h-[22rem]" : "aspect-video",
+      )}
+    >
       <Canvas
-        shadows
+        shadows={false}
         camera={{
           fov: forum ? 52 : 50,
           position: forum ? [26, 12, 38] : [10, 6.2, 14],
           near: 0.1,
-          far: forum ? 280 : 90,
+          far: Math.min(settings.far + 40, forum ? 240 : 90),
         }}
-        dpr={[1, 1.4]}
+        dpr={settings.dpr}
+        performance={{ min: 0.7 }}
         gl={{
-          antialias: true,
+          antialias: settings.antialias,
+          powerPreference: "high-performance",
+          stencil: false,
+          alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.08,
+          toneMappingExposure: 1.12,
         }}
       >
+        <AdaptiveDpr pixelated={false} />
         <DistrictScene district={d} collected={[]} preview />
         <OrbitControls
           enablePan={false}
@@ -36,8 +56,13 @@ export function WorldPreview({ district }: { district: WorldId }) {
           target={forum ? [0, 3.2, 6] : [0, 1.4, -2]}
         />
       </Canvas>
-      <p className="pointer-events-none absolute bottom-3 left-3 text-xs tracking-wide text-fg/80 uppercase">
-        Live 3D
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
+        <span className="rounded-full border border-accent/40 bg-bg/80 px-2.5 py-1 text-[10px] font-medium tracking-wide text-accent uppercase">
+          {walkable ? "Live 3D" : "3D preview · under construction"}
+        </span>
+      </div>
+      <p className="pointer-events-none absolute bottom-3 left-3 max-w-[min(100%-1.5rem,28rem)] text-xs tracking-wide text-fg/85 uppercase">
+        {walkable ? "Live 3D · drag to orbit" : "Look only · drag to orbit · walking locked"}
       </p>
     </div>
   );

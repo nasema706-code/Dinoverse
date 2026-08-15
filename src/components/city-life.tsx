@@ -10,7 +10,9 @@ export function CityLife() {
         </h2>
         <p className="mt-4 max-w-xl text-muted">
           Coffee. The floor. Dino Mart. The mall. Dino Fit. The Coliseum. This is the Dinoverse —
-          a working city that listed itself on Solana.
+          a working city that listed itself on Solana. The Floor is a live 3D preview. Walking, Dino
+          Mart, the Mall, and the Arena are still under construction — these plates are the rest of
+          the tour.
         </p>
 
         <div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3">

@@ -1,5 +1,6 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { AdaptiveDpr } from "@react-three/drei";
+import { Suspense, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import * as THREE from "three";
 import type { CharacterId } from "@/lib/characters";
 import { CHARACTER_BY_ID } from "@/lib/characters";
@@ -15,15 +16,19 @@ import {
 } from "./districts3d";
 import { FloorScene } from "./floor/FloorScene";
 import { floorHeightAt } from "./floor/levels";
+import { clampInCab, getLiftFloorY, inLiftCabin, liftBusy, liftPrompt, requestLift, tickLift } from "./floor/lift";
+import { useQuality } from "./quality";
 import { ShardOrb } from "./shard-orb";
 import { usePhoto } from "./textures";
 
 function groundY(district: District3D, x: number, z: number, prevY = 0) {
-  return district.id === "forum" ? floorHeightAt(x, z, prevY) : 0;
+  if (district.id !== "forum") return 0;
+  if (inLiftCabin(x, z)) return getLiftFloorY();
+  return floorHeightAt(x, z, prevY);
 }
 
 type Prompt =
-  | { kind: "npc" | "inspect" | "portal" | "sit" | "stand"; id: string; label: string }
+  | { kind: "npc" | "inspect" | "portal" | "sit" | "stand" | "lift"; id: string; label: string }
   | null;
 
 declare global {
@@ -43,8 +48,56 @@ declare global {
 const EYE = 1.65;
 const SIT_EYE = 1.18;
 const RADIUS = 0.38;
-const SPEED = 5.4;
-const REST_PITCH = -0.16;
+const SPEED = 6.35;
+const SPRINT_MUL = 1.42;
+const ACCEL = 26;
+const DECEL = 18;
+const LOOK_SENS = 0.00205;
+const KEY_LOOK = 2.05;
+const HEIGHT_DAMP = 20;
+const REST_PITCH = -0.06;
+const FOV_DEFAULT = 68;
+const FOV_MIN = 36;
+const FOV_MAX = 94;
+const FOV_DAMP = 11;
+const ZOOM_RATE = 38;
+const MOVE_CODES = new Set([
+  "KeyW",
+  "KeyA",
+  "KeyS",
+  "KeyD",
+  "KeyQ",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ShiftLeft",
+  "ShiftRight",
+  "Minus",
+  "Equal",
+  "NumpadSubtract",
+  "NumpadAdd",
+  "Numpad4",
+  "Numpad6",
+  "Numpad8",
+  "Numpad2",
+  "PageUp",
+  "PageDown",
+  "BracketLeft",
+  "BracketRight",
+  "Digit0",
+  "Numpad0",
+  "Home",
+  "KeyR",
+  "Space",
+]);
+const LOOK_LEFT = new Set(["ArrowLeft", "KeyQ", "Numpad4"]);
+const LOOK_RIGHT = new Set(["ArrowRight", "Numpad6"]);
+const LOOK_UP = new Set(["ArrowUp", "Numpad8"]);
+const LOOK_DOWN = new Set(["ArrowDown", "Numpad2"]);
+const ZOOM_IN = new Set(["Equal", "NumpadAdd", "PageUp", "BracketRight"]);
+const ZOOM_OUT = new Set(["Minus", "NumpadSubtract", "PageDown", "BracketLeft"]);
+const VIEW_RESET = new Set(["Digit0", "Numpad0", "Home", "KeyR"]);
 
 function Screen({ wall }: { wall: ScreenWall }) {
   const map = usePhoto(wall.src);
@@ -103,14 +156,14 @@ function PortalGate({ p }: { p: District3D["portals"][number] }) {
 
 function Headlamp() {
   const ref = useRef<THREE.SpotLight>(null);
+  const dir = useRef(new THREE.Vector3());
   const { camera } = useThree();
   useFrame(() => {
     const light = ref.current;
     if (!light) return;
-    const d = new THREE.Vector3();
-    camera.getWorldDirection(d);
+    camera.getWorldDirection(dir.current);
     light.position.copy(camera.position);
-    light.target.position.copy(camera.position).add(d);
+    light.target.position.copy(camera.position).add(dir.current);
     light.target.updateMatrixWorld();
   });
   return (
@@ -134,11 +187,12 @@ export function DistrictScene({
   collected: string[];
   preview?: boolean;
 }) {
+  const { settings } = useQuality();
   if (district.id === "forum") {
     return (
       <>
         <FloorScene collected={collected} />
-        {preview ? null : <Headlamp />}
+        {preview || !settings.headlamp ? null : <Headlamp />}
         {district.portals.map((p) => (
           <PortalGate key={p.to} p={p} />
         ))}
@@ -197,12 +251,19 @@ export function DistrictScene({
 
 type Look = { dx: number; dy: number };
 type Stick = { x: number; y: number };
+type Zoom = { wheel: number };
+
+function keyHeld(keys: Set<string>, codes: Set<string>) {
+  for (const code of codes) if (keys.has(code)) return true;
+  return false;
+}
 
 function Player({
   district,
   blocked,
   look,
   stick,
+  zoom,
   keysRef,
   session,
   onHud,
@@ -213,6 +274,7 @@ function Player({
   blocked: boolean;
   look: React.MutableRefObject<Look>;
   stick: React.MutableRefObject<Stick>;
+  zoom: React.MutableRefObject<Zoom>;
   keysRef: React.MutableRefObject<Set<string>>;
   session: number;
   onHud: (line: string, prompt: Prompt) => void;
@@ -239,16 +301,28 @@ function Player({
   const hudKey = useRef("");
   const interact = useRef<() => void>(() => {});
   const seated = useRef<{ x: number; z: number; yaw: number } | null>(null);
+  const vel = useRef(new THREE.Vector2(0, 0));
+  const bobT = useRef(0);
   const lookGrace = useRef(0);
+  const fov = useRef(FOV_DEFAULT);
+  const fovTarget = useRef(FOV_DEFAULT);
 
   useEffect(() => {
     pos.current.set(district.spawn.x, groundY(district, district.spawn.x, district.spawn.z) + EYE, district.spawn.z);
     yaw.current = district.spawn.yaw;
     pitch.current = REST_PITCH;
+    vel.current.set(0, 0);
+    bobT.current = 0;
+    fov.current = FOV_DEFAULT;
+    fovTarget.current = FOV_DEFAULT;
     seated.current = null;
-    lookGrace.current = 20;
+    lookGrace.current = 2;
     visitWorld(district.id);
   }, [district, visitWorld, session]);
+
+  useEffect(() => {
+    camera.rotation.order = "YXZ";
+  }, [camera]);
 
   useEffect(() => {
     window.__controlsTest = {
@@ -269,6 +343,7 @@ function Player({
           dz: +d.z.toFixed(2),
           yaw: +yaw.current.toFixed(2),
           pitch: +pitch.current.toFixed(2),
+          fov: +fov.current.toFixed(1),
         };
       },
       setKeys: (codes) => {
@@ -282,85 +357,121 @@ function Player({
   }, [keysRef]);
 
   useFrame((_, raw) => {
-    const dt = Math.min(raw, 0.1);
+    const dt = Math.min(Math.max(raw, 0), 0.05);
     tickRef.current += 1;
+    if (district.id === "forum") tickLift(dt);
+    camera.rotation.order = "YXZ";
+
     if (lookGrace.current > 0) {
       lookGrace.current -= 1;
       look.current.dx = 0;
       look.current.dy = 0;
     }
-    if (blockedRef.current) {
-      const y = pos.current.y;
+
+    const applyCamera = (y: number) => {
       camera.position.set(pos.current.x, y, pos.current.z);
-      camera.up.set(0, 1, 0);
-      camera.lookAt(
-        pos.current.x - Math.sin(yaw.current) * 6,
-        y,
-        pos.current.z - Math.cos(yaw.current) * 6,
-      );
+      camera.rotation.x = -pitch.current;
+      camera.rotation.y = yaw.current;
+      camera.rotation.z = 0;
+      if ("fov" in camera) {
+        const persp = camera as THREE.PerspectiveCamera;
+        if (Math.abs(persp.fov - fov.current) > 0.02) {
+          persp.fov = fov.current;
+          persp.updateProjectionMatrix();
+        }
+      }
+    };
+
+    if (blockedRef.current) {
+      vel.current.set(0, 0);
+      applyCamera(pos.current.y);
       return;
     }
 
-    if (Math.abs(look.current.dx) > 28 || Math.abs(look.current.dy) > 28) {
-      look.current.dx = 0;
-      look.current.dy = 0;
-    }
-    yaw.current -= look.current.dx * 0.0022;
-    pitch.current = THREE.MathUtils.clamp(pitch.current - look.current.dy * 0.0022, -1.2, 1.2);
+    const keys = keysRef.current;
+    const lookDx = THREE.MathUtils.clamp(look.current.dx, -96, 96);
+    const lookDy = THREE.MathUtils.clamp(look.current.dy, -96, 96);
     look.current.dx = 0;
     look.current.dy = 0;
+    yaw.current -= lookDx * LOOK_SENS;
+    pitch.current = THREE.MathUtils.clamp(pitch.current - lookDy * LOOK_SENS, -1.15, 1.15);
+
+    let keyYaw = 0;
+    let keyPitch = 0;
+    if (keyHeld(keys, LOOK_LEFT)) keyYaw += 1;
+    if (keyHeld(keys, LOOK_RIGHT)) keyYaw -= 1;
+    if (keyHeld(keys, LOOK_UP)) keyPitch += 1;
+    if (keyHeld(keys, LOOK_DOWN)) keyPitch -= 1;
+    yaw.current += keyYaw * KEY_LOOK * dt;
+    pitch.current = THREE.MathUtils.clamp(pitch.current + keyPitch * KEY_LOOK * 0.82 * dt, -1.15, 1.15);
+
+    if (keyHeld(keys, ZOOM_IN)) fovTarget.current -= ZOOM_RATE * dt;
+    if (keyHeld(keys, ZOOM_OUT)) fovTarget.current += ZOOM_RATE * dt;
+    fovTarget.current += zoom.current.wheel;
+    zoom.current.wheel = 0;
+    if (keyHeld(keys, VIEW_RESET)) {
+      fovTarget.current = FOV_DEFAULT;
+      pitch.current += (REST_PITCH - pitch.current) * (1 - Math.exp(-10 * dt));
+    }
+    fovTarget.current = THREE.MathUtils.clamp(fovTarget.current, FOV_MIN, FOV_MAX);
+    fov.current += (fovTarget.current - fov.current) * (1 - Math.exp(-FOV_DAMP * dt));
 
     const fx = -Math.sin(yaw.current);
     const fz = -Math.cos(yaw.current);
     const rx = Math.cos(yaw.current);
     const rz = -Math.sin(yaw.current);
 
-    const keys = keysRef.current;
     let mx = 0;
     let mz = 0;
-    if (keys.has("KeyW") || keys.has("ArrowUp")) {
+    if (keys.has("KeyW")) {
       mx += fx;
       mz += fz;
     }
-    if (keys.has("KeyS") || keys.has("ArrowDown")) {
+    if (keys.has("KeyS")) {
       mx -= fx;
       mz -= fz;
     }
-    if (keys.has("KeyD") || keys.has("ArrowRight")) {
+    if (keys.has("KeyD")) {
       mx += rx;
       mz += rz;
     }
-    if (keys.has("KeyA") || keys.has("ArrowLeft")) {
+    if (keys.has("KeyA")) {
       mx -= rx;
       mz -= rz;
     }
     mx += rx * stick.current.x + fx * -stick.current.y;
     mz += rz * stick.current.x + fz * -stick.current.y;
 
-    const len = Math.hypot(mx, mz);
-    if (len > 1) {
-      mx /= len;
-      mz /= len;
+    const inputLen = Math.hypot(mx, mz);
+    let analog = 0;
+    if (inputLen > 0.0001) {
+      analog = Math.min(1, inputLen);
+      mx = (mx / inputLen) * analog;
+      mz = (mz / inputLen) * analog;
     }
-    const sprint = keys.has("ShiftLeft") || keys.has("ShiftRight") ? 1.35 : 1;
-    const seatedNow = seated.current;
-    if (seatedNow && (mx !== 0 || mz !== 0)) {
-      seated.current = null;
-    }
+    const sprint = keys.has("ShiftLeft") || keys.has("ShiftRight") ? SPRINT_MUL : 1;
+    if (seated.current && analog > 0.08) seated.current = null;
 
     if (seated.current) {
       pos.current.x = seated.current.x;
       pos.current.z = seated.current.z;
+      vel.current.set(0, 0);
       speedRef.current = 0;
     } else {
-      const vx = mx * SPEED * sprint;
-      const vz = mz * SPEED * sprint;
-      speedRef.current = Math.hypot(vx, vz);
+      const targetVx = mx * SPEED * sprint;
+      const targetVz = mz * SPEED * sprint;
+      const rate = analog > 0.001 ? ACCEL : DECEL;
+      const k = 1 - Math.exp(-rate * dt);
+      vel.current.x += (targetVx - vel.current.x) * k;
+      vel.current.y += (targetVz - vel.current.y) * k;
+      if (analog < 0.001 && vel.current.length() < 0.04) vel.current.set(0, 0);
+      speedRef.current = vel.current.length();
 
       const tryMove = (nx: number, nz: number) => {
         if (nx < district.bounds.minX + RADIUS || nx > district.bounds.maxX - RADIUS) return false;
         if (nz < district.bounds.minZ + RADIUS || nz > district.bounds.maxZ - RADIUS) return false;
-        const foot = pos.current.y - (seated.current ? SIT_EYE : EYE);
+        const eyeNow = seated.current ? SIT_EYE : EYE;
+        const foot = pos.current.y - eyeNow;
         const oldH = groundY(district, pos.current.x, pos.current.z, foot);
         const newH = groundY(district, nx, nz, foot);
         if (newH - oldH > 0.55) return false;
@@ -371,22 +482,35 @@ function Player({
         return true;
       };
 
-      const nx = pos.current.x + vx * dt;
-      const nz = pos.current.z + vz * dt;
+      const nx = pos.current.x + vel.current.x * dt;
+      const nz = pos.current.z + vel.current.y * dt;
       if (tryMove(nx, pos.current.z)) pos.current.x = nx;
+      else vel.current.x = 0;
       if (tryMove(pos.current.x, nz)) pos.current.z = nz;
+      else vel.current.y = 0;
+      if (district.id === "forum" && liftBusy() && inLiftCabin(pos.current.x, pos.current.z)) {
+        const kept = clampInCab(pos.current.x, pos.current.z);
+        pos.current.x = kept.x;
+        pos.current.z = kept.z;
+      }
     }
 
     const eye = seated.current ? SIT_EYE : EYE;
     const ground = groundY(district, pos.current.x, pos.current.z, pos.current.y - eye);
-    pos.current.y = ground + eye;
-    const bob = !seated.current && speedRef.current > 0.4 ? Math.sin(performance.now() * 0.012) * 0.035 : 0;
-    const camY = pos.current.y + bob;
-    camera.position.set(pos.current.x, camY, pos.current.z);
-    const lookX = pos.current.x + fx * 6;
-    const lookZ = pos.current.z + fz * 6;
-    camera.up.set(0, 1, 0);
-    camera.lookAt(lookX, camY + Math.tan(pitch.current) * 6, lookZ);
+    const targetY = ground + eye;
+    pos.current.y += (targetY - pos.current.y) * (1 - Math.exp(-HEIGHT_DAMP * dt));
+    if (Math.abs(targetY - pos.current.y) < 0.002) pos.current.y = targetY;
+
+    if (!seated.current && speedRef.current > 0.35) {
+      bobT.current += dt * (8.4 + speedRef.current * 0.55);
+    } else {
+      bobT.current = 0;
+    }
+    const bob =
+      !seated.current && speedRef.current > 0.35
+        ? Math.sin(bobT.current) * 0.028 * Math.min(1, speedRef.current / SPEED)
+        : 0;
+    applyCamera(pos.current.y + bob);
 
     const px = pos.current.x;
     const pz = pos.current.z;
@@ -404,6 +528,11 @@ function Player({
     if (seated.current) {
       next = { kind: "stand", id: "stand", label: "Stand" };
     } else {
+      if (district.id === "forum") {
+        const ride = liftPrompt(px, pz, ground);
+        if (ride) next = { kind: "lift", id: "forum-lift", label: ride };
+      }
+      if (!next) {
       for (const seat of district.seats) {
         if (ground > 2.8) break;
         if (hitAABB(px, pz, 0.45, seat)) {
@@ -435,6 +564,7 @@ function Player({
           };
         }
       }
+      }
     }
     promptRef.current = next;
     const key = next ? `${next.kind}:${next.id}` : "";
@@ -464,6 +594,10 @@ function Player({
         yaw.current = seat.sitYaw;
         return;
       }
+      if (p.kind === "lift") {
+        requestLift(pos.current.x, pos.current.z, pos.current.y - (seated.current ? SIT_EYE : EYE));
+        return;
+      }
       if (p.kind === "portal" && (p.id === "mart" || p.id === "canopy" || p.id === "crater" || p.id === "forum")) {
         if (!isDistrictOpen(p.id)) {
           const world = WORLD_BY_ID[p.id];
@@ -486,14 +620,6 @@ function Player({
       }
     };
   });
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code === "KeyE") interact.current();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   useEffect(() => {
     (window as Window & { __exploreInteract?: () => void }).__exploreInteract = () =>
@@ -521,15 +647,26 @@ export function Explorer3D({
   const [prompt, setPrompt] = useState<Prompt>(null);
   const [line, setLine] = useState(world.enterLine[characterId]);
   const [fade, setFade] = useState(0);
+  const [help, setHelp] = useState(false);
   const collected = useDinoverse((s) => s.collected);
   const visited = useDinoverse((s) => s.visited);
   const questDone = useDinoverse((s) => s.questDone);
+  const { settings } = useQuality();
 
   const look = useRef<Look>({ dx: 0, dy: 0 });
   const stick = useRef<Stick>({ x: 0, y: 0 });
+  const zoom = useRef<Zoom>({ wheel: 0 });
   const keysRef = useRef(new Set<string>());
   const wrapRef = useRef<HTMLDivElement>(null);
   const lineTimer = useRef(0);
+
+  const startExplore = () => {
+    setStarted(true);
+    window.setTimeout(() => {
+      wrapRef.current?.focus();
+      requestLock();
+    }, 0);
+  };
 
   const onHud = (nextLine: string, nextPrompt: Prompt) => {
     if (nextLine) {
@@ -547,11 +684,59 @@ export function Explorer3D({
       setDistrictId(to);
       setLine(WORLD_BY_ID[to].enterLine[characterId]);
       setFade(0);
-    }, 280);
+    }, 420);
   };
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => keysRef.current.add(e.code);
+    const down = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+
+      if (
+        MOVE_CODES.has(e.code) ||
+        e.code === "KeyE" ||
+        e.code === "Enter" ||
+        e.code === "Escape" ||
+        e.code === "KeyH" ||
+        e.code === "Slash" ||
+        e.code === "Space"
+      ) {
+        e.preventDefault();
+      }
+
+      if (!started) {
+        if (!e.repeat && (e.code === "Enter" || e.code === "Space" || e.code === "KeyE")) startExplore();
+        return;
+      }
+
+      if (!e.repeat && (e.code === "KeyH" || e.code === "Slash")) {
+        setHelp((open) => !open);
+        return;
+      }
+
+      if (help && e.code === "Escape") {
+        setHelp(false);
+        return;
+      }
+
+      if (dialog) {
+        if (!e.repeat && (e.code === "Enter" || e.code === "Escape" || e.code === "Space" || e.code === "KeyE")) {
+          setDialog(null);
+        }
+        return;
+      }
+
+      if (e.code === "Escape") {
+        if (document.pointerLockElement) document.exitPointerLock();
+        return;
+      }
+
+      if (!e.repeat && (e.code === "KeyE" || e.code === "Enter" || e.code === "Space")) {
+        (window as Window & { __exploreInteract?: () => void }).__exploreInteract?.();
+      }
+
+      keysRef.current.add(e.code);
+    };
     const up = (e: KeyboardEvent) => keysRef.current.delete(e.code);
     const blur = () => keysRef.current.clear();
     window.addEventListener("keydown", down);
@@ -562,7 +747,7 @@ export function Explorer3D({
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
-  }, []);
+  }, [started, dialog, help]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -580,6 +765,18 @@ export function Explorer3D({
       document.removeEventListener("pointerlockchange", change);
     };
   }, []);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!started || dialog) return;
+      e.preventDefault();
+      zoom.current.wheel += Math.sign(e.deltaY) * 3.6;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [started, dialog]);
 
   const requestLock = () => {
     const el = wrapRef.current;
@@ -640,29 +837,38 @@ export function Explorer3D({
     <div className="relative isolate min-h-[calc(100dvh-4rem)] bg-bg">
       <div
         ref={wrapRef}
-        className="absolute inset-0 overflow-hidden touch-none"
+        tabIndex={0}
+        aria-label="The Floor explorer. WASD to walk, arrows to look, plus and minus to zoom."
+        className="absolute inset-0 overflow-hidden touch-none outline-none"
         onClick={() => {
           if (started && !locked && !dialog) requestLock();
         }}
       >
         <Canvas
-          shadows
-          camera={{ fov: 68, position: [0, EYE, 24], near: 0.08, far: 280 }}
+          shadows={settings.shadows}
+          camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: settings.far }}
           frameloop="always"
-          dpr={[1, 1.5]}
+          dpr={settings.dpr}
+          performance={{ min: 0.7 }}
           gl={{
-            antialias: true,
+            antialias: settings.antialias,
             powerPreference: "high-performance",
+            stencil: false,
+            alpha: false,
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.08,
+            toneMappingExposure: 1.12,
           }}
         >
-          <DistrictScene district={district} collected={collected} />
+          <AdaptiveDpr pixelated={false} />
+          <Suspense fallback={null}>
+            <DistrictScene district={district} collected={collected} />
+          </Suspense>
           <Player
             district={district}
             blocked={!!dialog}
             look={look}
             stick={stick}
+            zoom={zoom}
             keysRef={keysRef}
             session={session}
             onHud={onHud}
@@ -671,7 +877,7 @@ export function Explorer3D({
           />
         </Canvas>
         <div
-          className="pointer-events-none absolute inset-0 bg-bg transition-opacity duration-200"
+          className="pointer-events-none absolute inset-0 bg-bg transition-opacity duration-500"
           style={{ opacity: fade }}
         />
       </div>
@@ -687,8 +893,8 @@ export function Explorer3D({
                 {collected.length}/8 shards · {visited.length}/4 districts
               </p>
             </div>
-            <div className="pointer-events-auto hidden rounded-lg border border-border bg-bg/80 px-3 py-2 text-xs text-muted sm:block">
-              WASD walk · mouse look · E
+            <div className="pointer-events-auto hidden max-w-[16rem] rounded-lg border border-border bg-bg/80 px-3 py-2 text-xs text-muted sm:block">
+              WASD walk · arrows look · +/− zoom · E use · H keys
             </div>
           </div>
           {line ? (
@@ -712,6 +918,7 @@ export function Explorer3D({
               }
             >
               {prompt.label}
+              <span className="ml-1 text-[10px] tracking-wide text-accent-fg/70 uppercase">E</span>
             </Button>
           ) : null}
         </div>
@@ -751,20 +958,17 @@ export function Explorer3D({
             <p className="text-xs tracking-wide text-muted uppercase">{character.name}</p>
             <h1 className="mt-2 font-display text-2xl font-medium">The Floor is open</h1>
             <p className="mt-3 text-sm text-muted">
-              Walk the lobby, sit at a terminal, look out the glass. Dino Mart, the Mall, and the
-              Arena are still under construction. WASD to walk, mouse to look, E to sit and use
-              things.
+              Full keyboard: WASD walk, arrows (or Q) to look, +/− or Page Up/Down to zoom, Shift
+              sprint, E / Enter / Space to use, R to reset the view, H for the key list. Mouse look
+              still works after you click in.
             </p>
             <Button
               id="enter-3d"
               className="mt-6 w-full"
-              onClick={() => {
-                setStarted(true);
-                setSession((n) => n + 1);
-                requestLock();
-              }}
+              onClick={startExplore}
             >
               Enter {world.name}
+              <span className="text-[10px] tracking-wide uppercase opacity-70">Enter</span>
             </Button>
           </div>
         </div>
@@ -784,8 +988,26 @@ export function Explorer3D({
             <p className="mt-3 text-sm leading-relaxed">{dialog.body}</p>
             <Button className="mt-4" onClick={() => setDialog(null)}>
               Continue
+              <span className="text-[10px] tracking-wide uppercase opacity-70">Enter</span>
             </Button>
           </div>
+        </div>
+      ) : null}
+
+      {help ? (
+        <div className="absolute inset-x-0 bottom-4 z-10 mx-auto w-[min(100%-1.5rem,28rem)] rounded-xl border border-border bg-bg/92 p-4 backdrop-blur-sm">
+          <p className="text-xs tracking-wide text-muted uppercase">Keyboard</p>
+          <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+            <li>WASD — walk</li>
+            <li>Arrows / Q — look</li>
+            <li>+ / − / PgUp / PgDn — zoom</li>
+            <li>Mouse wheel — zoom</li>
+            <li>Shift — sprint</li>
+            <li>E / Enter / Space — use</li>
+            <li>R / Home / 0 — reset view</li>
+            <li>Esc — free mouse</li>
+          </ul>
+          <p className="mt-3 text-xs text-muted">H or Esc closes this list.</p>
         </div>
       ) : null}
 

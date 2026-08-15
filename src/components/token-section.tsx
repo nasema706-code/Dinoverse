@@ -1,69 +1,169 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useHydrated } from "@/lib/use-hydrated";
+import { BUY_STEPS, FAQS, ROADMAP, TOKEN, TOKENOMICS } from "@/lib/token";
 
-const CA = "SOON-ON-SOLANA-DINOVERSE111111111111111111";
+const TABS = ["tokenomics", "buy", "roadmap", "faq"] as const;
+type Tab = (typeof TABS)[number];
+
+function tabFromHash(hash: string): Tab {
+  if (hash === "buy" || hash === "roadmap" || hash === "faq") return hash;
+  return "tokenomics";
+}
 
 export function TokenSection() {
+  const hydrated = useHydrated();
+  const navigate = useNavigate();
+  const hash = useRouterState({ select: (s) => s.location.hash.replace(/^#/, "") });
+  const tab = hydrated ? tabFromHash(hash) : "tokenomics";
+
   return (
-    <section id="token" className="border-t border-border px-4 py-16 sm:py-24">
-      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <div>
-          <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Rex's listing</p>
-          <h2 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-            $DINOVERSE on Solana
+    <section className="border-t border-border px-4 py-16 sm:py-24">
+      <div id="token" className="h-0 scroll-mt-20" />
+      <div id="buy" className="h-0 scroll-mt-20" />
+      <div id="roadmap" className="h-0 scroll-mt-20" />
+      <div id="faq" className="h-0 scroll-mt-20" />
+      <div className="mx-auto max-w-6xl">
+        <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The listing</p>
+        <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
+            {TOKEN.ticker} on {TOKEN.chain}
           </h2>
-          <p className="mt-4 max-w-xl text-muted">
-            He does not pitch. He lists. $DINOVERSE is the ticker on a city that already works —
-            coffee, gyms, the mall, the Coliseum, charcoal floors. The contract drops when the
-            window opens.
+          <p className="max-w-md text-sm text-muted">
+            Fair launch. Zero tax. Live on Solana — copy the CA below.
           </p>
-          <div className="mt-6 rounded-xl border border-border bg-surface p-4">
-            <p className="text-xs tracking-wide text-muted uppercase">Contract</p>
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <code className="font-mono text-xs break-all text-fg sm:text-sm">{CA}</code>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  void navigator.clipboard.writeText(CA);
-                  toast("Address copied");
-                }}
-              >
-                <Copy className="size-3.5" />
-                Copy
-              </Button>
-            </div>
-          </div>
+        </div>
+        <div className="mt-8 max-w-3xl space-y-4 text-base leading-relaxed text-muted sm:text-lg">
+          {TOKEN.lore.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          {[
-            { k: "Chain", v: "Solana" },
-            { k: "Ticker", v: "$DINOVERSE" },
-            { k: "Tax", v: "0 / 0" },
-          ].map((row) => (
-            <div key={row.k} className="rounded-xl border border-border bg-surface p-4">
-              <p className="text-xs tracking-wide text-muted uppercase">{row.k}</p>
-              <p className="mt-1 font-display text-xl font-medium tabular-nums">{row.v}</p>
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            const next = TABS.includes(v as Tab) ? (v as Tab) : "tokenomics";
+            void navigate({
+              to: "/",
+              hash: next === "tokenomics" ? "token" : next,
+              replace: true,
+            });
+          }}
+          className="mt-10"
+        >
+          <TabsList>
+            <TabsTrigger value="tokenomics">Tokenomics</TabsTrigger>
+            <TabsTrigger value="buy">How to buy</TabsTrigger>
+            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+            <TabsTrigger value="faq">FAQ</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tokenomics">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {TOKENOMICS.map((row) => (
+                <div key={row.k} className="rounded-xl border border-border bg-surface p-5">
+                  <p className="text-xs tracking-[0.18em] text-muted uppercase">{row.k}</p>
+                  <p className="mt-2 font-display text-2xl font-medium tabular-nums">{row.v}</p>
+                  <p className="mt-2 text-sm text-muted">{row.d}</p>
+                </div>
+              ))}
             </div>
-          ))}
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="secondary">
-              <a href="https://jup.ag" target="_blank" rel="noreferrer">
-                Jupiter
-                <ExternalLink />
-              </a>
-            </Button>
-            <Button asChild variant="secondary">
-              <a href="https://raydium.io" target="_blank" rel="noreferrer">
-                Raydium
-                <ExternalLink />
-              </a>
-            </Button>
-          </div>
-        </div>
+            <div className="mt-4 rounded-xl border border-border bg-surface p-5">
+              <p className="text-xs tracking-[0.18em] text-muted uppercase">Contract</p>
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <code className="font-mono text-xs break-all sm:text-sm">{TOKEN.ca}</code>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(TOKEN.ca);
+                    toast("Contract copied");
+                  }}
+                >
+                  <Copy className="size-3.5" />
+                  Copy CA
+                </Button>
+              </div>
+              <p className="mt-3 text-xs text-subtle">
+                Live mint. Confirm this CA on DexScreener before you swap.
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="buy">
+            <ol className="grid gap-4 sm:grid-cols-2">
+              {BUY_STEPS.map((step) => (
+                <li key={step.n} className="rounded-xl border border-border bg-surface p-5">
+                  <p className="font-mono text-xs text-accent">{step.n}</p>
+                  <p className="mt-2 font-display text-xl font-medium">{step.title}</p>
+                  <p className="mt-2 text-sm text-muted">{step.body}</p>
+                  {"href" in step && step.href ? (
+                    <Button asChild variant="secondary" size="sm" className="mt-4">
+                      <a href={step.href} target="_blank" rel="noreferrer">
+                        {step.cta}
+                        <ExternalLink />
+                      </a>
+                    </Button>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild>
+                <a href={TOKEN.buy} target="_blank" rel="noreferrer">
+                  Buy {TOKEN.ticker}
+                  <ExternalLink />
+                </a>
+              </Button>
+              <Button asChild variant="secondary">
+                <a href={TOKEN.buy} target="_blank" rel="noreferrer">
+                  Chart on DexScreener
+                  <ExternalLink />
+                </a>
+              </Button>
+              <Button asChild>
+                <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
+                  Telegram
+                  <ExternalLink />
+                </a>
+              </Button>
+              <Button asChild>
+                <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
+                  Follow on X
+                  <ExternalLink />
+                </a>
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="roadmap">
+            <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {ROADMAP.map((item) => (
+                <li key={item.phase} className="rounded-xl border border-border bg-surface p-5">
+                  <p className="font-mono text-xs text-accent">Phase {item.phase}</p>
+                  <p className="mt-1 text-xs tracking-wide text-muted uppercase">{item.when}</p>
+                  <p className="mt-3 font-display text-lg font-medium">{item.title}</p>
+                  <p className="mt-2 text-sm text-muted">{item.body}</p>
+                </li>
+              ))}
+            </ol>
+          </TabsContent>
+
+          <TabsContent value="faq">
+            <ul className="space-y-3">
+              {FAQS.map((item) => (
+                <li key={item.q} className="rounded-xl border border-border bg-surface p-5">
+                  <p className="font-medium">{item.q}</p>
+                  <p className="mt-2 text-sm text-muted">{item.a}</p>
+                </li>
+              ))}
+            </ul>
+          </TabsContent>
+        </Tabs>
       </div>
     </section>
   );

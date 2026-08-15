@@ -4,6 +4,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
+import netlify from "@netlify/vite-plugin-tanstack-start";
 // @ts-expect-error JS plugin alongside the TS vite config
 import { grokPwaPlugin } from "./scripts/grok-pwa-plugin.mjs";
 
@@ -128,11 +129,20 @@ function authPopupPlugin(): Plugin {
 // opens a second dev-server port, which breaks the single-port preview.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
+process.env.VITE_AUTH_ENABLED = "false";
+
 export default defineConfig(({ command }) => ({
+  define: {
+    "import.meta.env.VITE_AUTH_ENABLED": JSON.stringify("false"),
+    "process.env.VITE_AUTH_ENABLED": JSON.stringify("false"),
+  },
   server: {
     host: "0.0.0.0",
     port: 8080,
     strictPort: true,
+    watch: {
+      ignored: ["**/public/**/*.mov", "**/public/**/*.mp4"],
+    },
   },
   resolve: { tsconfigPaths: true },
   plugins: [
@@ -144,15 +154,14 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     tanstackStart(),
     ...(command === "build"
-      ? [
-          nitro({
-            preset: "vercel",
-            // Auto-registers server/middleware/* (the PWA install page +
-            // manifest + head-tag middleware). Nitro v3 defaults serverDir to
-            // false, so removing this silently unwires /?install=1 on deploys.
-            serverDir: "./server",
-          }),
-        ]
+      ? process.env.VERCEL
+        ? [
+            nitro({
+              preset: "vercel",
+              serverDir: "./server",
+            }),
+          ]
+        : [netlify()]
       : []),
     viteReact(),
   ],

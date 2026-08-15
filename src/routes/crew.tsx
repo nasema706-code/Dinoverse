@@ -25,8 +25,9 @@ function CrewPage() {
           Rex Volt holds the cuff. The crew can borrow it.
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          The site walks as the Floor Chief by default — charcoal suit, bone collar, circuit seams.
-          Switch guides if you want another pair of eyes. The listing stays his.
+          The site talks as the Floor Chief by default — charcoal three-piece, headset, coffee and a live tablet.
+          Switch guides if you want another pair of eyes. The listing stays his. Walking HQ opens when
+          construction is done.
         </p>
 
         <div className="mt-8">
@@ -39,7 +40,7 @@ function CrewPage() {
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => navigate({ to: "/worlds" })}>Walk their districts</Button>
               <Button variant="secondary" onClick={() => navigate({ to: "/explore" })}>
-                Enter as {current.name}
+                Preview as {current.name}
               </Button>
             </div>
           </div>

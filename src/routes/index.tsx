@@ -1,17 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { CharacterGrid } from "@/components/character-grid";
-import { CityLife } from "@/components/city-life";
-import { Companion } from "@/components/companion";
+import { LaunchHero } from "@/components/launch-hero";
 import { RexDossier } from "@/components/rex-dossier";
 import { SiteShell } from "@/components/site-shell";
 import { TokenSection } from "@/components/token-section";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CHARACTER_BY_ID } from "@/lib/characters";
+import { TOKEN } from "@/lib/token";
 import { useDinoverse } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
-import { WORLDS } from "@/lib/worlds";
+import { WORLDS, isDistrictOpen } from "@/lib/worlds";
+import { useQuality } from "@/game/quality";
+
+const WorldPreview = lazy(() =>
+  import("@/game/WorldPreview").then((m) => ({ default: m.WorldPreview })),
+);
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -19,67 +23,87 @@ function Home() {
   const hydrated = useHydrated();
   const characterId = useDinoverse((s) => (hydrated ? s.characterId : "rex"));
   const setCharacter = useDinoverse((s) => s.setCharacter);
-  const character = CHARACTER_BY_ID[characterId];
-  const rex = CHARACTER_BY_ID.rex;
 
   return (
     <SiteShell>
       <main>
-        <section className="relative min-h-[calc(100dvh-4rem)] overflow-hidden">
-          <img
-            src="/hero.jpg"
-            alt="Dinoverse Global Headquarters plaza at dusk, eVTOL on the pad"
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-bg/70" />
-          <div className="relative mx-auto grid min-h-[calc(100dvh-4rem)] max-w-6xl items-end gap-8 px-4 py-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-center sm:py-16">
-            <div>
-              <div className="flex flex-wrap gap-2">
-                <Badge>Floor Chief</Badge>
-                <Badge>Solana · $DINOVERSE</Badge>
-              </div>
-              <h1 className="mt-4 max-w-3xl font-display text-4xl font-medium tracking-tight sm:text-6xl">
-                The Dinoverse
-              </h1>
-              <p className="mt-4 max-w-xl text-lg text-fg/90">{character.homeLead}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg">
-                  <Link to="/explore">
-                    Enter as {character.name}
-                    <ArrowRight />
-                  </Link>
-                </Button>
-                <Button asChild variant="secondary" size="lg">
-                  <Link to="/worlds">Walk the floor</Link>
-                </Button>
-              </div>
-              <div className="mt-8 max-w-lg">
-                <Companion line={`${character.homeKicker}. ${character.tagline}`} />
-              </div>
+        <LaunchHero />
+
+        <div id="about" className="h-0 scroll-mt-20" />
+        <RexDossier />
+
+        <TokenSection />
+
+        <section className="border-t border-border px-4 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The city</p>
+            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <h2 className="max-w-xl font-display text-3xl font-medium tracking-tight">
+                Four floors. One listing. The Floor is a live preview.
+              </h2>
+              <p className="max-w-md text-sm text-muted">
+                Look at HQ in 3D. Walking, Dino Mart, the Mall, and the Arena are still under
+                construction.
+              </p>
             </div>
 
-            <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-              <div className="overflow-hidden rounded-xl border border-border bg-surface">
-                <img
-                  src={rex.portrait}
-                  alt="Rex Volt, Floor Chief of the Dinoverse"
-                  className="aspect-portrait w-full object-cover object-top"
-                />
-                <div className="rex-seam" />
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="font-display text-sm font-medium">{rex.name}</p>
-                    <p className="text-xs text-muted">Charcoal suit. Bone collar. Circuit seams.</p>
-                  </div>
-                  <span className="text-xs tracking-wide text-accent uppercase">Listing live</span>
-                </div>
-              </div>
+            <HomeFloorPreview />
+
+            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+              {WORLDS.map((w) => {
+                const open = isDistrictOpen(w.id);
+                return (
+                  <li key={w.id}>
+                    <Link
+                      to="/worlds"
+                      search={{ district: w.id }}
+                      className="group block overflow-hidden rounded-xl border border-border bg-surface"
+                    >
+                      <div className="relative">
+                        <img
+                          src={w.cinematic}
+                          alt={w.summary}
+                          className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
+                        {!open ? <div className="absolute inset-0 bg-bg/55" /> : null}
+                        <span
+                          className={
+                            open
+                              ? "absolute top-3 left-3 rounded-full border border-border bg-bg/80 px-2.5 py-1 text-[10px] font-medium tracking-wide text-fg uppercase"
+                              : "absolute top-3 left-3 rounded-full border border-accent/40 bg-bg/80 px-2.5 py-1 text-[10px] font-medium tracking-wide text-accent uppercase"
+                          }
+                        >
+                          {open ? "3D preview" : "Under construction"}
+                        </span>
+                      </div>
+                      <div className="rex-seam" />
+                      <div className="p-4">
+                        <p className="text-xs text-muted">{w.district}</p>
+                        <p className="mt-1 font-display text-xl font-medium">{w.name}</p>
+                        <p className="mt-2 text-sm text-muted">
+                          {open
+                            ? "Live 3D look. Walking is locked until HQ construction is done."
+                            : "The plates are live. The 3D walk is still pouring."}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link to="/explore">
+                  Preview the floor
+                  <ArrowRight />
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg">
+                <Link to="/worlds">See all districts</Link>
+              </Button>
             </div>
           </div>
         </section>
-
-        <RexDossier />
-        <CityLife />
 
         <section className="border-t border-border px-4 py-16 sm:py-24">
           <div className="mx-auto max-w-6xl">
@@ -89,8 +113,8 @@ function Home() {
                 Rex holds the tape. The crew keeps him honest.
               </h2>
               <p className="max-w-md text-sm text-muted">
-                Walk as the Floor Chief by default, or switch guides. The city stays. The voice
-                changes.
+                Rex holds the tape by default, or switch guides. The city stays. The voice
+                changes. Walking the floor opens when construction is done.
               </p>
             </div>
             <div className="mt-8">
@@ -99,55 +123,71 @@ function Home() {
           </div>
         </section>
 
-        <section className="border-t border-border px-4 py-16 sm:py-24">
-          <div className="mx-auto max-w-6xl">
-            <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Districts</p>
-            <h2 className="mt-3 max-w-full font-display text-2xl font-medium tracking-tight sm:text-3xl">
-              Four floors. One listing.
-            </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-              {WORLDS.map((w) => (
-                <li key={w.id}>
-                  <Link
-                    to="/worlds"
-                    search={{ district: w.id }}
-                    className="group block overflow-hidden rounded-xl border border-border bg-surface"
-                  >
-                    <img
-                      src={w.cinematic}
-                      alt={w.summary}
-                      className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
-                    <div className="rex-seam" />
-                    <div className="p-4">
-                      <p className="text-xs text-muted">{w.district}</p>
-                      <p className="mt-1 font-display text-xl font-medium">{w.name}</p>
-                      <p className="mt-2 text-sm text-muted">{w.summary}</p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
         <section className="border-t border-border px-4 py-16">
-          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-xl border border-border bg-surface p-6 sm:flex-row sm:items-center sm:p-8">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-xl border border-accent/30 bg-surface p-6 sm:flex-row sm:items-center sm:p-8">
             <div>
-              <h2 className="font-display text-2xl font-medium">Walk the city in 3D</h2>
-              <p className="mt-2 max-w-xl text-sm text-muted">
-                First person. The plates are the rooms. Eight shards, four districts, Rex in your
-                ear.
+              <p className="text-xs tracking-[0.18em] text-accent uppercase">Live on Solana</p>
+              <h2 className="mt-2 font-display text-2xl font-medium">The CA is posted</h2>
+              <p className="mt-2 max-w-xl font-mono text-xs break-all text-muted sm:text-sm">
+                {TOKEN.ca}
               </p>
             </div>
-            <Button asChild size="lg">
-              <Link to="/explore">Open the explorer</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild size="lg">
+                <Link to="/" hash="buy">
+                  How to buy
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
-
-        <TokenSection />
       </main>
     </SiteShell>
+  );
+}
+
+function HomeFloorPreview() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [show3d, setShow3d] = useState(false);
+  const { settings } = useQuality();
+  useEffect(() => {
+    if (!settings.preview3d) return;
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) setShow3d(true);
+      },
+      { rootMargin: "120px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [settings.preview3d]);
+  const floor = WORLDS[0];
+  return (
+    <div ref={wrapRef} className="mt-8 overflow-hidden rounded-xl border border-border bg-surface">
+      {show3d && settings.preview3d ? (
+        <Suspense
+          fallback={
+            <img src={floor.cinematic} alt={floor.summary} className="aspect-video w-full object-cover" />
+          }
+        >
+          <WorldPreview district="forum" />
+        </Suspense>
+      ) : (
+        <img src={floor.cinematic} alt={floor.summary} className="aspect-video w-full object-cover" />
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
+        <p className="text-sm text-muted">
+          The Floor at dusk — drag to orbit. Walking is still under construction.
+        </p>
+        <Button asChild size="sm">
+          <Link to="/explore">
+            Open 3D preview
+            <ArrowRight />
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 }

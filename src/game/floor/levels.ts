@@ -55,7 +55,14 @@ function inSpiralWell(x: number, z: number) {
 
 export function nearStairLanding(x: number, z: number) {
   const top = spiralPoint(1);
-  return Math.hypot(x - top.x, z - top.z) < 1.85;
+  if (Math.hypot(x - top.x, z - top.z) < 1.85) return true;
+  const dx = x - SPIRAL.cx;
+  const dz = z - SPIRAL.cz;
+  const r = Math.hypot(dx, dz);
+  if (r < 1.02 || r > SPIRAL.r0 + 0.4) return false;
+  let d = Math.abs(Math.atan2(dx, dz) - top.ang);
+  while (d > Math.PI) d = Math.abs(d - Math.PI * 2);
+  return d < 0.44;
 }
 
 export function onMezzanine(x: number, z: number) {
@@ -85,13 +92,13 @@ function wellRails(): Collider[] {
     const x = SPIRAL.cx + Math.sin(a) * (SPIRAL.r1 + 0.14);
     const z = SPIRAL.cz + Math.cos(a) * (SPIRAL.r1 + 0.14);
     if (Math.hypot(x - land.x, z - land.z) < 1.75) continue;
+    if (Math.hypot(x - SPIRAL.cx, z - SPIRAL.cz) < 1.55) continue;
     out.push({ x, z, w: 0.72, d: 0.72, minY: 5.15, maxY: 8.4 });
   }
   return out;
 }
 
 export const MEZZ_COLLIDERS: Collider[] = [
-  { x: SPIRAL.cx, z: SPIRAL.cz, w: 3.7, d: 3.7 },
   { x: 0, z: MEZZ.holeMaxZ, w: 14.4, d: 0.22, minY: 5.15, maxY: 8.4 },
   { x: 0, z: MEZZ.holeMinZ, w: 14.4, d: 0.22, minY: 5.15, maxY: 8.4 },
   { x: MEZZ.holeMinX, z: 1.1, w: 0.22, d: 15.1, minY: 5.15, maxY: 8.4 },

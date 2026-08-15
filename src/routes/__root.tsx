@@ -1,22 +1,15 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { QualityProvider } from "@/game/quality";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "The Dinoverse";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
 const ogImage = host ? `https://${host}/og.jpg` : undefined;
 
-const fetchSessionUser = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSessionUser } = await import("@/lib/auth/verify.server");
-  const u = await getSessionUser();
-  return u ? { id: u.id, email: u.email } : null;
-});
-
 export const Route = createRootRoute({
-  beforeLoad: async () => ({ sessionUser: await fetchSessionUser() }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -25,7 +18,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "The Dinoverse — dinosaurs living like us. Rex Volt walks $DINOVERSE on Solana.",
+          "Bones are about to list. $DINOVERSE is the Solana token that built the dinosaur city first — front-run the fossil meta, then preview The Floor.",
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#0b0d0b" },
@@ -34,7 +27,8 @@ export const Route = createRootRoute({
       { property: "og:title", content: APP_NAME },
       {
         property: "og:description",
-        content: "Dinosaurs live like humans. Coffee, the floor, the mall. $DINOVERSE on Solana.",
+        content:
+          "Fossil tokenization is coming. $DINOVERSE front-runs the dinosaur meta with a 3D city on Solana.",
       },
       ...(ogImage
         ? [
@@ -68,6 +62,7 @@ function RootDocument() {
       </head>
       <body>
         <PreviewHostBridge />
+        <QualityProvider>
         <AuthProvider>
           <Outlet />
           <Toaster
@@ -78,6 +73,7 @@ function RootDocument() {
             }}
           />
         </AuthProvider>
+        </QualityProvider>
         <Scripts />
       </body>
     </html>

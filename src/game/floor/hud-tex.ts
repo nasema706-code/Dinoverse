@@ -1,6 +1,29 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 
+type HudTextures = {
+  ticker: THREE.CanvasTexture;
+  dnvr: THREE.CanvasTexture;
+  dinose: THREE.CanvasTexture;
+  q2: THREE.CanvasTexture;
+  ops: THREE.CanvasTexture;
+  portfolio: THREE.CanvasTexture;
+  species: THREE.CanvasTexture;
+  code: THREE.CanvasTexture;
+  sign: THREE.CanvasTexture;
+  hqSign: THREE.CanvasTexture;
+  plaque: THREE.CanvasTexture;
+  banner: THREE.CanvasTexture;
+  checkin: THREE.CanvasTexture;
+  visitors: THREE.CanvasTexture;
+  grid: THREE.CanvasTexture;
+  windows: THREE.CanvasTexture;
+  marble: THREE.CanvasTexture;
+  asphalt: THREE.CanvasTexture;
+};
+
+let hudCache: HudTextures | null = null;
+
 function canvasTex(
   w: number,
   h: number,
@@ -14,7 +37,7 @@ function canvasTex(
   draw(ctx, w, h);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.anisotropy = 4;
   tex.needsUpdate = true;
   return tex;
 }
@@ -22,6 +45,7 @@ function canvasTex(
 export function useHudTextures() {
   return useMemo(() => {
     if (typeof document === "undefined") return null;
+    if (hudCache) return hudCache;
 
     const ticker = canvasTex(1024, 512, (ctx, w, h) => {
       ctx.fillStyle = "#0c1018";
@@ -40,19 +64,20 @@ export function useHudTextures() {
       ctx.lineTo(720, 90);
       ctx.lineTo(960, 70);
       ctx.stroke();
-      ctx.font = "28px ui-sans-serif, system-ui, sans-serif";
-      const rows = [
-        ["JURASSIC", "+2.86%"],
-        ["CRETACEOUS", "+0.36%"],
-        ["TRIASSIC", "+0.32%"],
-        ["PERMIAN", "+0.56%"],
-        ["$DINOVERSE", "+1.62%"],
-      ];
-      rows.forEach((row, i) => {
+      const ticks = [
+        ["DNVR", "+1.62%", true],
+        ["DINOSE", "+2.34%", true],
+        ["JURA", "+0.38%", true],
+        ["CRETA", "-0.68%", false],
+        ["TRIAS", "+0.88%", true],
+        ["PERM", "-0.12%", false],
+        ["$DINOVERSE", "+1.62%", true],
+      ] as const;
+      ticks.forEach((row, i) => {
         ctx.fillStyle = "#9aa8b8";
-        ctx.fillText(row[0], 48, 280 + i * 42);
-        ctx.fillStyle = "#3ecf8e";
-        ctx.fillText(row[1], 420, 280 + i * 42);
+        ctx.fillText(row[0], 48, 260 + i * 34);
+        ctx.fillStyle = row[2] ? "#3ecf8e" : "#e85d5d";
+        ctx.fillText(row[1], 420, 260 + i * 34);
       });
     });
 
@@ -67,8 +92,9 @@ export function useHudTextures() {
       ctx.fillText("DNVR", 0, 0);
       ctx.restore();
       ctx.font = "32px ui-monospace, monospace";
-      ["+1.62%", "+0.38%", "+0.88%", "+2.10%", "+0.14%", "+1.04%"].forEach((n, i) => {
-        ctx.fillText(n, 48, 220 + i * 120);
+      ["+1.62%", "+0.38%", "-0.68%", "+0.88%", "+2.10%", "-0.14%", "+1.04%"].forEach((n, i) => {
+        ctx.fillStyle = n.startsWith("-") ? "#e85d5d" : "#3ecf8e";
+        ctx.fillText(n, 48, 200 + i * 110);
       });
     });
 
@@ -90,9 +116,9 @@ export function useHudTextures() {
       ctx.font = "bold 40px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("68%", 780, 292);
       ctx.font = "22px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("Operating Profit", 40, 340);
-      ctx.fillText("Assets Under Management", 40, 380);
-      ctx.fillText("Market Share Growth", 40, 420);
+      ctx.fillText("Operating Profit  +31.6%", 40, 340);
+      ctx.fillText("Assets Under Management  +22.8%", 40, 380);
+      ctx.fillText("Market Share Growth  +18.7%", 40, 420);
       ctx.fillStyle = "#3ecf8e";
       ctx.font = "bold 32px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("MARKET OUTLOOK  BULLISH", 40, 520);
@@ -148,8 +174,10 @@ export function useHudTextures() {
       ctx.fillText("VISITOR CHECK-IN", 24, 48);
       ctx.font = "22px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("VELOX RAPTORA", 24, 110);
-      ctx.fillText("GENESIS DYNAMICS", 24, 150);
-      ctx.fillText("HOST  DR. E. HALO", 24, 190);
+      ctx.fillText("Visitor ID  VR-4401", 24, 148);
+      ctx.fillText("GENESIS DYNAMICS", 24, 186);
+      ctx.fillText("HOST  DR. E. HALO", 24, 224);
+      ctx.fillText("CLEARANCE  3", 24, 262);
       ctx.fillStyle = "#3ecf8e";
       ctx.font = "bold 32px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("APPROVED", 24, 280);
@@ -233,6 +261,171 @@ export function useHudTextures() {
     asphalt.wrapT = THREE.RepeatWrapping;
     asphalt.repeat.set(18, 18);
 
-    return { ticker, dnvr, q2, ops, code, sign, checkin, visitors, windows, marble, asphalt };
+    const dinose = canvasTex(1024, 640, (ctx, w, h) => {
+      ctx.fillStyle = "rgba(6, 22, 40, 0.2)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#5ec8ff";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(16, 16, w - 32, h - 32);
+      ctx.fillStyle = "#e8f6ff";
+      ctx.font = "bold 92px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("DINOSE", 48, 140);
+      ctx.fillStyle = "#3ecf8e";
+      ctx.font = "bold 64px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("+2.34%", 520, 140);
+      ctx.font = "28px ui-sans-serif, system-ui, sans-serif";
+      [
+        ["JURASSIC", "+2.86%"],
+        ["CRETACEOUS", "+0.32%"],
+        ["TRIASSIC", "+0.56%"],
+      ].forEach((row, i) => {
+        ctx.fillStyle = "#9ad4ff";
+        ctx.fillText(row[0], 48, 240 + i * 70);
+        ctx.fillStyle = "#3ecf8e";
+        ctx.fillText(row[1], 420, 240 + i * 70);
+      });
+      ctx.fillStyle = "#7ec8ff";
+      ctx.font = "22px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$DINOVERSE  live book", 48, 500);
+    });
+
+    const portfolio = canvasTex(640, 480, (ctx, w, h) => {
+      ctx.fillStyle = "rgba(6, 20, 36, 0.14)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#6ecfff";
+      ctx.font = "bold 26px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("PORTFOLIO OVERVIEW", 24, 44);
+      ctx.beginPath();
+      ctx.arc(320, 230, 88, 0, Math.PI * 2);
+      ctx.strokeStyle = "#1a3a50";
+      ctx.lineWidth = 16;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(320, 230, 88, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.748);
+      ctx.strokeStyle = "#5ec8ff";
+      ctx.stroke();
+      ctx.fillStyle = "#e8f6ff";
+      ctx.font = "bold 40px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("74.8%", 270, 242);
+      ctx.fillStyle = "#9ad4ff";
+      ctx.font = "20px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("allocation vs target", 210, 400);
+    });
+
+    const species = canvasTex(640, 400, (ctx, w, h) => {
+      ctx.fillStyle = "rgba(6, 20, 36, 0.14)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#6ecfff";
+      ctx.font = "bold 26px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("SPECIES INDEX", 24, 44);
+      ctx.strokeStyle = "#5ec8ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(80, 280);
+      ctx.lineTo(120, 220);
+      ctx.lineTo(160, 240);
+      ctx.lineTo(210, 160);
+      ctx.lineTo(280, 190);
+      ctx.stroke();
+      ctx.fillStyle = "#9ad4ff";
+      ctx.font = "20px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("Raptor  1.00", 24, 120);
+      ctx.fillText("Trike   0.86", 24, 160);
+      ctx.fillText("Anky    0.72", 24, 200);
+      ctx.fillText("Ptera   1.14", 24, 240);
+    });
+
+    const hqSign = canvasTex(1280, 720, (ctx, w, h) => {
+      ctx.fillStyle = "#0a0a0c";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#d4af6a";
+      ctx.beginPath();
+      ctx.moveTo(w / 2, 168);
+      ctx.lineTo(w / 2 + 42, 218);
+      ctx.lineTo(w / 2 + 28, 218);
+      ctx.lineTo(w / 2, 268);
+      ctx.lineTo(w / 2 - 28, 218);
+      ctx.lineTo(w / 2 - 42, 218);
+      ctx.closePath();
+      ctx.fill();
+      ctx.textAlign = "center";
+      ctx.font = "bold 92px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("DINOVERSE", w / 2, 400);
+      ctx.font = "bold 42px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillStyle = "#e8d7a8";
+      ctx.fillText("GLOBAL HEADQUARTERS", w / 2, 470);
+    });
+
+    const plaque = canvasTex(768, 192, (ctx, w, h) => {
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#f2f4f6";
+      ctx.font = "bold 36px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("DINO-SEC DIVISION RECEPTION", 36, 110);
+    });
+
+    const banner = canvasTex(384, 1024, (ctx, w, h) => {
+      ctx.fillStyle = "#142038";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "#f2f4f6";
+      ctx.font = "bold 42px ui-sans-serif, system-ui, sans-serif";
+      ctx.save();
+      ctx.translate(w / 2, 80);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("DINOVERSE CORPORATE", 0, 0);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(w / 2, 820, 48, 0, Math.PI * 2);
+      ctx.strokeStyle = "#d4af6a";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fillStyle = "#d4af6a";
+      ctx.font = "bold 28px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("DV", w / 2 - 22, 830);
+    });
+
+    const grid = canvasTex(256, 256, (ctx, w, h) => {
+      ctx.fillStyle = "rgba(20, 60, 90, 0.15)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(94, 200, 255, 0.55)";
+      ctx.lineWidth = 2;
+      for (let x = 0; x <= w; x += 32) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += 32) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+    });
+    grid.wrapS = THREE.RepeatWrapping;
+    grid.wrapT = THREE.RepeatWrapping;
+    grid.repeat.set(4, 8);
+
+    hudCache = {
+      ticker,
+      dnvr,
+      dinose,
+      q2,
+      ops,
+      portfolio,
+      species,
+      code,
+      sign,
+      hqSign,
+      plaque,
+      banner,
+      checkin,
+      visitors,
+      grid,
+      windows,
+      marble,
+      asphalt,
+    };
+    return hudCache;
   }, []);
 }

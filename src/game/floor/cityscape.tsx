@@ -3,11 +3,12 @@ import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { Box } from "./kit";
 import { useHudTextures } from "./hud-tex";
+import { useQuality } from "../quality";
 
-function ringTowers() {
+function ringTowers(count: number) {
   const out: { x: number; z: number; h: number; w: number; d: number }[] = [];
-  for (let i = 0; i < 40; i++) {
-    const a = (i / 40) * Math.PI * 2 + 0.08;
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2 + 0.08;
     const r = 40 + (i % 7) * 3.2;
     const h = 22 + ((i * 17) % 38);
     const w = 2.6 + (i % 4) * 0.7;
@@ -49,13 +50,14 @@ function Craft({ seed }: { seed: number }) {
 
 export function Cityscape() {
   const hud = useHudTextures();
-  const towers = useMemo(ringTowers, []);
+  const { settings } = useQuality();
+  const towers = useMemo(() => ringTowers(settings.towers), [settings.towers]);
 
   return (
     <group>
       {towers.map((t) => (
         <group key={`${t.x.toFixed(1)}-${t.z.toFixed(1)}`} position={[t.x, t.h / 2, t.z]}>
-          <mesh castShadow>
+          <mesh castShadow={settings.shadows}>
             <boxGeometry args={[t.w, t.h, t.d]} />
             <meshStandardMaterial
               color="#1c2834"
@@ -81,7 +83,7 @@ export function Cityscape() {
         </group>
       ))}
 
-      {[0, 1, 2, 3, 4].map((n) => (
+      {Array.from({ length: settings.crafts }, (_, n) => (
         <Craft key={n} seed={n} />
       ))}
 
@@ -101,8 +103,15 @@ export function Cityscape() {
 export function PlazaTiles() {
   const strips = useMemo(() => {
     const out: [number, number][] = [];
-    for (let x = -20; x <= 20; x += 4) out.push([x, 22]);
-    for (let z = 18; z <= 32; z += 4) out.push([0, z]);
+    const seen = new Set<string>();
+    const add = (x: number, z: number) => {
+      const k = `${x},${z}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push([x, z]);
+    };
+    for (let x = -20; x <= 20; x += 4) add(x, 22);
+    for (let z = 18; z <= 32; z += 4) add(0, z);
     return out;
   }, []);
   return (

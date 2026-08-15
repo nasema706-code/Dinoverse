@@ -3,12 +3,15 @@ import { persist } from "zustand/middleware";
 import { isCharacterId, type CharacterId } from "./characters";
 import { isWorldId, type WorldId } from "./worlds";
 
-type DinoverseState = {
+export type CloudSave = {
   characterId: CharacterId;
   collected: string[];
   visited: WorldId[];
   questDone: boolean;
   hasOnboarded: boolean;
+};
+
+type DinoverseState = CloudSave & {
   setCharacter: (id: CharacterId) => void;
   collectShard: (id: string) => void;
   visitWorld: (id: WorldId) => void;
@@ -62,3 +65,28 @@ export const useDinoverse = create<DinoverseState>()(
     },
   ),
 );
+
+export function getSaveSnapshot(): CloudSave {
+  const s = useDinoverse.getState();
+  return {
+    characterId: s.characterId,
+    collected: s.collected,
+    visited: s.visited,
+    questDone: s.questDone,
+    hasOnboarded: s.hasOnboarded,
+  };
+}
+
+export function applySave(save: CloudSave) {
+  useDinoverse.setState({
+    characterId: save.characterId,
+    collected: save.collected,
+    visited: save.visited,
+    questDone: save.questDone,
+    hasOnboarded: save.hasOnboarded,
+  });
+}
+
+export function saveFingerprint(save: CloudSave) {
+  return JSON.stringify(save);
+}
