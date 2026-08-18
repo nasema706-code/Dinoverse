@@ -38,7 +38,7 @@ function Home() {
           <div className="mx-auto max-w-6xl">
             <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The city</p>
             <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <h2 className="max-w-xl font-display text-3xl font-medium tracking-tight">
+              <h2 className="max-w-xl min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
                 Four floors. One listing. The Floor is a live preview.
               </h2>
               <p className="max-w-md text-sm text-muted">
@@ -91,14 +91,17 @@ function Home() {
                 );
               })}
             </ul>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild size="lg" className="max-sm:w-full">
                 <Link to="/explore">
                   Preview the floor
                   <ArrowRight />
                 </Link>
               </Button>
-              <Button asChild variant="secondary" size="lg">
+              <Button asChild variant="secondary" size="lg" className="max-sm:w-full">
+                <Link to="/play">Play Mushroom Run</Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="max-sm:w-full">
                 <Link to="/worlds">See all districts</Link>
               </Button>
             </div>
@@ -109,7 +112,7 @@ function Home() {
           <div className="mx-auto max-w-6xl">
             <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The floor</p>
             <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <h2 className="max-w-xl font-display text-3xl font-medium tracking-tight">
+              <h2 className="max-w-xl min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
                 Rex holds the tape. The crew keeps him honest.
               </h2>
               <p className="max-w-md text-sm text-muted">
@@ -123,8 +126,46 @@ function Home() {
           </div>
         </section>
 
+        <section className="border-t border-border px-4 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Play</p>
+            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <h2 className="max-w-xl min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+                Rex Volt — Mushroom Run
+              </h2>
+              <p className="max-w-md text-sm text-muted">
+                A three-lane run on this site. Catch energy, collect the herd, dodge mushrooms.
+                High score saves while you keep {TOKEN.ticker} in the tape.
+              </p>
+            </div>
+            <div className="mt-8 overflow-hidden rounded-xl border border-border bg-black sm:grid sm:grid-cols-[16rem_1fr]">
+              <img
+                src="/game/mushroom.jpg"
+                alt="Glowing prehistoric mushroom field"
+                className="h-56 w-full object-cover object-center sm:h-full"
+              />
+              <div className="flex flex-col justify-between gap-4 bg-surface p-5 sm:p-6">
+                <div>
+                  <p className="font-display text-2xl font-medium tracking-tight">Mushroom Run</p>
+                  <p className="mt-2 text-sm text-muted">
+                    Three tracks with music. Jump rocks, thread tunnels, catch parachute bones for
+                    extra lives. Unlock Zen Stego, Elder Brachio, Flow Diplo, Quiet Anky, and Trike
+                    Volt.
+                  </p>
+                </div>
+                <Button asChild size="lg" className="max-sm:w-full sm:self-start">
+                  <Link to="/play">
+                    Play now
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="border-t border-border px-4 py-16">
-          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 rounded-xl border border-accent/30 bg-surface p-6 sm:flex-row sm:items-center sm:p-8">
+          <div className="mx-auto flex max-w-6xl min-w-0 flex-col items-start justify-between gap-6 rounded-xl border border-accent/30 bg-surface p-4 sm:flex-row sm:items-center sm:p-8">
             <div>
               <p className="text-xs tracking-[0.18em] text-accent uppercase">Live on Solana</p>
               <h2 className="mt-2 font-display text-2xl font-medium">The CA is posted</h2>
@@ -177,11 +218,11 @@ function HomeFloorPreview() {
       ) : (
         <img src={floor.cinematic} alt={floor.summary} className="aspect-video w-full object-cover" />
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
-        <p className="text-sm text-muted">
+      <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <p className="min-w-0 text-sm leading-relaxed text-muted">
           The Floor at dusk — drag to orbit. Walking is still under construction.
         </p>
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="max-sm:w-full">
           <Link to="/explore">
             Open 3D preview
             <ArrowRight />

@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-bg text-fg">
+    <div className="flex min-h-dvh flex-col overflow-x-clip bg-bg text-fg">
       <SiteNav />
       <div className="flex-1">{children}</div>
       <footer className="border-t border-border px-4 py-10">
@@ -17,19 +17,19 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <p className="font-display text-lg text-fg">{TOKEN.name}</p>
             <p className="mt-2 max-w-sm text-sm text-muted">{TOKEN.tagline}</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="max-sm:flex-1">
                 <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
                   X
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="max-sm:flex-1">
                 <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
                   Telegram
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="max-sm:w-full">
                 <a href={TOKEN.buy} target="_blank" rel="noreferrer">
                   Buy {TOKEN.ticker}
                 </a>
@@ -52,6 +52,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <li>
                 <Link to="/" hash="buy" className="text-muted hover:text-fg">
                   How to buy
+                </Link>
+              </li>
+              <li>
+                <Link to="/play" className="text-muted hover:text-fg">
+                  Play
                 </Link>
               </li>
               <li>

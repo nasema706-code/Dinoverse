@@ -13,6 +13,7 @@ const LINKS = [
   { to: "/", hash: "token", label: "Tokenomics" },
   { to: "/", hash: "buy", label: "How to buy" },
   { to: "/", hash: "roadmap", label: "Roadmap" },
+  { to: "/play", label: "Play" },
   { to: "/worlds", label: "City" },
   { to: "/explore", label: "Preview" },
 ] as const;
@@ -55,22 +56,22 @@ export function SiteNav() {
   const character = CHARACTERS.find((c) => c.id === characterId) ?? null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl min-w-0 items-center justify-between gap-2 px-4 sm:gap-3">
         <Link
           to="/"
           hash=""
           resetScroll
           aria-label="Dinoverse home"
-          className="flex items-center gap-2.5"
+          className="flex min-w-0 items-center gap-2 sm:gap-2.5"
           onClick={() => window.scrollTo({ top: 0 })}
         >
           <img
             src="/hero.png"
             alt=""
-            className="size-8 rounded-sm border border-border object-cover object-[center_18%]"
+            className="size-8 shrink-0 rounded-sm border border-border object-cover object-[center_18%]"
           />
-          <span className="font-display text-sm font-medium tracking-tight">
+          <span className="truncate font-display text-sm font-medium tracking-tight">
             {TOKEN.ticker}
           </span>
         </Link>

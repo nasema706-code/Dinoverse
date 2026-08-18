@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlayRouteImport } from './routes/play'
 import { Route as WorldsRouteImport } from './routes/worlds'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -36,6 +37,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorldsRoute = WorldsRouteImport.update({
   id: '/worlds',
   path: '/worlds',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -69,20 +77,24 @@ export interface FileRoutesById {
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
+  '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/crew' | '/explore' | '/login' | '/worlds' | '/api/auth/$'
+  fullPaths:
+    '/' | '/crew' | '/explore' | '/login' | '/play' | '/worlds' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/crew' | '/explore' | '/login' | '/worlds' | '/api/auth/$'
+  to:
+    '/' | '/crew' | '/explore' | '/login' | '/play' | '/worlds' | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/crew'
     | '/explore'
     | '/login'
+    | '/play'
     | '/worlds'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -92,6 +104,7 @@ export interface RootRouteChildren {
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
   LoginRoute: typeof LoginRoute
+  PlayRoute: typeof PlayRoute
   WorldsRoute: typeof WorldsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -126,6 +139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/worlds': {
       id: '/worlds'
       path: '/worlds'
@@ -148,6 +168,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
   LoginRoute: LoginRoute,
+  PlayRoute: PlayRoute,
   WorldsRoute: WorldsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
