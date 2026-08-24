@@ -19,7 +19,7 @@ export function CharacterGrid({
           type="button"
           onClick={() => onSelect(featured.id)}
           className={cn(
-            "group grid w-full overflow-hidden rounded-xl border bg-black text-left transition-[border-color] duration-200 sm:grid-cols-[14rem_1fr]",
+            "group grid w-full min-w-0 overflow-hidden rounded-xl border bg-black text-left transition-[border-color] duration-200 sm:grid-cols-[14rem_1fr]",
             selected === featured.id ? "border-accent" : "border-border hover:border-muted",
           )}
         >
@@ -28,7 +28,7 @@ export function CharacterGrid({
             alt={`${featured.name}, ${featured.species} ${featured.title}`}
             className="h-56 w-full bg-black object-contain object-bottom sm:h-full"
           />
-          <div className="flex flex-col justify-between bg-surface p-5 sm:p-6">
+          <div className="flex min-w-0 flex-col justify-between bg-surface p-4 sm:p-6">
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
                 <Badge>Floor Chief</Badge>
@@ -54,7 +54,7 @@ export function CharacterGrid({
                 type="button"
                 onClick={() => onSelect(c.id)}
                 className={cn(
-                  "flex h-full w-full flex-col overflow-hidden rounded-xl border bg-surface text-left transition-[border-color] duration-200",
+                  "flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border bg-surface text-left transition-[border-color] duration-200",
                   active ? "border-accent" : "border-border hover:border-muted",
                 )}
               >

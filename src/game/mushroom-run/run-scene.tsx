@@ -3,7 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { AdaptiveDpr } from "@react-three/drei";
 import { useQuality } from "../quality";
-import { RexRunner } from "./rex-runner";
+import { PlayableRunner } from "./playable-runner";
+import type { Loadout } from "./shop";
 import { EnergyOrb, HazardMushroom, ParachuteBone, RockBoulder, StoneTunnel, TokenBillboard } from "./props";
 import { STAGES, type StageId, type StageTheme } from "./levels";
 import {
@@ -13,14 +14,16 @@ import {
   type Collected,
   type RunObj,
   type RunState,
+  type RunnerId,
   stepRun,
 } from "./run-state";
+import type { SfxKind } from "./sfx";
 
 function SkyGrove({ theme }: { theme: StageTheme }) {
   return (
     <group>
       <mesh>
-        <sphereGeometry args={[48, 16, 12]} />
+        <sphereGeometry args={[90, 16, 12]} />
         <meshBasicMaterial color={theme.sky} side={THREE.BackSide} depthWrite={false} />
       </mesh>
       <mesh position={[10, 11, -22]}>
@@ -38,6 +41,10 @@ function SkyGrove({ theme }: { theme: StageTheme }) {
         { x: 9.8, z: -26, s: 3.5, c: theme.hills[0] },
         { x: -7.6, z: -32, s: 3.6, c: theme.hills[0] },
         { x: 8.2, z: -34, s: 4.4, c: theme.hills[1] },
+        { x: -9.2, z: -42, s: 4.6, c: theme.hills[1] },
+        { x: 9.4, z: -48, s: 5.0, c: theme.hills[0] },
+        { x: -8.6, z: -56, s: 4.2, c: theme.hills[0] },
+        { x: 8.8, z: -62, s: 4.8, c: theme.hills[1] },
       ].map((h) => (
         <mesh key={`${h.x}-${h.z}`} position={[h.x, -0.4, h.z]} scale={[h.s, 1.15, h.s * 1.4]}>
           <sphereGeometry args={[1, 10, 8]} />
@@ -61,21 +68,21 @@ function LaneField({
   });
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -18]} receiveShadow={false}>
-        <planeGeometry args={[22, 72]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -24]} receiveShadow={false}>
+        <planeGeometry args={[24, 96]} />
         <meshStandardMaterial color={theme.ground} roughness={0.9} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-5.4, 0.008, -18]}>
-        <planeGeometry args={[4.2, 72]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-5.4, 0.008, -24]}>
+        <planeGeometry args={[4.2, 96]} />
         <meshStandardMaterial color={theme.grass} roughness={0.86} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5.4, 0.008, -18]}>
-        <planeGeometry args={[4.2, 72]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5.4, 0.008, -24]}>
+        <planeGeometry args={[4.2, 96]} />
         <meshStandardMaterial color={theme.grass} roughness={0.86} />
       </mesh>
       {LANE_X.map((x, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.02, -18]}>
-          <planeGeometry args={[1.22, 64]} />
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.02, -24]}>
+          <planeGeometry args={[1.28, 92]} />
           <meshStandardMaterial
             color={i === 1 ? theme.laneMid : theme.lane}
             emissive={theme.lane}
@@ -86,8 +93,8 @@ function LaneField({
       ))}
       <group ref={stripes}>
         {[-0.74, 0.74].map((x) => (
-          <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.028, -18]}>
-            <planeGeometry args={[0.08, 64]} />
+          <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.028, -24]}>
+            <planeGeometry args={[0.09, 92]} />
             <meshStandardMaterial
               color={theme.stripe}
               emissive={theme.stripeEmissive}
@@ -118,7 +125,7 @@ function GroveDecor({
     for (let i = 0; i < count; i++) {
       const side = i % 2 === 0 ? -1 : 1;
       list.push({
-        x: side * (2.6 + (i % 5) * 0.42),
+        x: side * (3.35 + (i % 5) * 0.38),
         z: -3.2 - i * 2.2,
         s: 0.48 + (i % 4) * 0.18,
         look: i % looks.length,
@@ -189,7 +196,7 @@ function TrackItem({ obj, theme }: { obj: RunObj; theme: StageTheme }) {
   if (obj.type === "mushroom") {
     return (
       <group ref={group} position={[x, 0, obj.z]}>
-        <HazardMushroom look={theme.hazard} />
+        <HazardMushroom look={theme.hazard} signal />
       </group>
     );
   }
@@ -236,7 +243,10 @@ export function RunScene({
   stage,
   onHud,
   onCrash,
-  onUnlock,
+  onScout,
+  onSfx,
+  loadout,
+  runnerId,
 }: {
   run: React.MutableRefObject<RunState>;
   collected: React.MutableRefObject<Collected>;
@@ -244,7 +254,10 @@ export function RunScene({
   stage: StageId;
   onHud: (score: number, energy: number, lives: number) => void;
   onCrash: () => void;
-  onUnlock: (id: CharId) => void;
+  onScout: (id: CharId) => void;
+  onSfx: (kinds: SfxKind[]) => void;
+  loadout: Loadout;
+  runnerId: RunnerId;
 }) {
   const { level: quality } = useQuality();
   const theme = STAGES[stage];
@@ -264,9 +277,13 @@ export function RunScene({
         hudTick.current = 0;
         onHud(run.current.score, run.current.energy, run.current.lives);
       }
+      if (result.sfx.length) {
+        const kinds = result.sfx.slice();
+        queueMicrotask(() => onSfx(kinds));
+      }
       if (result.collectedId) {
         const id = result.collectedId;
-        queueMicrotask(() => onUnlock(id));
+        queueMicrotask(() => onScout(id));
       }
       if (result.fatal) {
         queueMicrotask(onCrash);
@@ -286,10 +303,10 @@ export function RunScene({
 
     const lx = run.current.laneX;
     const ly = run.current.y;
-    state.camera.position.x += (lx * 0.42 - state.camera.position.x) * 0.1;
-    state.camera.position.y = 1.72 + ly * 0.38;
-    state.camera.position.z = 4.15;
-    state.camera.lookAt(lx * 0.18, 0.72 + ly * 0.28, -5);
+    state.camera.position.x += (lx * 0.32 - state.camera.position.x) * 0.1;
+    state.camera.position.y = 2.22 + ly * 0.38;
+    state.camera.position.z = 5.35;
+    state.camera.lookAt(lx * 0.12, 0.42 + ly * 0.28, -12);
     if (keyLight.current) {
       keyLight.current.position.set(lx, 2.15 + ly, 1.35);
     }
@@ -299,11 +316,13 @@ export function RunScene({
     <>
       <AdaptiveDpr pixelated={false} />
       <color attach="background" args={[theme.sky]} />
-      <fog attach="fog" args={[theme.fog, 14, 44]} />
+      <fog attach="fog" args={[theme.fog, 28, 82]} />
       <ambientLight intensity={theme.id === 1 ? 0.72 : 0.42} />
       <hemisphereLight color={theme.hemiSky} groundColor={theme.hemiGround} intensity={0.8} />
       <directionalLight position={[8, 14, 4]} intensity={theme.id === 3 ? 1.15 : 1.5} color={theme.dirLight} />
       <pointLight ref={keyLight} intensity={1.5} distance={10} color="#fff4d6" />
+      <pointLight position={[0, 5.2, -18]} intensity={1.35} distance={46} color="#fff6e8" />
+      <pointLight position={[0, 4.4, -38]} intensity={1.05} distance={42} color={theme.accentB} />
       <pointLight position={[-4, 3, -6]} intensity={0.85} distance={16} color={theme.accentA} />
       <pointLight position={[4, 2.6, -8]} intensity={0.8} distance={16} color={theme.accentB} />
       <SkyGrove theme={theme} />
@@ -313,11 +332,14 @@ export function RunScene({
       {items.map((obj) => (
         <TrackItem key={obj.id} obj={obj} theme={theme} />
       ))}
-      <RexRunner
+      <PlayableRunner
+        id={runnerId}
         getX={() => run.current.laneX}
         getY={() => run.current.y}
+        getVy={() => run.current.vy}
         running={playing}
         getInvuln={() => run.current.invuln > 0}
+        loadout={loadout}
       />
     </>
   );

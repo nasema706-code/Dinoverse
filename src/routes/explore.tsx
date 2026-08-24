@@ -93,7 +93,7 @@ function ExplorePage() {
             <WorldPreview district={world.id} variant="stage" />
           </Suspense>
         </div>
-        <div className="mx-auto max-w-6xl space-y-5 px-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-6xl min-w-0 space-y-5 px-4 py-8 sm:py-10">
           <div className="flex flex-wrap gap-2">
             <Badge className="border-accent/40 text-accent">Under construction</Badge>
             <Badge>3D preview</Badge>

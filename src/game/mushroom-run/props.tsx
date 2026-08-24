@@ -130,15 +130,19 @@ export function EnergyOrb({
   return (
     <group>
       <mesh ref={glow} position={[0, 0.72, 0]}>
-        <sphereGeometry args={[0.28, 12, 10]} />
+        <sphereGeometry args={[0.42, 12, 10]} />
+        <meshBasicMaterial color={emissive} transparent opacity={0.28} depthWrite={false} />
+      </mesh>
+      <mesh position={[0, 1.15, 0]}>
+        <cylinderGeometry args={[0.055, 0.09, 2.35, 8]} />
         <meshBasicMaterial color={emissive} transparent opacity={0.22} depthWrite={false} />
       </mesh>
       <mesh ref={ref} position={[0, 0.72, 0]}>
-        <octahedronGeometry args={[0.22, 0]} />
+        <octahedronGeometry args={[0.3, 0]} />
         <meshStandardMaterial
           color={color}
           emissive={emissive}
-          emissiveIntensity={1.7}
+          emissiveIntensity={2.15}
           roughness={0.18}
           metalness={0.35}
         />
@@ -171,7 +175,13 @@ export const GROVE_LOOKS: MushroomLook[] = [
   { cap: "#5ec8ff", emissive: "#2aa8ff", stem: "#f0e6cc", spot: "#e8f6ff", glow: "#9adfff" },
 ];
 
-export function HazardMushroom({ look = HAZARD_LOOK }: { look?: MushroomLook }) {
+export function HazardMushroom({
+  look = HAZARD_LOOK,
+  signal = false,
+}: {
+  look?: MushroomLook;
+  signal?: boolean;
+}) {
   const spots = useMemo(
     () =>
       [
@@ -184,32 +194,44 @@ export function HazardMushroom({ look = HAZARD_LOOK }: { look?: MushroomLook }) 
   );
   return (
     <group>
-      <mesh position={[0, 0.38, 0]}>
-        <cylinderGeometry args={[0.12, 0.16, 0.72, 8]} />
+      {signal ? (
+        <>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+            <ringGeometry args={[0.38, 0.68, 24]} />
+            <meshBasicMaterial color={look.glow} transparent opacity={0.72} depthWrite={false} />
+          </mesh>
+          <mesh position={[0, 1.55, 0]}>
+            <cylinderGeometry args={[0.045, 0.07, 2.6, 8]} />
+            <meshBasicMaterial color={look.glow} transparent opacity={0.38} depthWrite={false} />
+          </mesh>
+        </>
+      ) : null}
+      <mesh position={[0, 0.42, 0]}>
+        <cylinderGeometry args={[0.14, 0.18, 0.82, 8]} />
         <meshStandardMaterial color={look.stem} roughness={0.7} />
       </mesh>
-      <mesh position={[0, 0.82, 0]}>
-        <sphereGeometry args={[0.48, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
+      <mesh position={[0, 0.92, 0]}>
+        <sphereGeometry args={[0.56, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7]} />
         <meshStandardMaterial
           color={look.cap}
           emissive={look.emissive}
-          emissiveIntensity={0.55}
+          emissiveIntensity={0.85}
           roughness={0.42}
         />
       </mesh>
-      <mesh position={[0, 0.7, 0]} rotation={[Math.PI, 0, 0]}>
-        <cylinderGeometry args={[0.48, 0.48, 0.06, 16]} />
+      <mesh position={[0, 0.78, 0]} rotation={[Math.PI, 0, 0]}>
+        <cylinderGeometry args={[0.56, 0.56, 0.06, 16]} />
         <meshStandardMaterial color="#f7eccf" roughness={0.65} />
       </mesh>
       {spots.map(([x, z], i) => (
-        <mesh key={i} position={[x, 1.02, z]}>
-          <sphereGeometry args={[0.08, 8, 6]} />
+        <mesh key={i} position={[x * 1.12, 1.14, z * 1.12]}>
+          <sphereGeometry args={[0.09, 8, 6]} />
           <meshStandardMaterial color={look.spot} roughness={0.55} />
         </mesh>
       ))}
-      <mesh position={[0, 1.08, 0]}>
-        <sphereGeometry args={[0.14, 8, 6]} />
-        <meshBasicMaterial color={look.glow} transparent opacity={0.32} />
+      <mesh position={[0, 1.22, 0]}>
+        <sphereGeometry args={[0.18, 8, 6]} />
+        <meshBasicMaterial color={look.glow} transparent opacity={0.42} />
       </mesh>
     </group>
   );
@@ -224,6 +246,14 @@ const BONE_DARK = "#c8b894";
 export function RockBoulder() {
   return (
     <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
+        <ringGeometry args={[0.42, 0.72, 20]} />
+        <meshBasicMaterial color="#ffb06a" transparent opacity={0.55} depthWrite={false} />
+      </mesh>
+      <mesh position={[0, 1.35, 0]}>
+        <cylinderGeometry args={[0.04, 0.06, 2.1, 8]} />
+        <meshBasicMaterial color="#ffb06a" transparent opacity={0.32} depthWrite={false} />
+      </mesh>
       <mesh position={[0, 0.42, 0]} rotation={[0.2, 0.4, 0.1]} scale={[1, 0.82, 1.05]}>
         <dodecahedronGeometry args={[0.62, 0]} />
         <meshStandardMaterial color={ROCK} roughness={0.82} metalness={0.08} />
@@ -287,13 +317,26 @@ export function StoneTunnel({ openLane }: { openLane: number }) {
         <meshStandardMaterial color="#4a443c" roughness={0.75} />
       </mesh>
       <mesh position={[openX, 1.12, 0.02]}>
-        <boxGeometry args={[1.05, 0.07, 1.55]} />
+        <boxGeometry args={[1.12, 0.1, 1.55]} />
+        <meshStandardMaterial
+          color="#7dffb3"
+          emissive="#3ecf8e"
+          emissiveIntensity={1.35}
+          roughness={0.32}
+        />
+      </mesh>
+      <mesh position={[openX, 0.04, 0]}>
+        <boxGeometry args={[1.18, 0.06, 2.4]} />
         <meshStandardMaterial
           color="#3ecf8e"
           emissive="#3ecf8e"
-          emissiveIntensity={0.6}
-          roughness={0.4}
+          emissiveIntensity={1.1}
+          roughness={0.35}
         />
+      </mesh>
+      <mesh position={[openX, 1.05, 0]}>
+        <boxGeometry args={[1.05, 1.9, 0.08]} />
+        <meshBasicMaterial color="#7dffb3" transparent opacity={0.16} depthWrite={false} />
       </mesh>
       <mesh position={[openX, 0.7, -0.12]}>
         <boxGeometry args={[1.08, 1.28, 0.04]} />
@@ -348,8 +391,12 @@ export function ParachuteBone({ z }: { z: number }) {
         </mesh>
       </group>
       <mesh position={[0, 0.08, 0]}>
-        <sphereGeometry args={[0.22, 8, 6]} />
-        <meshBasicMaterial color="#ffe08a" transparent opacity={0.16} depthWrite={false} />
+        <sphereGeometry args={[0.32, 8, 6]} />
+        <meshBasicMaterial color="#ffe08a" transparent opacity={0.22} depthWrite={false} />
+      </mesh>
+      <mesh position={[0, 0.9, 0]}>
+        <cylinderGeometry args={[0.05, 0.08, 1.8, 8]} />
+        <meshBasicMaterial color="#ff8a70" transparent opacity={0.22} depthWrite={false} />
       </mesh>
     </group>
   );

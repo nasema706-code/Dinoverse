@@ -5,8 +5,11 @@ import { TOKEN } from "@/lib/token";
 import { useDinoverse } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
+import { AccountChip } from "./account-chip";
 import { Button } from "./ui/button";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "./ui/sheet";
+import { authEnabled, signOut } from "@/lib/auth/client";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 const LINKS = [
   { to: "/", hash: "about", label: "About" },
@@ -14,8 +17,10 @@ const LINKS = [
   { to: "/", hash: "buy", label: "How to buy" },
   { to: "/", hash: "roadmap", label: "Roadmap" },
   { to: "/play", label: "Play" },
+  { to: "/memes", label: "Memes" },
+  { to: "/leaderboard", label: "Board" },
   { to: "/worlds", label: "City" },
-  { to: "/explore", label: "Preview" },
+  { to: "/explore", label: "The Floor" },
 ] as const;
 
 function NavLinks({ onClick, className }: { onClick?: () => void; className?: string }) {
@@ -52,6 +57,7 @@ function NavLinks({ onClick, className }: { onClick?: () => void; className?: st
 
 export function SiteNav() {
   const hydrated = useHydrated();
+  const { user } = useCurrentUserState();
   const characterId = useDinoverse((s) => (hydrated ? s.characterId : "rex"));
   const character = CHARACTERS.find((c) => c.id === characterId) ?? null;
 
@@ -94,6 +100,7 @@ export function SiteNav() {
               Buy {TOKEN.ticker}
             </a>
           </Button>
+          <AccountChip />
           {character ? (
             <Link
               to="/crew"
@@ -151,6 +158,28 @@ export function SiteNav() {
                     {character ? `Guide: ${character.name}` : "Pick a guide"}
                   </Link>
                 </SheetClose>
+                {authEnabled && !user ? (
+                  <SheetClose asChild>
+                    <Link
+                      to="/login"
+                      search={{ next: "/play" }}
+                      className="inline-flex h-11 items-center px-3 text-sm font-medium text-accent"
+                    >
+                      Sign in
+                    </Link>
+                  </SheetClose>
+                ) : null}
+                {authEnabled && user ? (
+                  <SheetClose asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-11 items-center px-3 text-left text-sm text-muted"
+                      onClick={() => void signOut("/")}
+                    >
+                      Sign out
+                    </button>
+                  </SheetClose>
+                ) : null}
               </div>
             </SheetContent>
           </Sheet>

@@ -1,7 +1,7 @@
 import type { Texture } from "three";
 import type { FloorDesk } from "./layout";
 import { L2_HEIGHT } from "./levels";
-import { Box, CheapGlass } from "./kit";
+import { Box, CheapGlass, TransmissionGlass } from "./kit";
 import { useQuality } from "../quality";
 import {
   CharacterSlot,
@@ -137,7 +137,7 @@ export function CommandStation({ hud }: { hud: Hud }) {
 }
 
 function CheapGlassTop() {
-  return <meshStandardMaterial color="#9ec8dc" transparent opacity={0.28} metalness={0.35} roughness={0.12} />;
+  return <TransmissionGlass color="#9ec8dc" />;
 }
 
 export function DinoseHolo({ hud }: { hud: Hud }) {

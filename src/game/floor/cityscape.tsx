@@ -60,12 +60,12 @@ export function Cityscape() {
           <mesh castShadow={settings.shadows}>
             <boxGeometry args={[t.w, t.h, t.d]} />
             <meshStandardMaterial
-              color="#1c2834"
-              metalness={0.62}
-              roughness={0.22}
+              color="#6d7d8c"
+              metalness={0.48}
+              roughness={0.32}
               map={hud?.windows ?? undefined}
               emissive="#243044"
-              emissiveIntensity={0.55}
+              emissiveIntensity={0.16}
             />
           </mesh>
           <mesh position={[0, t.h / 2 + 0.55, 0]}>
@@ -90,9 +90,9 @@ export function Cityscape() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 4]} receiveShadow>
         <planeGeometry args={[160, 160]} />
         <meshStandardMaterial
-          color="#12181f"
-          roughness={0.92}
-          metalness={0.08}
+          color="#5a6570"
+          roughness={0.88}
+          metalness={0.06}
           map={hud?.asphalt ?? undefined}
         />
       </mesh>
@@ -118,16 +118,16 @@ export function PlazaTiles() {
     <>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 24]} receiveShadow>
         <planeGeometry args={[48, 22]} />
-        <meshStandardMaterial color="#1a1d22" roughness={0.38} metalness={0.28} />
+        <meshStandardMaterial color="#c9d0d8" roughness={0.38} metalness={0.22} envMapIntensity={0.7} />
       </mesh>
       {strips.map(([x, z]) => (
         <Box
           key={`${x}-${z}`}
           position={[x, 0.03, z]}
           size={[3.6, 0.02, 0.08]}
-          color="#d4af6a"
-          emissive="#d4af6a"
-          eInt={0.85}
+          color="#c4a45a"
+          metal={0.45}
+          rough={0.35}
         />
       ))}
     </>

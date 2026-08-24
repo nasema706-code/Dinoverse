@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { ContactShadows } from "@react-three/drei";
+import { AccumulativeShadows, RandomizedLight, MeshTransmissionMaterial } from "@react-three/drei";
+import { HqEnvironment, SUN_POS } from "./env";
 import type { Group, Texture } from "three";
 import { DoubleSide } from "three";
 import { usePhoto } from "../textures";
@@ -22,19 +23,60 @@ export function CheapGlass({
   opacity?: number;
   color?: string;
 }) {
+  const { level } = useQuality();
   return (
     <meshPhysicalMaterial
       color={color}
-      roughness={0.06}
-      metalness={0.05}
-      clearcoat={0.72}
-      clearcoatRoughness={0.14}
+      roughness={0.04}
+      metalness={0.14}
+      clearcoat={1}
+      clearcoatRoughness={0.08}
+      ior={1.5}
       transparent
       opacity={opacity}
       side={DoubleSide}
       depthWrite={false}
-      envMapIntensity={0.55}
+      envMapIntensity={level === "low" ? 1.15 : 1.55}
     />
+  );
+}
+
+/** Thick refractive glass. One mesh = one extra scene pass — never put this on curtain walls. */
+export function TransmissionGlass({ color = "#d4eefc" }: { color?: string }) {
+  const { level, settings } = useQuality();
+  if (!settings.atriumDetail) {
+    return <CheapGlass opacity={0.28} color={color} />;
+  }
+  const high = level === "high";
+  return (
+    <MeshTransmissionMaterial
+      color={color}
+      transmission={1}
+      thickness={0.4}
+      roughness={0.05}
+      ior={1.5}
+      chromaticAberration={high ? 0.03 : 0.015}
+      anisotropicBlur={high ? 0.1 : 0.05}
+      samples={high ? 6 : 4}
+      resolution={high ? 256 : 128}
+    />
+  );
+}
+
+export function TransmissionPane({
+  position,
+  rotation = [0, 0, 0],
+  args = [1.2, 1.8, 0.15],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  args?: [number, number, number];
+}) {
+  return (
+    <mesh position={position} rotation={rotation}>
+      <boxGeometry args={args} />
+      <TransmissionGlass />
+    </mesh>
   );
 }
 
@@ -65,6 +107,7 @@ export function Box({
         roughness={rough}
         emissive={eInt > 0 ? (emissive ?? color) : "#000000"}
         emissiveIntensity={eInt}
+        envMapIntensity={metal > 0.45 ? 0.85 : 0.28}
       />
     </mesh>
   );
@@ -319,26 +362,37 @@ export function Lights(): ReactNode {
   const { settings } = useQuality();
   return (
     <>
-      <color attach="background" args={["#8ec4ea"]} />
-      <fog attach="fog" args={["#b9d6ee", settings.fogNear, settings.fogFar]} />
-      <hemisphereLight args={["#fff6dd", "#8aaeb8", 0.95]} />
-      <ambientLight intensity={settings.extraLights ? 0.72 : 0.92} />
+      <HqEnvironment />
+      <fog attach="fog" args={["#cfe6f8", Math.max(78, settings.fogNear + 28), Math.min(settings.far - 6, settings.fogFar + 48)]} />
+      <hemisphereLight args={["#fff4d6", "#9db58a", 1.15]} />
+      <ambientLight intensity={settings.extraLights ? 0.95 : 1.08} />
       <directionalLight
-        position={[32, 48, 22]}
-        intensity={settings.extraLights ? 3.6 : 2.85}
-        color="#fff1c8"
+        position={SUN_POS}
+        intensity={settings.extraLights ? 5.2 : 4.4}
+        color="#fff3cc"
         castShadow={settings.shadows}
         shadow-mapSize={settings.shadows ? [512, 512] : [256, 256]}
+        shadow-bias={-0.00035}
+        shadow-normalBias={0.035}
         shadow-camera-near={4}
-        shadow-camera-far={90}
-        shadow-camera-left={-28}
-        shadow-camera-right={28}
-        shadow-camera-top={28}
-        shadow-camera-bottom={-28}
+        shadow-camera-far={110}
+        shadow-camera-left={-32}
+        shadow-camera-right={32}
+        shadow-camera-top={32}
+        shadow-camera-bottom={-32}
       />
-      <directionalLight position={[-24, 22, -16]} intensity={settings.extraLights ? 1.05 : 0.72} color="#c5dff2" />
+      <directionalLight position={[-28, 18, -14]} intensity={0.42} color="#b7d4ee" />
       {settings.contactShadows ? (
-        <ContactShadows frames={1} position={[0, 0.03, 2]} opacity={0.22} scale={40} blur={1.6} far={10} />
+        <AccumulativeShadows
+          temporal
+          frames={60}
+          scale={20}
+          opacity={0.45}
+          color="#3a2e22"
+          position={[0, 0.026, 0]}
+        >
+          <RandomizedLight amount={8} radius={8} position={SUN_POS} />
+        </AccumulativeShadows>
       ) : null}
     </>
   );
@@ -354,10 +408,10 @@ export function LampPost({ position }: { position: [number, number, number] }) {
       </mesh>
       <mesh position={[0, 3.28, 0]}>
         <sphereGeometry args={[0.16, 10, 8]} />
-        <meshStandardMaterial color="#ffe7b0" emissive="#ffe7b0" emissiveIntensity={2.2} />
+        <meshStandardMaterial color="#ffe7b0" emissive="#ffe7b0" emissiveIntensity={0.28} />
       </mesh>
       {settings.extraLights ? (
-        <pointLight position={[0, 3.1, 0]} intensity={1.1} distance={9} color="#ffd9a0" />
+        <pointLight position={[0, 3.1, 0]} intensity={0.2} distance={6} color="#ffd9a0" />
       ) : null}
     </group>
   );
@@ -580,7 +634,7 @@ export function Helicopter({ position }: { position: [number, number, number] })
       </mesh>
       <mesh position={[0, 1.05, -0.15]}>
         <boxGeometry args={[1.12, 0.42, 1.15]} />
-        <CheapGlass opacity={0.24} color="#7fb7d4" />
+        <TransmissionGlass color="#7fb7d4" />
       </mesh>
       <mesh position={[0, 1.12, -1.55]}>
         <boxGeometry args={[0.22, 0.16, 0.08]} />

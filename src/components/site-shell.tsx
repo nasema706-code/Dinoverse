@@ -60,13 +60,23 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 </Link>
               </li>
               <li>
+                <Link to="/memes" className="text-muted hover:text-fg">
+                  Memes
+                </Link>
+              </li>
+              <li>
+                <Link to="/leaderboard" className="text-muted hover:text-fg">
+                  Floor Board
+                </Link>
+              </li>
+              <li>
                 <Link to="/worlds" className="text-muted hover:text-fg">
                   City
                 </Link>
               </li>
               <li>
                 <Link to="/explore" className="text-muted hover:text-fg">
-                  3D preview
+                  The Floor
                 </Link>
               </li>
             </ul>

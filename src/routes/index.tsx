@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { TOKEN } from "@/lib/token";
 import { useDinoverse } from "@/lib/store";
 import { useHydrated } from "@/lib/use-hydrated";
-import { WORLDS, isDistrictOpen } from "@/lib/worlds";
+import { WORLDS, isDistrictOpen, isDistrictWalkable } from "@/lib/worlds";
 import { useQuality } from "@/game/quality";
 
 const WorldPreview = lazy(() =>
@@ -39,11 +39,11 @@ function Home() {
             <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The city</p>
             <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <h2 className="max-w-xl min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-                Four floors. One listing. The Floor is a live preview.
+                Four floors. One listing. The Floor is walkable.
               </h2>
               <p className="max-w-md text-sm text-muted">
-                Look at HQ in 3D. Walking, Dino Mart, the Mall, and the Arena are still under
-                construction.
+                Walk HQ in first person. Dino Mart, the Mall, and the Arena stay under construction
+                while we build the next section.
               </p>
             </div>
 
@@ -73,7 +73,7 @@ function Home() {
                               : "absolute top-3 left-3 rounded-full border border-accent/40 bg-bg/80 px-2.5 py-1 text-[10px] font-medium tracking-wide text-accent uppercase"
                           }
                         >
-                          {open ? "3D preview" : "Under construction"}
+                          {open ? (isDistrictWalkable(w.id) ? "Walkable" : "3D preview") : "Under construction"}
                         </span>
                       </div>
                       <div className="rex-seam" />
@@ -82,7 +82,9 @@ function Home() {
                         <p className="mt-1 font-display text-xl font-medium">{w.name}</p>
                         <p className="mt-2 text-sm text-muted">
                           {open
-                            ? "Live 3D look. Walking is locked until HQ construction is done."
+                            ? isDistrictWalkable(w.id)
+                              ? "Walk the plaza, lobby, and tape. WASD on The Floor."
+                              : "Live 3D look. Walking is locked until this floor is done."
                             : "The plates are live. The 3D walk is still pouring."}
                         </p>
                       </div>
@@ -94,12 +96,15 @@ function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild size="lg" className="max-sm:w-full">
                 <Link to="/explore">
-                  Preview the floor
+                  Walk The Floor
                   <ArrowRight />
                 </Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="max-sm:w-full">
                 <Link to="/play">Play Mushroom Run</Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="max-sm:w-full">
+                <Link to="/memes">Make a meme</Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="max-sm:w-full">
                 <Link to="/worlds">See all districts</Link>
@@ -117,7 +122,7 @@ function Home() {
               </h2>
               <p className="max-w-md text-sm text-muted">
                 Rex holds the tape by default, or switch guides. The city stays. The voice
-                changes. Walking the floor opens when construction is done.
+                changes. Walk HQ now — the next floors open when they are honest.
               </p>
             </div>
             <div className="mt-8">
@@ -134,8 +139,7 @@ function Home() {
                 Rex Volt — Mushroom Run
               </h2>
               <p className="max-w-md text-sm text-muted">
-                A three-lane run on this site. Catch energy, collect the herd, dodge mushrooms.
-                High score saves while you keep {TOKEN.ticker} in the tape.
+                A three-lane run on this site. Catch energy, kit Rex. Dodge mushrooms.
               </p>
             </div>
             <div className="mt-8 overflow-hidden rounded-xl border border-border bg-black sm:grid sm:grid-cols-[16rem_1fr]">
@@ -149,13 +153,49 @@ function Home() {
                   <p className="font-display text-2xl font-medium tracking-tight">Mushroom Run</p>
                   <p className="mt-2 text-sm text-muted">
                     Three tracks with music. Jump rocks, thread tunnels, catch parachute bones for
-                    extra lives. Unlock Zen Stego, Elder Brachio, Flow Diplo, Quiet Anky, and Trike
-                    Volt.
+                    extra lives. Rex Volt is the only runner.
                   </p>
                 </div>
                 <Button asChild size="lg" className="max-sm:w-full sm:self-start">
                   <Link to="/play">
                     Play now
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-border px-4 py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Memes</p>
+            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <h2 className="max-w-xl min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+                Make the meme. The city already clocked in.
+              </h2>
+              <p className="max-w-md text-sm text-muted">
+                Classic tape text on Dinoverse plates. Download a PNG or sign in and post it to the
+                wall.
+              </p>
+            </div>
+            <div className="mt-8 overflow-hidden rounded-xl border border-border bg-black sm:grid sm:grid-cols-[16rem_1fr]">
+              <img
+                src="/life/corporate.jpg"
+                alt="Rex Volt crossing the Floor"
+                className="h-56 w-full object-cover object-center sm:h-full"
+              />
+              <div className="flex flex-col justify-between gap-4 bg-surface p-5 sm:p-6">
+                <div>
+                  <p className="font-display text-2xl font-medium tracking-tight">Dino Meme Maker</p>
+                  <p className="mt-2 text-sm text-muted">
+                    Fourteen city plates, your own upload, Impact captions, a {TOKEN.ticker} watermark,
+                    and a public wall with likes.
+                  </p>
+                </div>
+                <Button asChild size="lg" className="max-sm:w-full sm:self-start">
+                  <Link to="/memes">
+                    Open the maker
                     <ArrowRight />
                   </Link>
                 </Button>
@@ -220,11 +260,11 @@ function HomeFloorPreview() {
       )}
       <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="min-w-0 text-sm leading-relaxed text-muted">
-          The Floor at dusk — drag to orbit. Walking is still under construction.
+          The Floor at dusk — drag to orbit, or walk it in first person.
         </p>
         <Button asChild size="sm" className="max-sm:w-full">
           <Link to="/explore">
-            Open 3D preview
+            Walk The Floor
             <ArrowRight />
           </Link>
         </Button>

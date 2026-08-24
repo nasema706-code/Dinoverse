@@ -26,7 +26,7 @@ export const WORLDS: World[] = [
     summary:
       "A glass HQ. Sun on the tape, city in every window, and a raptor with a coffee walking the lobby like he owns the floor. He does.",
     stills: [
-      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Preview" },
+      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Lobby" },
       { src: "/life/finance.jpg", alt: "Boardroom briefing under a Dinoverse Financial Group hologram", caption: "The tape" },
       { src: "/life/analysis.jpg", alt: "Triceratops analyst at a glass desk of market holograms", caption: "Ops" },
       { src: "/life/office.jpg", alt: "Raptor developers at curved holographic code desks", caption: "Build" },
@@ -361,9 +361,9 @@ export function isDistrictOpen(id: WorldId): id is "forum" {
   return id === "forum";
 }
 
-/** First-person walking. Off while HQ is still under construction. */
-export function isDistrictWalkable(_id: WorldId): boolean {
-  return false;
+/** First-person walking. The Floor is open; other districts stay plates. */
+export function isDistrictWalkable(id: WorldId): boolean {
+  return id === "forum";
 }
 
 export const FLOOR_PREVIEW_LINE: Record<CharacterId, string> = {

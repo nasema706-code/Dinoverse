@@ -29,7 +29,7 @@ export function TokenSection() {
       <div className="mx-auto max-w-6xl">
         <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The listing</p>
         <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
+          <h2 className="min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
             {TOKEN.ticker} on {TOKEN.chain}
           </h2>
           <p className="max-w-md text-sm text-muted">
@@ -66,15 +66,15 @@ export function TokenSection() {
               {TOKENOMICS.map((row) => (
                 <div key={row.k} className="rounded-xl border border-border bg-surface p-5">
                   <p className="text-xs tracking-[0.18em] text-muted uppercase">{row.k}</p>
-                  <p className="mt-2 font-display text-2xl font-medium tabular-nums">{row.v}</p>
+                  <p className="mt-2 font-display text-2xl font-medium break-words tabular-nums">{row.v}</p>
                   <p className="mt-2 text-sm text-muted">{row.d}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-4 rounded-xl border border-border bg-surface p-5">
+            <div className="mt-4 rounded-xl border border-border bg-surface p-4 sm:p-5">
               <p className="text-xs tracking-[0.18em] text-muted uppercase">Contract</p>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <code className="font-mono text-xs break-all sm:text-sm">{TOKEN.ca}</code>
+                <code className="min-w-0 font-mono text-xs break-all sm:text-sm">{TOKEN.ca}</code>
                 <Button
                   type="button"
                   variant="secondary"
@@ -112,26 +112,26 @@ export function TokenSection() {
                 </li>
               ))}
             </ol>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button asChild className="max-sm:w-full">
                 <a href={TOKEN.buy} target="_blank" rel="noreferrer">
                   Buy {TOKEN.ticker}
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild variant="secondary">
+              <Button asChild variant="secondary" className="max-sm:w-full">
                 <a href={TOKEN.buy} target="_blank" rel="noreferrer">
                   Chart on DexScreener
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild>
+              <Button asChild className="max-sm:w-full">
                 <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
                   Telegram
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild>
+              <Button asChild className="max-sm:w-full">
                 <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
                   Follow on X
                   <ExternalLink />

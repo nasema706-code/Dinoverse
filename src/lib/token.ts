@@ -19,9 +19,9 @@ export const TOKEN = {
   ],
   x: "https://x.com/dinoversesol",
   telegram: "https://t.me/dinoverseonsol",
-  buy: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
-  jupiter: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
-  raydium: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
+  buy: "https://dexscreener.com/solana/d4ej9orc39h6yjyglhppamjtncxkn4ty6fyn3vnbkyqp",
+  jupiter: "https://jup.ag/swap/SOL-CUTuufCBBFA4AwvB3LNwtPqZvCDEg25L9PsKSkx3pump",
+  raydium: "https://dexscreener.com/solana/d4ej9orc39h6yjyglhppamjtncxkn4ty6fyn3vnbkyqp",
   phantom: "https://phantom.app/",
 } as const;
 
@@ -71,7 +71,7 @@ export const ROADMAP = [
     phase: "00",
     title: "Front-run the bone market",
     when: "Now",
-    body: "The fossil tokenization wave is coming. We built the city first. The Floor is a live 3D preview. Rex holds the cuff.",
+    body: "The fossil tokenization wave is coming. We built the city first. The Floor is walkable in 3D. Rex holds the cuff.",
   },
   {
     phase: "01",
@@ -82,8 +82,8 @@ export const ROADMAP = [
   {
     phase: "02",
     title: "Walk the floors",
-    when: "Next",
-    body: "First-person HQ, then Dino Mart, the Mega Mall, and the Arena. Utility is a place you can stand, not a slide.",
+    when: "Live · next",
+    body: "First-person HQ is open. Dino Mart, the Mega Mall, and the Arena are still pouring. Utility is a place you can stand, not a slide.",
   },
   {
     phase: "03",
@@ -116,6 +116,6 @@ export const FAQS = [
   },
   {
     q: "What can I do on the site now?",
-    a: "Orbit The Floor in 3D. Read the city plates. Walking HQ, Dino Mart, the Mall, and the Arena are under construction.",
+    a: "Walk The Floor in first person. Make and post memes. Run the mushroom track. Dino Mart, the Mall, and the Arena are under construction.",
   },
 ] as const;

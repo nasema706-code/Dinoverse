@@ -25,7 +25,7 @@ export function SheetContent({
         className={cn(
           "fixed z-50 bg-surface text-fg border-border shadow-xl focus:outline-none",
           side === "right" &&
-            "inset-y-0 right-0 h-full w-[min(100%,22rem)] border-l p-5 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+            "inset-y-0 right-0 h-full w-[min(100%,22rem)] max-w-[100vw] border-l p-4 pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-[max(1.25rem,env(safe-area-inset-bottom))] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
           side === "bottom" &&
             "inset-x-0 bottom-0 rounded-t-xl border-t p-5 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
           className,

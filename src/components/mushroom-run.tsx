@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import { ChevronsUp, Copy, ExternalLink, Volume2, VolumeX } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronsUp, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { TOKEN } from "@/lib/token";
 import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
+import { authEnabled } from "@/lib/auth/client";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { submitRunScore } from "@/lib/leaderboard";
 import { useQuality } from "@/game/quality";
 import { RunScene } from "@/game/mushroom-run/run-scene";
+import { armSfx, playSfx, type SfxKind } from "@/game/mushroom-run/sfx";
+import { CharacterTurntable } from "@/game/mushroom-run/character-turntable";
 import {
   MUTE_KEY,
   STAGE_KEY,
@@ -20,35 +25,154 @@ import {
 import {
   BEST_KEY,
   CHARACTERS,
-  COLLECTED_KEY,
+  MAX_LIVES,
+  addVault,
   createRunState,
   loadBest,
   loadCollected,
+  loadScout,
+  loadVault,
   resetRun,
   requestJump,
+  saveRunner,
+  saveScout,
   type CharId,
   type Collected,
 } from "@/game/mushroom-run/run-state";
+import {
+  ACCESSORIES,
+  DEFAULT_LOADOUT,
+  applyEquip,
+  buyAccessory,
+  isEquipped,
+  loadLoadout,
+  loadOwnedGear,
+  type AccId,
+  type Loadout,
+} from "@/game/mushroom-run/shop";
+
+const HOW_TO = [
+  { key: "A / D", label: "Switch lanes. Tap left or right on the tape." },
+  { key: "JUMP", label: "Space, W, swipe up. Rocks clip you if you stay low." },
+  { key: "TUNNEL", label: "Mint glow is the hole. Stay low — jump and you eat the lintel." },
+  { key: "RED CAP", label: "Crash. A graze still counts." },
+  { key: "ORB", label: "Green crystal = energy. Banked at crash. Spend it in the shop." },
+  { key: "CHIP", label: "Portrait chip. Flavor on the tape — Rex stays on the run." },
+  { key: "BONE", label: "Parachute catch = extra life. Max three." },
+] as const;
 
 type Screen = "start" | "play" | "over";
 
-function TokenRow({ collected }: { collected: Collected }) {
+function CharacterSelect({ loadout }: { loadout: Loadout }) {
   return (
-    <div className="my-3 flex flex-wrap justify-center gap-2">
-      {CHARACTERS.map((c) => (
-        <img
-          key={c.id}
-          src={c.img}
-          alt={c.name}
-          title={c.name}
-          className={cn(
-            "size-[42px] rounded-full border-2 object-cover object-top",
-            collected[c.id]
-              ? "border-accent opacity-100 shadow-[0_0_14px_rgba(62,207,142,0.45)]"
-              : "border-border opacity-35",
-          )}
-        />
-      ))}
+    <div className="mt-4 rounded-xl border border-white/15 bg-black/45 p-3 text-left">
+      <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Play as</p>
+      <p className="mt-1 text-[13px] leading-snug text-white/85">
+        Rex Volt only. Drag for a full 360°. Equipped kit shows here and on the tape.
+      </p>
+      <div
+        className="relative mt-3 h-[230px] cursor-grab touch-none overflow-hidden rounded-lg border border-white/12 bg-black pointer-events-auto active:cursor-grabbing"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerMove={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+      >
+        <CharacterTurntable loadout={loadout} />
+        <p className="pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[11px] tracking-[0.16em] text-white/75 uppercase">
+          Drag to rotate · 360°
+        </p>
+      </div>
+      <p className="mt-2.5 font-display text-lg leading-none text-white">Rex Volt</p>
+      <p className="mt-1 text-[12px] text-white/65">Floor Chief</p>
+      <p className="mt-2 text-[12px] font-medium text-accent">On the tape.</p>
+    </div>
+  );
+}
+
+function EnergyShop({
+  vault,
+  banked,
+  owned,
+  loadout,
+  onBuyGear,
+  onEquip,
+}: {
+  vault: number;
+  banked: number | null;
+  owned: AccId[];
+  loadout: Loadout;
+  onBuyGear: (id: AccId) => void;
+  onEquip: (id: AccId) => void;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-white/15 bg-black/45 p-3 text-left">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Energy shop</p>
+        <p className="font-mono text-[12px] text-white/80">{vault} vault</p>
+      </div>
+      <p className="mt-1 text-[13px] leading-snug text-white/85">
+        {banked && banked > 0 ? `This run banked +${banked}. ` : null}
+        Spend banked energy on Rex's kit. Nothing here touches the ticker.
+      </p>
+      <ul className="mt-2 space-y-1.5">
+        {ACCESSORIES.map((item) => {
+          const has = owned.includes(item.id);
+          const on = has && isEquipped(loadout, item.id);
+          const canBuy = !has && vault >= item.cost;
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={() => (has ? onEquip(item.id) : onBuyGear(item.id))}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left",
+                  on ? "border-accent/50 bg-accent/10" : "border-white/10 bg-black/20",
+                  !has && !canBuy ? "opacity-70" : null,
+                )}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium text-white">{item.name}</span>
+                  <span className="block text-[11px] text-white/60">{item.blurb}</span>
+                </span>
+                <span className={cn("shrink-0 font-mono text-[12px]", on ? "text-accent" : "text-white")}>
+                  {has ? (on ? "ON" : "EQUIP") : `${item.cost} E`}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function StagePicker({
+  stage,
+  onPick,
+}: {
+  stage: StageId;
+  onPick: (id: StageId) => void;
+}) {
+  return (
+    <div className="grid w-full grid-cols-3 gap-1.5">
+      {([1, 2, 3] as const).map((id) => {
+        const s = STAGES[id];
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onPick(id)}
+            className={cn(
+              "rounded-lg border px-1.5 py-2 text-center transition-colors",
+              stage === id
+                ? "border-accent bg-accent/20 text-accent"
+                : "border-white/20 bg-white/5 text-white/75 hover:border-white/40 hover:text-white",
+            )}
+          >
+            <p className="text-[10px] tracking-[0.14em] uppercase">Lv {id}</p>
+            <p className="font-display text-[12px] leading-tight font-medium">{s.name}</p>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -56,22 +180,32 @@ function TokenRow({ collected }: { collected: Collected }) {
 export function MushroomRun() {
   const hydrated = useHydrated();
   const { settings } = useQuality();
+  const { user } = useCurrentUserState();
   const wrapRef = useRef<HTMLDivElement>(null);
   const runRef = useRef(createRunState(1));
   const collectedRef = useRef<Collected>({});
   const bestRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const userRef = useRef(user);
+  userRef.current = user;
 
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<Screen>("start");
   const [stage, setStage] = useState<StageId>(1);
   const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
   const [score, setScore] = useState(0);
+  const [energy, setEnergy] = useState(0);
   const [lives, setLives] = useState(1);
   const [best, setBest] = useState(0);
-  const [collected, setCollected] = useState<Collected>({});
+  const [vault, setVault] = useState(0);
+  const [ownedGear, setOwnedGear] = useState<AccId[]>([]);
+  const [loadout, setLoadout] = useState<Loadout>(DEFAULT_LOADOUT);
+  const [banked, setBanked] = useState<number | null>(null);
   const [newBest, setNewBest] = useState(false);
   const [finalLine, setFinalLine] = useState("Score: 0");
+  const [boardNote, setBoardNote] = useState<string | null>(null);
 
   const theme = STAGES[stage];
 
@@ -82,12 +216,22 @@ export function MushroomRun() {
     const savedStage = loadStage();
     collectedRef.current = saved;
     bestRef.current = savedBest;
-    setCollected(saved);
+    setVault(loadVault());
+    setOwnedGear(loadOwnedGear());
+    setLoadout(loadLoadout());
+    saveRunner("rex");
     setBest(savedBest);
     setStage(savedStage);
     setMuted(loadMuted());
     setReady(true);
   }, [hydrated]);
+
+  useEffect(() => {
+    if (!authEnabled || !user || !ready) return;
+    const localBest = loadBest();
+    if (localBest <= 0) return;
+    void submitRunScore({ data: { score: localBest, stage: loadStage() } }).catch(() => {});
+  }, [user?.id, ready]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -132,6 +276,7 @@ export function MushroomRun() {
     setMuted((prev) => {
       const next = !prev;
       localStorage.setItem(MUTE_KEY, next ? "1" : "0");
+      if (!next) armSfx();
       return next;
     });
   };
@@ -142,10 +287,37 @@ export function MushroomRun() {
     setLives(nextLives);
   }, []);
 
-  const onUnlock = useCallback((id: CharId) => {
-    collectedRef.current = { ...collectedRef.current, [id]: true };
-    localStorage.setItem(COLLECTED_KEY, JSON.stringify(collectedRef.current));
-    setCollected({ ...collectedRef.current });
+  const onScout = useCallback((id: CharId) => {
+    if (collectedRef.current[id]) return;
+    const already = loadScout() === id;
+    saveScout(id);
+    if (already) return;
+    const char = CHARACTERS.find((c) => c.id === id);
+    toast(char ? `${char.name} on the tape. Rex still runs.` : "Chip collected.");
+  }, []);
+
+  const buyNextGear = (id: AccId) => {
+    const result = buyAccessory(vault, ownedGear, id);
+    if (!result.ok) {
+      if (result.reason === "energy") {
+        const cost = ACCESSORIES.find((a) => a.id === id)?.cost ?? 0;
+        toast(`Need ${Math.max(0, cost - vault)} more energy.`);
+      }
+      return;
+    }
+    setOwnedGear(result.owned);
+    setVault(result.vault);
+    setLoadout(result.loadout);
+    playSfx("token", mutedRef.current);
+    toast(`${ACCESSORIES.find((a) => a.id === id)?.name ?? "Kit"} equipped.`);
+  };
+
+  const equipGear = (id: AccId) => {
+    setLoadout(applyEquip(loadout, id));
+  };
+
+  const onSfx = useCallback((kinds: SfxKind[]) => {
+    for (const kind of kinds) playSfx(kind, mutedRef.current);
   }, []);
 
   const onCrash = useCallback(() => {
@@ -162,17 +334,40 @@ export function MushroomRun() {
     setScore(run.score);
     setEnergy(run.energy);
     setLives(run.lives);
-    setFinalLine(`Score: ${run.score}  •  Energy: ${run.energy}`);
-    setCollected({ ...collectedRef.current });
+    const nextVault = addVault(run.energy);
+    setVault(nextVault);
+    setBanked(run.energy);
+    setFinalLine(`Score: ${run.score}  •  Energy banked: +${run.energy}`);
     setScreen("over");
+    setBoardNote(null);
+    const snapshot = { score: run.score, stage: run.stage };
+    if (!authEnabled || !userRef.current) {
+      setBoardNote("Sign in to post this run on the Floor Board.");
+      return;
+    }
+    void submitRunScore({ data: snapshot })
+      .then((res) => {
+        setBoardNote(
+          res.improved
+            ? `Posted — rank ${res.rank} with ${res.best}.`
+            : `On the board — best ${res.best}, rank ${res.rank}.`,
+        );
+      })
+      .catch(() => {
+        setBoardNote("Could not reach the Floor Board.");
+      });
   }, []);
 
   const startGame = () => {
+    saveRunner("rex");
+    armSfx();
     resetRun(runRef.current, stage);
     setScore(0);
     setEnergy(0);
     setLives(1);
     setNewBest(false);
+    setBoardNote(null);
+    setBanked(null);
     setScreen("play");
   };
 
@@ -226,6 +421,7 @@ export function MushroomRun() {
         setMuted((prev) => {
           const next = !prev;
           localStorage.setItem(MUTE_KEY, next ? "1" : "0");
+          if (!next) armSfx();
           return next;
         });
       }
@@ -240,17 +436,12 @@ export function MushroomRun() {
     };
   }, [ready]);
 
-  const copyCa = () => {
-    void navigator.clipboard.writeText(TOKEN.ca);
-    toast("Contract copied");
-  };
-
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[440px]">
+    <div className="mx-auto w-full min-w-0 max-w-[520px]">
       <div
         ref={wrapRef}
         className={cn(
-          "relative h-[min(78dvh,780px)] min-h-[28rem] overflow-hidden rounded-xl border border-border shadow-[0_0_50px_rgba(62,207,142,0.16)] touch-none",
+          "relative h-[min(82dvh,820px)] min-h-[32rem] overflow-hidden rounded-xl border border-white/12 shadow-[0_0_60px_rgba(62,207,142,0.14)] touch-none",
           theme.wrap,
         )}
       >
@@ -258,7 +449,7 @@ export function MushroomRun() {
           <Canvas
             className="absolute inset-0 touch-none"
             shadows={false}
-            camera={{ fov: 48, position: [0, 1.72, 4.15], near: 0.1, far: 70 }}
+            camera={{ fov: 50, position: [0, 2.22, 5.35], near: 0.1, far: 96 }}
             dpr={settings.dpr}
             performance={{ min: 0.7 }}
             gl={{
@@ -267,7 +458,7 @@ export function MushroomRun() {
               stencil: false,
               alpha: false,
               toneMapping: THREE.ACESFilmicToneMapping,
-              toneMappingExposure: stage === 1 ? 1.28 : 1.12,
+              toneMappingExposure: stage === 1 ? 1.22 : 1.1,
             }}
           >
             <RunScene
@@ -277,7 +468,10 @@ export function MushroomRun() {
               stage={stage}
               onHud={onHud}
               onCrash={onCrash}
-              onUnlock={onUnlock}
+              onScout={onScout}
+              onSfx={onSfx}
+              loadout={loadout}
+              runnerId="rex"
             />
           </Canvas>
         ) : (
@@ -286,24 +480,34 @@ export function MushroomRun() {
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3">
           <div className={cn("rounded-[14px] border px-3 py-2 backdrop-blur-sm", theme.hud)}>
-            <p className="text-[10px] tracking-wide text-muted uppercase">Score</p>
+            <p className="text-[10px] tracking-[0.16em] text-white/60 uppercase">Score</p>
             <p className="font-display text-[22px] leading-none font-medium text-accent tabular-nums">
               {score}
             </p>
-            <p className="mt-0.5 text-[11px] text-subtle">
+            <p className="mt-0.5 text-[11px] text-white/70">
               Best <span className="text-accent">{best}</span>
             </p>
-            <p className="mt-1 text-[11px] tracking-wide text-accent">
-              {"🦴".repeat(Math.max(0, lives))}
-              <span className="ml-1 text-subtle">{lives} {lives === 1 ? "life" : "lives"}</span>
-            </p>
+            <p className="mt-1.5 text-[10px] tracking-[0.16em] text-white/55 uppercase">Lives</p>
+            <div className="mt-1 flex gap-1">
+              {Array.from({ length: MAX_LIVES }, (_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "h-1.5 w-4 rounded-full",
+                    i < lives ? "bg-accent shadow-[0_0_8px_rgba(62,207,142,0.7)]" : "bg-white/18",
+                  )}
+                />
+              ))}
+            </div>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className={cn("rounded-[14px] border px-3 py-2 text-right backdrop-blur-sm", theme.hud)}>
-              <p className="text-[10px] tracking-wide text-muted uppercase">Energy</p>
+              <p className="text-[10px] tracking-[0.16em] text-white/60 uppercase">Energy</p>
               <p className="font-display text-[22px] leading-none font-medium text-accent tabular-nums">
                 {energy}
               </p>
+              <p className="mt-1 text-[10px] tracking-[0.16em] text-white/55 uppercase">Vault</p>
+              <p className="font-display text-[15px] leading-none text-white tabular-nums">{vault}</p>
             </div>
             <button
               type="button"
@@ -312,7 +516,7 @@ export function MushroomRun() {
                 "pointer-events-auto grid size-10 place-items-center rounded-full border text-accent backdrop-blur-sm",
                 theme.hud,
               )}
-              aria-label={muted ? "Unmute music" : "Mute music"}
+              aria-label={muted ? "Unmute" : "Mute"}
             >
               {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
             </button>
@@ -335,121 +539,112 @@ export function MushroomRun() {
               <ChevronsUp className="size-5" />
               Jump
             </button>
-            <p className="pointer-events-none absolute bottom-3 left-0 right-0 z-10 text-center text-[11px] tracking-wide text-white/80 uppercase">
-              {theme.name}
+            <p className="pointer-events-none absolute bottom-3 left-0 right-0 z-10 text-center text-[11px] tracking-[0.18em] text-white/85 uppercase">
+              Rex Volt · {theme.name}
             </p>
           </>
         ) : null}
 
         {screen !== "play" ? (
-          <div
-            className={cn(
-              "absolute inset-0 z-20 flex flex-col items-center justify-center px-5 py-5 text-center backdrop-blur-[1px]",
-              theme.overlay,
-            )}
-          >
-            {screen === "start" ? (
-              <>
-                <h2 className="font-display text-[24px] font-medium tracking-tight text-accent">
-                  REX VOLT
-                </h2>
-                <p className="mt-1 mb-2 text-sm leading-relaxed text-muted">
-                  Mushroom Run
-                  <br />
-                  Pick a track · Jump rocks · Grab parachute bones
-                </p>
-                <div className="mb-2 grid w-full max-w-[280px] grid-cols-3 gap-1.5">
-                  {([1, 2, 3] as const).map((id) => {
-                    const s = STAGES[id];
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => pickStage(id)}
-                        className={cn(
-                          "rounded-lg border px-1.5 py-2 text-center transition-colors",
-                          stage === id
-                            ? "border-accent bg-accent/15 text-accent"
-                            : "border-white/15 bg-black/25 text-subtle hover:border-white/30",
-                        )}
-                      >
-                        <p className="text-[10px] tracking-wide uppercase">Lv {id}</p>
-                        <p className="font-display text-[12px] leading-tight font-medium">{s.name}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mb-1 max-w-[280px] text-[11px] text-subtle">{theme.tagline}</p>
-                <TokenRow collected={collected} />
-                <Button size="lg" className="mt-1 w-full max-w-[260px]" disabled={!ready} onClick={startGame}>
-                  {ready ? `Start ${theme.name}` : "Loading…"}
-                </Button>
-                <p className="mt-3 text-xs text-subtle">
-                  Tap left / right for lanes. Swipe up, Jump, Space, or W to jump. M mutes.
-                </p>
-                <p className="mt-3 max-w-[280px] text-[11px] break-all text-subtle">
-                  {TOKEN.ticker}
-                  <br />
-                  {TOKEN.ca}
-                </p>
-                <div className="mt-2 flex w-full max-w-[260px] flex-col gap-2">
-                  <Button type="button" variant="secondary" onClick={copyCa}>
-                    <Copy className="size-3.5" />
-                    Copy CA
+          <div className="absolute inset-0 z-20 overflow-y-auto bg-black/86">
+            <div className="mx-auto flex min-h-full max-w-[400px] flex-col justify-start px-5 py-6">
+              {screen === "start" ? (
+                <>
+                  <p className="text-[11px] font-medium tracking-[0.22em] text-accent uppercase">
+                    Floor tape
+                  </p>
+                  <h2 className="mt-1 font-display text-[28px] font-medium tracking-tight text-white">
+                    REX VOLT
+                  </h2>
+                  <p className="mt-1 text-sm text-white/80">
+                    Mushroom Run — bank energy, kit Rex, dodge mushrooms. Rex holds the tape.
+                  </p>
+
+                  <CharacterSelect loadout={loadout} />
+
+                  <div className="mt-4 rounded-xl border border-white/15 bg-black/45 p-3">
+                    <p className="text-[11px] font-medium tracking-[0.18em] text-white uppercase">
+                      How to play
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {HOW_TO.map((row) => (
+                        <li key={row.key} className="flex gap-2.5 text-left">
+                          <span className="mt-px w-[4.75rem] shrink-0 rounded-md bg-accent/15 px-1 py-0.5 text-center font-mono text-[10px] font-semibold tracking-wide text-accent">
+                            {row.key}
+                          </span>
+                          <span className="text-[13px] leading-snug text-white">{row.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <p className="mt-4 text-[11px] font-medium tracking-[0.16em] text-white/55 uppercase">
+                    Track
+                  </p>
+                  <div className="mt-1.5">
+                    <StagePicker stage={stage} onPick={pickStage} />
+                  </div>
+                  <p className="mt-2 text-[12px] leading-snug text-white/75">{theme.tagline}</p>
+                  <EnergyShop
+                    vault={vault}
+                    banked={null}
+                    owned={ownedGear}
+                    loadout={loadout}
+                    onBuyGear={buyNextGear}
+                    onEquip={equipGear}
+                  />
+                  <Button size="lg" className="mt-3 w-full" disabled={!ready} onClick={startGame}>
+                    {ready ? "Start as Rex Volt" : "Loading…"}
                   </Button>
-                  <Button asChild variant="secondary">
-                    <a href={TOKEN.buy} target="_blank" rel="noreferrer">
-                      Buy {TOKEN.ticker}
-                      <ExternalLink />
-                    </a>
+                </>
+              ) : (
+                <>
+                  <p className="text-[11px] font-medium tracking-[0.22em] text-white/55 uppercase">
+                    Off the tape
+                  </p>
+                  <h2 className="mt-1 font-display text-[28px] font-medium tracking-tight text-white">
+                    RUN OVER
+                  </h2>
+                  <p className="mt-2 font-display text-xl text-accent tabular-nums">{finalLine}</p>
+                  <p className="mt-1 text-sm text-white/75">{theme.name}</p>
+                  <EnergyShop
+                    vault={vault}
+                    banked={banked}
+                    owned={ownedGear}
+                    loadout={loadout}
+                    onBuyGear={buyNextGear}
+                    onEquip={equipGear}
+                  />
+                  <CharacterSelect loadout={loadout} />
+                  {newBest ? <p className="mt-2 text-sm font-medium text-accent">New personal best.</p> : null}
+                  {boardNote ? (
+                    <p className="mb-3 text-sm text-white/80">
+                      {boardNote}{" "}
+                      {authEnabled && !user ? (
+                        <Link
+                          to="/login"
+                          search={{ next: "/play" }}
+                          className="pointer-events-auto font-medium text-accent hover:underline"
+                        >
+                          Sign in
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/leaderboard"
+                          className="pointer-events-auto font-medium text-accent hover:underline"
+                        >
+                          Floor Board
+                        </Link>
+                      )}
+                    </p>
+                  ) : null}
+                  <StagePicker stage={stage} onPick={pickStage} />
+                  <Button size="lg" className="mt-3 w-full" onClick={startGame}>
+                    Run {theme.name}
                   </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="font-display text-[26px] font-medium tracking-tight text-accent">
-                  RUN OVER
-                </h2>
-                <p className="mt-1.5 text-sm text-muted">{finalLine}</p>
-                <p className="mt-1 text-xs text-subtle">{theme.name}</p>
-                <TokenRow collected={collected} />
-                {newBest ? <p className="mb-2 text-sm text-accent">New personal best!</p> : null}
-                <div className="mb-3 grid w-full max-w-[280px] grid-cols-3 gap-1.5">
-                  {([1, 2, 3] as const).map((id) => {
-                    const s = STAGES[id];
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => pickStage(id)}
-                        className={cn(
-                          "rounded-lg border px-1.5 py-2 text-center transition-colors",
-                          stage === id
-                            ? "border-accent bg-accent/15 text-accent"
-                            : "border-white/15 bg-black/25 text-subtle hover:border-white/30",
-                        )}
-                      >
-                        <p className="text-[10px] tracking-wide uppercase">Lv {id}</p>
-                        <p className="font-display text-[12px] leading-tight font-medium">{s.name}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-                <Button size="lg" className="w-full max-w-[260px]" onClick={startGame}>
-                  Run {theme.name}
-                </Button>
-                <Button asChild variant="secondary" className="mt-2 w-full max-w-[260px]">
-                  <a href={TOKEN.buy} target="_blank" rel="noreferrer">
-                    Buy {TOKEN.ticker}
-                    <ExternalLink />
-                  </a>
-                </Button>
-                <Button type="button" variant="ghost" className="mt-1 w-full max-w-[260px]" onClick={copyCa}>
-                  <Copy className="size-3.5" />
-                  Copy CA
-                </Button>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         ) : null}
       </div>

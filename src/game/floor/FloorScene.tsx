@@ -12,9 +12,11 @@ import {
   TickerRail,
   Box,
   CheapGlass,
+  TransmissionPane,
 } from "./kit";
 import { Atrium } from "./atrium";
 import { Cityscape, PlazaTiles } from "./cityscape";
+import { MarbleSlab } from "./env";
 import { useHudTextures } from "./hud-tex";
 import { ShardOrb } from "../shard-orb";
 import { useQuality } from "../quality";
@@ -46,22 +48,33 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <PlazaDressing hud={hud} />
       <FloorCrew />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -4]} receiveShadow={settings.shadows}>
-        <planeGeometry args={[36, 40]} />
-        <meshStandardMaterial
-          color="#9aa3ad"
-          roughness={0.16}
-          metalness={0.3}
-          map={hud?.marble ?? undefined}
-        />
-      </mesh>
+      <MarbleSlab
+        position={[0, 0.02, -4]}
+        args={[36, 40]}
+        map={hud?.marble ?? null}
+        reflect={settings.atriumDetail}
+      />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4, 0.03, 2.4]}>
         <circleGeometry args={[5.2, 28]} />
-        <meshStandardMaterial color="#7a828c" roughness={0.12} metalness={0.38} />
+        <meshPhysicalMaterial
+          color="#7a828c"
+          roughness={0.1}
+          metalness={0.48}
+          envMapIntensity={1.25}
+          clearcoat={0.4}
+          clearcoatRoughness={0.22}
+        />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, 10.2]}>
         <planeGeometry args={[10, 7]} />
-        <meshStandardMaterial color="#c5ccd4" roughness={0.1} metalness={0.42} />
+        <meshPhysicalMaterial
+          color="#c5ccd4"
+          roughness={0.08}
+          metalness={0.5}
+          envMapIntensity={1.2}
+          clearcoat={0.45}
+          clearcoatRoughness={0.2}
+        />
       </mesh>
       <Box position={[0, 12.42, -1]} size={[36.4, 0.08, 32]} color="#d8e4ee" metal={0.15} rough={0.35} />
       {settings.atriumDetail ? (
@@ -99,6 +112,8 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <GlassFacade position={[maxX, 6.1, -20]} size={[0.12, 12.2, 24]} />
 
       <GlassCurtain position={[0, 6.1, 16.12]} size={[5.2, 11.4]} />
+      <TransmissionPane position={[-0.64, 0.9, 16.22]} rotation={[0, 0.16, 0]} />
+      <TransmissionPane position={[0.64, 0.9, 16.22]} rotation={[0, -0.16, 0]} />
 
       {hud ? (
         <>

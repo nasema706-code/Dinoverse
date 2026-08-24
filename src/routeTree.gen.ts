@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MemesRouteImport } from './routes/memes'
 import { Route as PlayRouteImport } from './routes/play'
 import { Route as WorldsRouteImport } from './routes/worlds'
+import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -32,9 +35,19 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemesRoute = MemesRouteImport.update({
+  id: '/memes',
+  path: '/memes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayRoute = PlayRouteImport.update({
@@ -47,6 +60,11 @@ const WorldsRoute = WorldsRouteImport.update({
   path: '/worlds',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -57,18 +75,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -76,26 +100,50 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/crew' | '/explore' | '/login' | '/play' | '/worlds' | '/api/auth/$'
+    | '/'
+    | '/crew'
+    | '/explore'
+    | '/leaderboard'
+    | '/login'
+    | '/memes'
+    | '/play'
+    | '/worlds'
+    | '/admin/members'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/crew' | '/explore' | '/login' | '/play' | '/worlds' | '/api/auth/$'
+    | '/'
+    | '/crew'
+    | '/explore'
+    | '/leaderboard'
+    | '/login'
+    | '/memes'
+    | '/play'
+    | '/worlds'
+    | '/admin/members'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/crew'
     | '/explore'
+    | '/leaderboard'
     | '/login'
+    | '/memes'
     | '/play'
     | '/worlds'
+    | '/admin/members'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -103,9 +151,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  MemesRoute: typeof MemesRoute
   PlayRoute: typeof PlayRoute
   WorldsRoute: typeof WorldsRoute
+  AdminMembersRoute: typeof AdminMembersRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -132,11 +183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memes': {
+      id: '/memes'
+      path: '/memes'
+      fullPath: '/memes'
+      preLoaderRoute: typeof MemesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/play': {
@@ -153,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorldsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -167,9 +239,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
+  LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  MemesRoute: MemesRoute,
   PlayRoute: PlayRoute,
   WorldsRoute: WorldsRoute,
+  AdminMembersRoute: AdminMembersRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

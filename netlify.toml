@@ -5,4 +5,11 @@
 [build.environment]
   NODE_VERSION = "22"
   NETLIFY = "true"
-  VITE_AUTH_ENABLED = "false"
+  BETTER_AUTH_URL = "https://the-dinoverse.netlify.app"
+
+[[headers]]
+  for = "/intro.mp4"
+  [headers.values]
+    Content-Type = "video/mp4"
+    Accept-Ranges = "bytes"
+    Cache-Control = "public, max-age=3600"
