@@ -27,6 +27,76 @@ function groundY(district: District3D, x: number, z: number, prevY = 0) {
   return floorHeightAt(x, z, prevY);
 }
 
+function isTouchFloor() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(max-width: 639px)").matches ||
+    navigator.maxTouchPoints > 0
+  );
+}
+
+function FloorStick({
+  label,
+  onChange,
+}: {
+  label: string;
+  onChange: (x: number, y: number) => void;
+}) {
+  const [knob, setKnob] = useState({ x: 0, y: 0 });
+
+  const apply = (el: HTMLDivElement, clientX: number, clientY: number) => {
+    const rect = el.getBoundingClientRect();
+    let x = (clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+    let y = (clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+    const len = Math.hypot(x, y);
+    if (len > 1) {
+      x /= len;
+      y /= len;
+    }
+    if (len < 0.16) {
+      x = 0;
+      y = 0;
+    }
+    setKnob({ x, y });
+    onChange(x, y);
+  };
+
+  const reset = () => {
+    setKnob({ x: 0, y: 0 });
+    onChange(0, 0);
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <p className="text-[10px] font-medium tracking-[0.16em] text-white/80 uppercase">{label}</p>
+      <div
+        className="relative size-[6.75rem] touch-none rounded-full border-2 border-white/40 bg-black/65 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+        onPointerDown={(e: PointerEvent<HTMLDivElement>) => {
+          e.stopPropagation();
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          apply(e.currentTarget, e.clientX, e.clientY);
+        }}
+        onPointerMove={(e: PointerEvent<HTMLDivElement>) => {
+          if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+          apply(e.currentTarget, e.clientX, e.clientY);
+        }}
+        onPointerUp={reset}
+        onPointerCancel={reset}
+      >
+        <div
+          className="pointer-events-none absolute inset-[18%] rounded-full border border-white/10"
+        />
+        <div
+          className="pointer-events-none absolute top-1/2 left-1/2 size-11 rounded-full border border-gold/50 bg-gold/85"
+          style={{ transform: `translate(calc(-50% + ${knob.x * 28}px), calc(-50% + ${knob.y * 28}px))` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 type Prompt =
   | { kind: "npc" | "inspect" | "portal" | "sit" | "stand" | "lift"; id: string; label: string }
   | null;
@@ -53,6 +123,7 @@ const SPRINT_MUL = 1.42;
 const ACCEL = 26;
 const DECEL = 18;
 const LOOK_SENS = 0.00205;
+const LOOK_STICK = 2.05;
 const KEY_LOOK = 2.05;
 const HEIGHT_DAMP = 20;
 const REST_PITCH = -0.06;
@@ -263,6 +334,7 @@ function Player({
   blocked,
   look,
   stick,
+  lookStick,
   zoom,
   keysRef,
   session,
@@ -274,6 +346,7 @@ function Player({
   blocked: boolean;
   look: React.MutableRefObject<Look>;
   stick: React.MutableRefObject<Stick>;
+  lookStick: React.MutableRefObject<Stick>;
   zoom: React.MutableRefObject<Zoom>;
   keysRef: React.MutableRefObject<Set<string>>;
   session: number;
@@ -395,6 +468,12 @@ function Player({
     look.current.dy = 0;
     yaw.current -= lookDx * LOOK_SENS;
     pitch.current = THREE.MathUtils.clamp(pitch.current - lookDy * LOOK_SENS, -1.15, 1.15);
+    yaw.current -= lookStick.current.x * LOOK_STICK * dt;
+    pitch.current = THREE.MathUtils.clamp(
+      pitch.current - lookStick.current.y * LOOK_STICK * dt,
+      -1.15,
+      1.15,
+    );
 
     let keyYaw = 0;
     let keyPitch = 0;
@@ -655,6 +734,7 @@ export function Explorer3D({
 
   const look = useRef<Look>({ dx: 0, dy: 0 });
   const stick = useRef<Stick>({ x: 0, y: 0 });
+  const lookStick = useRef<Stick>({ x: 0, y: 0 });
   const zoom = useRef<Zoom>({ wheel: 0 });
   const keysRef = useRef(new Set<string>());
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -664,9 +744,14 @@ export function Explorer3D({
     setStarted(true);
     window.setTimeout(() => {
       wrapRef.current?.focus();
-      requestLock();
+      if (!isTouchFloor()) requestLock();
     }, 0);
   };
+
+  useEffect(() => {
+    document.documentElement.classList.add("floor-lock");
+    return () => document.documentElement.classList.remove("floor-lock");
+  }, []);
 
   const onHud = (nextLine: string, nextPrompt: Prompt) => {
     if (nextLine) {
@@ -779,6 +864,7 @@ export function Explorer3D({
   }, [started, dialog]);
 
   const requestLock = () => {
+    if (isTouchFloor()) return;
     const el = wrapRef.current;
     if (!el) return;
     const req = el.requestPointerLock as typeof el.requestPointerLock & {
@@ -794,54 +880,15 @@ export function Explorer3D({
     }
   };
 
-  const onStickStart = (e: PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    moveStick(e);
-  };
-  const moveStick = (e: PointerEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    let x = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
-    let y = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-    const len = Math.hypot(x, y);
-    if (len > 1) {
-      x /= len;
-      y /= len;
-    }
-    if (len < 0.18) {
-      x = 0;
-      y = 0;
-    }
-    stick.current = { x, y };
-  };
-  const onStickEnd = () => {
-    stick.current = { x: 0, y: 0 };
-  };
-
-  const lookPad = useRef({ id: -1, x: 0, y: 0 });
-  const onLookStart = (e: PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    lookPad.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-  };
-  const onLookMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (lookPad.current.id !== e.pointerId) return;
-    look.current.dx += e.clientX - lookPad.current.x;
-    look.current.dy += e.clientY - lookPad.current.y;
-    lookPad.current.x = e.clientX;
-    lookPad.current.y = e.clientY;
-  };
-  const onLookEnd = () => {
-    lookPad.current.id = -1;
-  };
-
   return (
-    <div className="relative isolate min-h-[calc(100dvh-4rem)] bg-bg">
+    <div className="relative isolate h-full min-h-0 bg-bg">
       <div
         ref={wrapRef}
         tabIndex={0}
         aria-label="The Floor explorer. WASD to walk, arrows to look, plus and minus to zoom."
         className="absolute inset-0 overflow-hidden touch-none outline-none"
         onClick={() => {
-          if (started && !locked && !dialog) requestLock();
+          if (started && !locked && !dialog && !isTouchFloor()) requestLock();
         }}
       >
         <Canvas
@@ -868,6 +915,7 @@ export function Explorer3D({
             blocked={!!dialog}
             look={look}
             stick={stick}
+            lookStick={lookStick}
             zoom={zoom}
             keysRef={keysRef}
             session={session}
@@ -898,13 +946,13 @@ export function Explorer3D({
             </div>
           </div>
           {line ? (
-            <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-xl border border-border bg-bg/85 p-3 backdrop-blur-sm">
+            <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-xl border border-border bg-bg/85 p-2.5 backdrop-blur-sm max-sm:max-w-[min(100%,18rem)] sm:p-3">
               <img
                 src={character.portrait}
                 alt=""
-                className="size-10 rounded-md object-cover object-[center_18%]"
+                className="size-9 rounded-md object-cover object-[center_18%] sm:size-10"
               />
-              <p className="text-sm leading-relaxed">{line}</p>
+              <p className="text-xs leading-relaxed sm:text-sm">{line}</p>
             </div>
           ) : null}
         </div>
@@ -924,40 +972,47 @@ export function Explorer3D({
         </div>
       </div>
 
-      <div className="absolute bottom-24 left-4 sm:hidden">
-        <div
-          className="relative size-28 rounded-full border border-border bg-bg/50 touch-none"
-          onPointerDown={onStickStart}
-          onPointerMove={moveStick}
-          onPointerUp={onStickEnd}
-          onPointerCancel={onStickEnd}
-        >
-          <div className="pointer-events-none absolute inset-8 rounded-full bg-surface-2" />
+      {started ? (
+      <div className="pointer-events-none absolute inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 flex items-end justify-between gap-3 px-3 sm:hidden">
+        <div className="pointer-events-auto">
+          <FloorStick
+            label="Walk"
+            onChange={(x, y) => {
+              stick.current = { x, y };
+            }}
+          />
+        </div>
+        <div className="pointer-events-auto flex flex-col items-center gap-2">
+          <button
+            type="button"
+            disabled={!prompt}
+            className="grid min-h-12 min-w-[4.75rem] place-items-center rounded-full border-2 border-gold/70 bg-gold px-3 py-2 font-display text-xs text-gold-fg disabled:opacity-40"
+            onClick={() =>
+              (window as Window & { __exploreInteract?: () => void }).__exploreInteract?.()
+            }
+          >
+            {prompt?.label ?? "Use"}
+          </button>
+          <FloorStick
+            label="Look"
+            onChange={(x, y) => {
+              lookStick.current = { x, y };
+            }}
+          />
         </div>
       </div>
-      <div
-        className="absolute right-4 bottom-24 h-36 w-36 touch-none sm:hidden"
-        onPointerDown={onLookStart}
-        onPointerMove={onLookMove}
-        onPointerUp={onLookEnd}
-        onPointerCancel={onLookEnd}
-      />
-      <button
-        type="button"
-        className="absolute right-4 bottom-24 grid size-16 place-items-center rounded-full border border-border bg-accent text-accent-fg font-display text-sm sm:hidden"
-        onClick={() =>
-          (window as Window & { __exploreInteract?: () => void }).__exploreInteract?.()
-        }
-      >
-        E
-      </button>
+      ) : null}
 
       {!started ? (
-        <div className="absolute inset-0 z-10 grid place-items-center bg-bg/80 p-6">
-          <div className="w-full max-w-md rounded-xl border border-border bg-surface p-6">
+        <div className="absolute inset-0 z-10 grid place-items-center overflow-y-auto bg-bg/80 p-4 sm:p-6">
+          <div className="w-full max-w-md rounded-xl border border-border bg-surface p-5 sm:p-6">
             <p className="text-xs tracking-wide text-muted uppercase">{character.name}</p>
             <h1 className="mt-2 font-display text-2xl font-medium">The Floor is open</h1>
-            <p className="mt-3 text-sm text-muted">
+            <p className="mt-3 text-sm leading-relaxed text-muted sm:hidden">
+              Left stick walks. Right stick looks. Tap Use when something glows. The header takes you
+              back out.
+            </p>
+            <p className="mt-3 hidden text-sm text-muted sm:block">
               Full keyboard: WASD walk, arrows (or Q) to look, +/− or Page Up/Down to zoom, Shift
               sprint, E / Enter / Space to use, R to reset the view, H for the key list. Mouse look
               still works after you click in.
@@ -1015,7 +1070,7 @@ export function Explorer3D({
         <div className="absolute inset-x-0 top-20 z-10 mx-auto w-[min(100%-1.5rem,28rem)] rounded-xl border border-accent/40 bg-surface p-4">
           <p className="font-display text-lg">Bag secured</p>
           <p className="mt-1 text-sm text-muted">
-            You walked The Floor as {character.name} and checked the other three. The listing window is watching.
+            You walked The Floor as {character.name} and checked the other three. The Floor is still open. The other districts are still pouring.
           </p>
         </div>
       ) : null}

@@ -9,7 +9,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { TOKEN } from "@/lib/token";
 import { cn } from "@/lib/utils";
 
-const NEXT_PATHS = ["/", "/play", "/memes", "/leaderboard", "/crew", "/worlds", "/explore", "/admin/members"] as const;
+const NEXT_PATHS = ["/", "/play", "/memes", "/leaderboard", "/crew", "/worlds", "/explore", "/transparency", "/fossil-tokenisation", "/admin/members"] as const;
 type NextPath = (typeof NEXT_PATHS)[number];
 
 function safeNextPath(value: unknown): NextPath {
@@ -20,9 +20,11 @@ function safeNextPath(value: unknown): NextPath {
 }
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): { next: NextPath } => ({
-    next: safeNextPath(search.next),
-  }),
+  validateSearch: (search: Record<string, unknown>): { next: NextPath; forgot?: boolean } => {
+    const next = safeNextPath(search.next);
+    const forgot = search.forgot === true || search.forgot === "true" || search.forgot === "1";
+    return forgot ? { next, forgot: true } : { next };
+  },
   component: LoginPage,
 });
 
@@ -30,9 +32,9 @@ const fieldClass =
   "mt-1.5 h-11 w-full rounded-sm border border-border bg-surface px-3 text-sm text-fg outline-none transition-colors placeholder:text-subtle focus:border-accent";
 
 function LoginPage() {
-  const { next } = Route.useSearch();
+  const { next, forgot } = Route.useSearch();
   const { user } = useCurrentUserState();
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up" | "forgot">(forgot ? "forgot" : "in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,6 +75,25 @@ function LoginPage() {
     }
   };
 
+  const submitForgot = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: resetError } = await authClient.requestPasswordReset({
+        email: email.trim(),
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (resetError) throw new Error(resetError.message ?? "Could not start a password reset.");
+      toast("If that email has a Floor pass, a reset link is on the way.");
+      setMode("in");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start a password reset.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submitOAuth = async (providerId: string) => {
     setError(null);
     setBusy(true);
@@ -100,7 +121,11 @@ function LoginPage() {
 
         <div className="mt-8 rounded-xl border border-border bg-surface/80 p-5">
           {emailAndPasswordEnabled ? (
-            <form className="space-y-3" onSubmit={(event) => void submitEmail(event)}>
+            <form
+              className="space-y-3"
+              onSubmit={(event) => void (mode === "forgot" ? submitForgot(event) : submitEmail(event))}
+            >
+              {mode !== "forgot" ? (
               <div className="flex rounded-sm border border-border p-0.5">
                 <button
                   type="button"
@@ -123,6 +148,12 @@ function LoginPage() {
                   Create account
                 </button>
               </div>
+              ) : (
+                <p className="text-sm text-muted">
+                  Enter the email on the account. We send a reset link if it exists — we will not
+                  say whether it does.
+                </p>
+              )}
               {mode === "up" ? (
                 <label className="block text-xs tracking-wide text-muted uppercase">
                   Runner name
@@ -148,6 +179,7 @@ function LoginPage() {
                   placeholder="you@floor.city"
                 />
               </label>
+              {mode !== "forgot" ? (
               <label className="block text-xs tracking-wide text-muted uppercase">
                 Password
                 <input
@@ -161,13 +193,45 @@ function LoginPage() {
                   placeholder="At least 8 characters"
                 />
               </label>
+              ) : null}
+              {mode === "in" ? (
+                <button
+                  type="button"
+                  className="text-xs text-accent hover:underline"
+                  onClick={() => {
+                    setError(null);
+                    setMode("forgot");
+                  }}
+                >
+                  Forgot password?
+                </button>
+              ) : null}
               {error ? <p className="text-sm text-danger">{error}</p> : null}
               <Button type="submit" className="w-full" disabled={busy}>
-                {busy ? "Working…" : mode === "up" ? "Create account" : "Sign in"}
+                {busy
+                  ? "Working…"
+                  : mode === "up"
+                    ? "Create account"
+                    : mode === "forgot"
+                      ? "Send reset link"
+                      : "Sign in"}
               </Button>
+              {mode === "forgot" ? (
+                <button
+                  type="button"
+                  className="w-full text-center text-xs text-muted hover:text-fg"
+                  onClick={() => {
+                    setError(null);
+                    setMode("in");
+                  }}
+                >
+                  Back to sign in
+                </button>
+              ) : null}
             </form>
           ) : null}
 
+          {mode !== "forgot" ? (
           <div className={cn("space-y-2", emailAndPasswordEnabled ? "mt-4" : "")}>
             {emailAndPasswordEnabled ? (
               <p className="text-center text-[11px] tracking-wide text-subtle uppercase">Or continue with</p>
@@ -185,6 +249,7 @@ function LoginPage() {
               </Button>
             ))}
           </div>
+          ) : null}
         </div>
 
         <p className="mt-6 text-sm text-subtle">

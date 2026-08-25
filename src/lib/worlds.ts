@@ -47,7 +47,7 @@ export const WORLDS: World[] = [
         },
         {
           title: "The tape",
-          body: "In the glass boardroom he walks the Q2 hologram like a meal. $DINOVERSE is not a pitch here. It is the operating system of a city that already clocks in.",
+          body: "In the glass boardroom he walks the Q2 hologram like a meal. $DINOVERSE is not a pitch here. It is wallpaper on a city that already clocks in.",
         },
         {
           title: "Plaza lift",
@@ -75,7 +75,7 @@ export const WORLDS: World[] = [
         },
         {
           title: "Names on badges",
-          body: "She reads the visitor board like a reservation list. If the city feeds its analysts, the listing will hold.",
+          body: "She reads the visitor board like a reservation list. If the city feeds its analysts, the close still happens on a full stomach.",
         },
         {
           title: "After the open",
@@ -268,7 +268,7 @@ export const WORLDS: World[] = [
     cinematic: "/life/football.jpg",
     map: "/worlds/crater/map.jpg",
     summary:
-      "Dino Fit, Jurassic Coliseum, the track at dusk. The city trains like the listing depends on it.",
+      "Dino Fit, Jurassic Coliseum, the track at dusk. The city trains. Sweat, lights, a cup.",
     stills: [
       { src: "/life/gym.jpg", alt: "T-rex deadlifting at Dino Fit", caption: "Fit" },
       { src: "/life/fitness-street.jpg", alt: "Friends walking between Dino Mac and Dino Fit", caption: "Block" },

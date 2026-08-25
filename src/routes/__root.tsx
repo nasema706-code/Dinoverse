@@ -21,7 +21,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Bones are about to list. $DINOVERSE is the Solana token that built the dinosaur city first — front-run the fossil meta, then walk The Floor.",
+          "The bones went on-chain. The dinosaurs never left. $DINOVERSE is an independent Solana meme universe inspired by dinosaur fossil tokenisation. Not affiliated with Jurassic Finance, Solana, the Solana Foundation or Anatoly Yakovenko.",
       },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#0b0d0b" },
@@ -31,7 +31,7 @@ export const Route = createRootRoute({
       {
         property: "og:description",
         content:
-          "Fossil tokenization is coming. $DINOVERSE front-runs the dinosaur meta with a 3D city on Solana.",
+          "Independent Solana meme universe inspired by dinosaur fossil tokenisation. Not affiliated with Jurassic Finance, Solana, the Solana Foundation or Anatoly Yakovenko.",
       },
       ...(ogImage
         ? [
@@ -42,7 +42,7 @@ export const Route = createRootRoute({
         : []),
     ],
     links: [
-      { rel: "preload", as: "video", href: "/intro.mp4?v=4", type: "video/mp4" },
+      { rel: "preload", as: "video", href: "/intro.mp4?v=5", type: "video/mp4" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },

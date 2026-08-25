@@ -1,17 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { authEnabled, signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
-export function AccountChip() {
+export function AccountChip({ className }: { className?: string }) {
   const { user, isPending } = useCurrentUserState();
   if (!authEnabled) return null;
   if (isPending) {
-    return <span className="hidden text-xs text-subtle sm:inline">…</span>;
+    return <span className={cn("hidden text-xs text-subtle lg:inline", className)}>…</span>;
   }
   if (!user) {
     return (
-      <Button asChild size="sm" variant="secondary">
+      <Button asChild size="sm" variant="secondary" className={cn("hidden lg:inline-flex", className)}>
         <Link to="/login" search={{ next: "/play" }}>
           Sign in
         </Link>
@@ -20,7 +21,7 @@ export function AccountChip() {
   }
   const label = user.displayName ?? user.primaryEmail ?? "Runner";
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("hidden items-center gap-2 lg:flex", className)}>
       <Link
         to="/leaderboard"
         className="flex max-w-[9rem] items-center gap-2 rounded-full border border-border bg-surface py-1 pr-3 pl-1"

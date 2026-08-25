@@ -1,26 +1,97 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Download, Heart, ImagePlus, Loader2, Upload } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { Copy, Download, Dices, RotateCcw, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { authEnabled } from "@/lib/auth/client";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import {
-  listMemes,
+  DEFAULT_BOTTOM_Y,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_TOP_Y,
+  MAX_FONT_SIZE,
   MEME_CANVAS,
+  MEME_LOOKS,
+  MEME_PACKS,
   MEME_TEMPLATES,
-  postMeme,
-  toggleMemeLike,
-  type MemeCard,
-  type MemeView,
+  MIN_FONT_SIZE,
+  memeFileName,
+  shareCopy,
+  templatesInPack,
+  type MemeLook,
+  type MemePack,
+  type MemeTemplate,
 } from "@/lib/memes";
 import { TOKEN } from "@/lib/token";
 import { cn } from "@/lib/utils";
 
-const FONT = '900 {size}px Anton, Impact, "Arial Black", sans-serif';
+type LookStyle = {
+  family: string;
+  weight: string;
+  uppercase: boolean;
+  fill: string;
+  stroke: string | null;
+  sizeMul: number;
+};
+
+const LOOK_STYLE: Record<MemeLook, LookStyle> = {
+  impact: {
+    family: 'Anton, Impact, "Arial Black", sans-serif',
+    weight: "900",
+    uppercase: true,
+    fill: "#fff",
+    stroke: "#000",
+    sizeMul: 1,
+  },
+  tape: {
+    family: '"IBM Plex Mono", ui-monospace, monospace',
+    weight: "500",
+    uppercase: true,
+    fill: "#3ecf8e",
+    stroke: "#0b0b0c",
+    sizeMul: 0.72,
+  },
+  quiet: {
+    family: "Figtree, ui-sans-serif, sans-serif",
+    weight: "500",
+    uppercase: false,
+    fill: "#ece8df",
+    stroke: null,
+    sizeMul: 0.58,
+  },
+};
+
+type DrawOpts = {
+  imageUrl: string;
+  topText: string;
+  bottomText: string;
+  topSize: number;
+  bottomSize: number;
+  look: MemeLook;
+  topY: number;
+  bottomY: number;
+  ghostTop: string;
+  ghostBottom: string;
+  showGhost: boolean;
+};
+
+const plateCache = new Map<string, Promise<HTMLImageElement>>();
+
+function loadPlate(url: string): Promise<HTMLImageElement> {
+  const hit = plateCache.get(url);
+  if (hit) return hit;
+  const pending = new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => {
+      plateCache.delete(url);
+      reject(new Error("Could not load that plate."));
+    };
+    img.src = url;
+  });
+  plateCache.set(url, pending);
+  return pending;
+}
 
 function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const words = text.toUpperCase().split(/\s+/).filter(Boolean);
+  const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = "";
   for (const word of words) {
@@ -36,58 +107,104 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return lines;
 }
 
-function paintCaption(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  size: number,
-  fromBottom: boolean,
-) {
-  if (!text.trim()) return;
-  ctx.font = FONT.replace("{size}", String(size));
-  ctx.textAlign = "center";
-  ctx.lineJoin = "round";
-  ctx.miterLimit = 2;
-  ctx.lineWidth = Math.max(2, size / 12);
-  ctx.strokeStyle = "#000";
-  ctx.fillStyle = "#fff";
-  const lines = wrapLines(ctx, text, maxWidth);
-  const leading = size * 1.1;
-  lines.forEach((line, i) => {
-    const yy = fromBottom ? y - (lines.length - 1 - i) * leading : y + i * leading;
-    ctx.strokeText(line, x, yy);
-    ctx.fillText(line, x, yy);
-  });
+function fontFor(look: LookStyle, px: number): string {
+  return `${look.weight} ${px}px ${look.family}`;
 }
 
-async function drawMeme(
-  canvas: HTMLCanvasElement,
-  imageUrl: string,
-  topText: string,
-  bottomText: string,
-  fontSize: number,
-  watermark: boolean,
+function captionPx(size: number, look: LookStyle): number {
+  return (size / 100) * MEME_CANVAS * look.sizeMul;
+}
+
+function clampFont(size: number): number {
+  return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Math.round(size * 10) / 10));
+}
+
+type CaptionBox = { x: number; y: number; w: number; h: number; cx: number; cy: number };
+
+function captionBox(
+  raw: string,
+  yNorm: number,
+  size: number,
+  lookId: MemeLook,
+  fromBottom: boolean,
+): CaptionBox {
+  const look = LOOK_STYLE[lookId];
+  const px = captionPx(size, look);
+  let maxW = px * 8;
+  let lineCount = Math.max(1, raw.trim().split(/\s+/).length > 6 ? 2 : 1);
+  if (typeof document !== "undefined") {
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (ctx) {
+      const text = (look.uppercase ? raw.toUpperCase() : raw).trim() || " ";
+      ctx.font = fontFor(look, px);
+      const lines = wrapLines(ctx, text, MEME_CANVAS * 0.92);
+      lineCount = Math.max(1, lines.length);
+      maxW = Math.max(px * 2.2, ...lines.map((line) => ctx.measureText(line).width));
+    }
+  }
+  const leading = px * 1.1;
+  const blockH = lineCount * leading;
+  const pad = Math.max(22, px * 0.4);
+  const yFirst = yNorm * MEME_CANVAS;
+  const firstBaseline = fromBottom ? yFirst - (lineCount - 1) * leading : yFirst;
+  const top = firstBaseline - px * 0.82;
+  const w = Math.min(MEME_CANVAS - 16, maxW + pad * 2);
+  const h = blockH + pad;
+  const x = Math.max(8, (MEME_CANVAS - w) / 2);
+  const y = Math.max(8, Math.min(MEME_CANVAS - h - 8, top - pad * 0.35));
+  return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
+}
+
+function paintCaption(
+  ctx: CanvasRenderingContext2D,
+  raw: string,
+  yFirst: number,
+  px: number,
+  look: LookStyle,
+  ghost: boolean,
+  fromBottom: boolean,
 ) {
+  if (!raw.trim()) return;
+  const text = look.uppercase ? raw.toUpperCase() : raw;
+  ctx.font = fontFor(look, px);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  ctx.globalAlpha = ghost ? 0.42 : 1;
+  ctx.lineWidth = Math.max(2, px / 12);
+  ctx.strokeStyle = look.stroke ?? "transparent";
+  ctx.fillStyle = look.fill;
+  const lines = wrapLines(ctx, text, MEME_CANVAS * 0.92);
+  const leading = px * 1.1;
+  lines.forEach((line, i) => {
+    const yy = fromBottom ? yFirst - (lines.length - 1 - i) * leading : yFirst + i * leading;
+    if (look.stroke) ctx.strokeText(line, MEME_CANVAS / 2, yy);
+    ctx.fillText(line, MEME_CANVAS / 2, yy);
+  });
+  ctx.globalAlpha = 1;
+}
+
+async function loadFont(look: LookStyle, px: number) {
+  try {
+    await document.fonts.load(fontFor(look, px));
+  } catch {
+    /* system fallback */
+  }
+}
+
+async function drawMeme(canvas: HTMLCanvasElement, opts: DrawOpts, cancelled?: { current: boolean }) {
   const size = MEME_CANVAS;
-  canvas.width = size;
-  canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-
-  try {
-    await document.fonts.load(`900 ${Math.round((fontSize / 100) * size)}px Anton`);
-  } catch {
-    /* Impact / Arial Black still work */
-  }
-
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Could not load that plate."));
-    img.src = imageUrl;
-  });
+  const look = LOOK_STYLE[opts.look];
+  const topPx = captionPx(opts.topSize, look);
+  const bottomPx = captionPx(opts.bottomSize, look);
+  const image = await loadPlate(opts.imageUrl);
+  await Promise.all([loadFont(look, topPx), loadFont(look, bottomPx)]);
+  if (cancelled?.current) return;
+  canvas.width = size;
+  canvas.height = size;
 
   ctx.fillStyle = "#111";
   ctx.fillRect(0, 0, size, size);
@@ -96,175 +213,465 @@ async function drawMeme(
   const dh = image.height * scale;
   ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh);
 
-  const px = (fontSize / 100) * size;
-  paintCaption(ctx, topText, size / 2, px * 1.05, size * 0.92, px, false);
-  paintCaption(ctx, bottomText, size / 2, size - px * 0.35, size * 0.92, px, true);
+  const top = opts.topText.trim();
+  const bottom = opts.bottomText.trim();
+  paintCaption(
+    ctx,
+    top || (opts.showGhost ? opts.ghostTop : ""),
+    opts.topY * size,
+    topPx,
+    look,
+    !top && opts.showGhost,
+    false,
+  );
+  paintCaption(
+    ctx,
+    bottom || (opts.showGhost ? opts.ghostBottom : ""),
+    opts.bottomY * size,
+    bottomPx,
+    look,
+    !bottom && opts.showGhost,
+    true,
+  );
 
-  if (watermark) {
-    ctx.font = `600 ${size * 0.026}px Figtree, system-ui, sans-serif`;
-    ctx.textAlign = "right";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(0,0,0,0.6)";
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.strokeText(TOKEN.ticker, size - 18, size - 16);
-    ctx.fillText(TOKEN.ticker, size - 18, size - 16);
-  }
+  ctx.font = `600 ${size * 0.026}px Figtree, system-ui, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(0,0,0,0.6)";
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.strokeText(TOKEN.ticker, size - 18, size - 16);
+  ctx.fillText(TOKEN.ticker, size - 18, size - 16);
 }
 
-function canvasToJpeg(canvas: HTMLCanvasElement): string {
-  let quality = 0.82;
-  let data = canvas.toDataURL("image/jpeg", quality);
-  while (data.length > 780_000 && quality > 0.45) {
-    quality -= 0.08;
-    data = canvas.toDataURL("image/jpeg", quality);
-  }
-  return data;
+function canvasPoint(el: HTMLElement, event: PointerEvent | ReactPointerEvent | WheelEvent) {
+  const box = el.getBoundingClientRect();
+  return {
+    x: ((event.clientX - box.left) / box.width) * MEME_CANVAS,
+    y: ((event.clientY - box.top) / box.height) * MEME_CANVAS,
+  };
 }
+
+type CaptionWhich = "top" | "bottom";
+
+type Gesture =
+  | { kind: "move"; which: CaptionWhich; startY: number }
+  | { kind: "resize"; which: CaptionWhich; originSize: number; originDist: number; cx: number; cy: number }
+  | { kind: "pinch"; which: CaptionWhich; originSize: number; originDist: number };
 
 function MemeCanvas({
   canvasRef,
-  imageUrl,
-  topText,
-  bottomText,
-  fontSize,
-  watermark,
+  opts,
+  onMoveY,
+  onResize,
+  onTap,
 }: {
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  imageUrl: string;
-  topText: string;
-  bottomText: string;
-  fontSize: number;
-  watermark: boolean;
+  opts: DrawOpts;
+  onMoveY: (which: CaptionWhich, y: number) => void;
+  onResize: (which: CaptionWhich, size: number) => void;
+  onTap: (which: CaptionWhich) => void;
 }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<Gesture | null>(null);
+  const moved = useRef(false);
+  const [active, setActive] = useState<CaptionWhich>("top");
+
+  const topText = opts.topText.trim() || (opts.showGhost ? opts.ghostTop : "");
+  const bottomText = opts.bottomText.trim() || (opts.showGhost ? opts.ghostBottom : "");
+  const topBox = captionBox(topText, opts.topY, opts.topSize, opts.look, false);
+  const bottomBox = captionBox(bottomText, opts.bottomY, opts.bottomSize, opts.look, true);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !imageUrl) return;
-    let cancelled = false;
-    void drawMeme(canvas, imageUrl, topText, bottomText, fontSize, watermark).catch((err) => {
-      if (!cancelled) toast(err instanceof Error ? err.message : "Could not paint that plate.");
+    if (!canvas || !opts.imageUrl) return;
+    const token = { current: false };
+    void drawMeme(canvas, opts, token).catch((err) => {
+      if (!token.current) toast(err instanceof Error ? err.message : "Could not paint that plate.");
     });
     return () => {
-      cancelled = true;
+      token.current = true;
     };
-  }, [canvasRef, imageUrl, topText, bottomText, fontSize, watermark]);
+  }, [canvasRef, opts]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="aspect-square w-full rounded-xl border border-border bg-surface-2 shadow-2xl"
-    />
-  );
-}
+  const sizeOf = (which: CaptionWhich) => (which === "top" ? opts.topSize : opts.bottomSize);
 
-function TemplatePicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (url: string) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploadUrl, setUploadUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const extras = uploadUrl ? [...MEME_TEMPLATES, { id: "upload", name: "Your upload", url: uploadUrl }] : MEME_TEMPLATES;
-
-  const onFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast("Drop a picture, not a fossil file.");
-      return;
-    }
-    setUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const next = typeof reader.result === "string" ? reader.result : "";
-      if (uploadUrl?.startsWith("blob:")) URL.revokeObjectURL(uploadUrl);
-      setUploadUrl(next);
-      onChange(next);
-      setUploading(false);
-    };
-    reader.onerror = () => {
-      setUploading(false);
-      toast("Could not read that image.");
-    };
-    reader.readAsDataURL(file);
+  const whichAt = (x: number, y: number): CaptionWhich => {
+    const inTop =
+      x >= topBox.x && x <= topBox.x + topBox.w && y >= topBox.y && y <= topBox.y + topBox.h;
+    const inBottom =
+      x >= bottomBox.x &&
+      x <= bottomBox.x + bottomBox.w &&
+      y >= bottomBox.y &&
+      y <= bottomBox.y + bottomBox.h;
+    if (inTop && !inBottom) return "top";
+    if (inBottom && !inTop) return "bottom";
+    const topDist = Math.hypot(x - topBox.cx, y - topBox.cy);
+    const bottomDist = Math.hypot(x - bottomBox.cx, y - bottomBox.cy);
+    return topDist <= bottomDist ? "top" : "bottom";
   };
 
+  const boxOf = (which: CaptionWhich) => (which === "top" ? topBox : bottomBox);
+
+  const startResize = (which: CaptionWhich, x: number, y: number) => {
+    const box = boxOf(which);
+    const dist = Math.hypot(x - box.cx, y - box.cy) || 1;
+    gesture.current = {
+      kind: "resize",
+      which,
+      originSize: sizeOf(which),
+      originDist: dist,
+      cx: box.cx,
+      cy: box.cy,
+    };
+    setActive(which);
+  };
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.setPointerCapture(event.pointerId);
+    const pt = canvasPoint(stage, event);
+    pointers.current.set(event.pointerId, pt);
+    moved.current = false;
+    const which = whichAt(pt.x, pt.y);
+    setActive(which);
+
+    if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const midY = (a.y + b.y) / 2;
+      const midX = (a.x + b.x) / 2;
+      const pinchWhich = whichAt(midX, midY);
+      gesture.current = {
+        kind: "pinch",
+        which: pinchWhich,
+        originSize: sizeOf(pinchWhich),
+        originDist: dist,
+      };
+      setActive(pinchWhich);
+      return;
+    }
+
+    const handle = (event.target as HTMLElement).closest("[data-handle]") as HTMLElement | null;
+    const handleWhich = handle?.dataset.which;
+    if (handleWhich === "top" || handleWhich === "bottom") {
+      startResize(handleWhich, pt.x, pt.y);
+      return;
+    }
+    gesture.current = { kind: "move", which, startY: pt.y };
+  };
+
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const stage = stageRef.current;
+    const activeGesture = gesture.current;
+    if (!stage || !activeGesture) return;
+    const pt = canvasPoint(stage, event);
+    pointers.current.set(event.pointerId, pt);
+
+    if (activeGesture.kind === "pinch" && pointers.current.size >= 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      onResize(activeGesture.which, clampFont(activeGesture.originSize * (dist / activeGesture.originDist)));
+      moved.current = true;
+      return;
+    }
+
+    if (activeGesture.kind === "resize") {
+      const dist = Math.hypot(pt.x - activeGesture.cx, pt.y - activeGesture.cy) || 1;
+      if (Math.abs(dist - activeGesture.originDist) > 6) moved.current = true;
+      onResize(activeGesture.which, clampFont(activeGesture.originSize * (dist / activeGesture.originDist)));
+      return;
+    }
+
+    if (activeGesture.kind !== "move") return;
+    if (Math.abs(pt.y - activeGesture.startY) > 8) moved.current = true;
+    if (!moved.current) return;
+    const next = Math.min(0.94, Math.max(0.08, pt.y / MEME_CANVAS));
+    onMoveY(activeGesture.which, next);
+  };
+
+  const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const activeGesture = gesture.current;
+    pointers.current.delete(event.pointerId);
+    if (pointers.current.size === 0) {
+      if (activeGesture && !moved.current && activeGesture.kind === "move") {
+        onTap(activeGesture.which);
+      }
+      gesture.current = null;
+    }
+  };
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const pt = canvasPoint(stage, event);
+      const which = whichAt(pt.x, pt.y);
+      setActive(which);
+      const delta = event.deltaY > 0 ? -0.45 : 0.45;
+      onResize(which, clampFont(sizeOf(which) + delta));
+    };
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", onWheel);
+  });
+
+  const frame = (which: CaptionWhich, box: CaptionBox) => (
+    <div
+      className={cn(
+        "absolute border border-dashed",
+        active === which ? "border-accent/80" : "border-white/25 hover:border-white/50",
+      )}
+      style={{
+        left: `${(box.x / MEME_CANVAS) * 100}%`,
+        top: `${(box.y / MEME_CANVAS) * 100}%`,
+        width: `${(box.w / MEME_CANVAS) * 100}%`,
+        height: `${(box.h / MEME_CANVAS) * 100}%`,
+      }}
+    >
+      {(["nw", "ne", "sw", "se"] as const).map((corner) => (
+        <span
+          key={corner}
+          data-handle={corner}
+          data-which={which}
+          role="button"
+          aria-label={`Resize ${which} caption`}
+          className={cn(
+            "absolute z-10 size-4 rounded-[2px] border border-bg bg-accent before:absolute before:-inset-3 before:content-['']",
+            corner === "nw" && "-top-2 -left-2 cursor-nwse-resize",
+            corner === "ne" && "-top-2 -right-2 cursor-nesw-resize",
+            corner === "sw" && "-bottom-2 -left-2 cursor-nesw-resize",
+            corner === "se" && "-bottom-2 -right-2 cursor-nwse-resize",
+          )}
+        />
+      ))}
+    </div>
+  );
+
   return (
-    <div>
-      <p className="text-[11px] font-medium tracking-[0.2em] text-muted uppercase">Template</p>
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {extras.map((plate) => (
-          <button
-            key={plate.id}
-            type="button"
-            title={plate.name}
-            onClick={() => onChange(plate.url)}
-            className={cn(
-              "relative aspect-square overflow-hidden rounded-lg border transition-all",
-              value === plate.url
-                ? "border-accent ring-2 ring-accent/40"
-                : "border-border hover:border-muted",
-            )}
-          >
-            <img src={plate.url} alt={plate.name} className="size-full object-cover" />
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-muted hover:border-muted hover:text-fg"
-        >
-          {uploading ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
-          <span className="text-[10px] tracking-wide uppercase">Upload</span>
-        </button>
+    <div
+      ref={stageRef}
+      className="relative touch-none"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endPointer}
+      onPointerCancel={endPointer}
+    >
+      <canvas
+        ref={canvasRef}
+        role="img"
+        aria-label="Meme preview. Drag a caption to move it. Drag a corner or pinch to resize."
+        className="aspect-square w-full rounded-xl border border-border bg-surface-2 shadow-2xl"
+      />
+      <div className="absolute inset-0 cursor-grab active:cursor-grabbing">
+        {frame("top", topBox)}
+        {frame("bottom", bottomBox)}
       </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
     </div>
   );
 }
 
-function Generator() {
+function ActionBar({
+  className,
+  onDownload,
+  onCopy,
+  onShareX,
+}: {
+  className?: string;
+  onDownload: () => void;
+  onCopy: () => void;
+  onShareX: () => void;
+}) {
+  return (
+    <div className={cn("grid grid-cols-3 gap-2", className)}>
+      <Button type="button" variant="secondary" className="h-12" onClick={onCopy}>
+        <Copy />
+        Copy
+      </Button>
+      <Button
+        type="button"
+        variant="secondary"
+        className="h-12"
+        aria-label="Share to X"
+        title="Share to X"
+        onClick={onShareX}
+      >
+        <Share2 />
+        Share
+      </Button>
+      <Button type="button" className="h-12" onClick={onDownload}>
+        <Download />
+        Download
+      </Button>
+    </div>
+  );
+}
+
+export function MemeMaker() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const navigate = useNavigate();
-  const { user } = useCurrentUserState();
-  const [imageUrl, setImageUrl] = useState(MEME_TEMPLATES[0].url);
+  const exportRef = useRef<HTMLCanvasElement>(null);
+  const exportBlob = useRef<Blob | null>(null);
+  const topInput = useRef<HTMLInputElement>(null);
+  const bottomInput = useRef<HTMLInputElement>(null);
+  const [pack, setPack] = useState<"all" | MemePack>(MEME_TEMPLATES[0].pack);
+  const [plate, setPlate] = useState<MemeTemplate>(MEME_TEMPLATES[0]);
+  const [packOpen, setPackOpen] = useState(false);
   const [topText, setTopText] = useState("");
   const [bottomText, setBottomText] = useState("");
-  const [fontSize, setFontSize] = useState(8);
-  const [watermark, setWatermark] = useState(true);
-  const [posting, setPosting] = useState(false);
+  const [look, setLook] = useState<MemeLook>("impact");
+  const [topY, setTopY] = useState(DEFAULT_TOP_Y);
+  const [bottomY, setBottomY] = useState(DEFAULT_BOTTOM_Y);
+  const [topSize, setTopSize] = useState(DEFAULT_FONT_SIZE);
+  const [bottomSize, setBottomSize] = useState(DEFAULT_FONT_SIZE);
+
+  const plates = templatesInPack(pack);
+  const ghost = plate.captions[0] ?? { top: "Bones are about to list", bottom: "We built the city first" };
+
+  useEffect(() => {
+    const next = templatesInPack(pack);
+    if (next.some((item) => item.id === plate.id)) return;
+    setPlate(next[0] ?? MEME_TEMPLATES[0]);
+  }, [pack, plate.id]);
+
+  const opts = useMemo<DrawOpts>(
+    () => ({
+      imageUrl: plate.url,
+      topText,
+      bottomText,
+      topSize,
+      bottomSize,
+      look,
+      topY,
+      bottomY,
+      ghostTop: ghost.top,
+      ghostBottom: ghost.bottom,
+      showGhost: true,
+    }),
+    [plate.url, topText, bottomText, topSize, bottomSize, look, topY, bottomY, ghost.top, ghost.bottom],
+  );
+
+  const pickPlate = (next: MemeTemplate) => {
+    setPlate(next);
+    setPack(next.pack);
+  };
+
+  const applyCaption = (caption: { top: string; bottom: string }) => {
+    setTopText(caption.top);
+    setBottomText(caption.bottom);
+  };
+
+  const surprise = () => {
+    const pool = plates.length ? plates : MEME_TEMPLATES;
+    const next = pool[Math.floor(Math.random() * pool.length)] ?? MEME_TEMPLATES[0];
+    const caption = next.captions[Math.floor(Math.random() * next.captions.length)] ?? next.captions[0];
+    const looks: MemeLook[] = ["impact", "tape", "quiet"];
+    setPlate(next);
+    if (caption) applyCaption(caption);
+    setLook(looks[Math.floor(Math.random() * looks.length)] ?? "impact");
+    setTopY(DEFAULT_TOP_Y);
+    setBottomY(DEFAULT_BOTTOM_Y);
+    setTopSize(DEFAULT_FONT_SIZE);
+    setBottomSize(DEFAULT_FONT_SIZE);
+  };
+
+  const reset = () => {
+    setPack(MEME_TEMPLATES[0].pack);
+    setPackOpen(false);
+    setPlate(MEME_TEMPLATES[0]);
+    setTopText("");
+    setBottomText("");
+    setLook("impact");
+    setTopY(DEFAULT_TOP_Y);
+    setBottomY(DEFAULT_BOTTOM_Y);
+    setTopSize(DEFAULT_FONT_SIZE);
+    setBottomSize(DEFAULT_FONT_SIZE);
+  };
+
+  useEffect(() => {
+    const canvas = exportRef.current;
+    if (!canvas) return;
+    const token = { current: false };
+    void drawMeme(canvas, { ...opts, showGhost: false }, token).then(() => {
+      if (token.current) return;
+      canvas.toBlob((blob) => {
+        if (!token.current) exportBlob.current = blob;
+      }, "image/png");
+    });
+    return () => {
+      token.current = true;
+    };
+  }, [opts]);
+
+  const copyFallback = async () => {
+    try {
+      await navigator.clipboard.writeText(shareCopy(topText, bottomText));
+      toast("Caption copied. Image copy needs a secure browser.");
+    } catch {
+      toast("Could not copy. Download the PNG instead.");
+    }
+  };
 
   const download = () => {
-    const canvas = canvasRef.current;
+    const canvas = exportRef.current;
     if (!canvas) return;
     const a = document.createElement("a");
-    a.download = "dinoverse-meme.png";
+    a.download = memeFileName(plate, topText);
     a.href = canvas.toDataURL("image/png");
     a.click();
   };
 
-  const post = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setPosting(true);
-    try {
-      await postMeme({
-        data: {
-          topText,
-          bottomText,
-          imageData: canvasToJpeg(canvas),
-        },
-      });
-      toast("Posted to the wall.");
-      void navigate({ to: "/memes", search: { view: "wall" } });
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Could not post that meme.");
-    } finally {
-      setPosting(false);
+  const copyImage = () => {
+    const blob = exportBlob.current;
+    if (!blob) {
+      void copyFallback();
+      return;
     }
+    void navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(
+      () => toast("Copied"),
+      () => void copyFallback(),
+    );
+  };
+
+  const shareX = () => {
+    const text = shareCopy(topText, bottomText);
+    const blob = exportBlob.current;
+    const file = blob ? new File([blob], memeFileName(plate, topText), { type: "image/png" }) : null;
+    if (file && navigator.share && navigator.canShare?.({ files: [file] })) {
+      void navigator.share({ files: [file], text, title: TOKEN.ticker }).catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+      });
+      return;
+    }
+    if (blob) {
+      void navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(
+        () => toast("Image copied. Paste it into the post."),
+        () => {},
+      );
+    }
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
+
+  const onMoveY = (which: CaptionWhich, y: number) => {
+    if (which === "top") {
+      setTopY(Math.min(y, bottomY - 0.12));
+    } else {
+      setBottomY(Math.max(y, topY + 0.12));
+    }
+  };
+
+  const onResize = (which: CaptionWhich, size: number) => {
+    if (which === "top") setTopSize(size);
+    else setBottomSize(size);
   };
 
   const field =
@@ -272,39 +679,166 @@ function Generator() {
 
   return (
     <div>
-      <div className="max-w-2xl">
-        <p className="text-xs font-medium tracking-[0.18em] text-accent uppercase">
-          Solana · {TOKEN.ticker}
-        </p>
-        <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
-          Make the meme. The city already clocked in.
-        </h1>
-        <p className="mt-4 max-w-xl text-muted">
-          Pick a Dinoverse plate or drop your own image, write the tape, download, and post it to
-          the wall.
-        </p>
+      <div className="flex max-w-3xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">
+            Solana · {TOKEN.ticker}
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
+            Make the meme. The city already clocked in.
+          </h1>
+          <p className="mt-4 max-w-xl text-muted">
+            Tap a caption, drag the lines, pull a corner to resize, or surprise yourself. Plates
+            only — no uploads.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" onClick={surprise}>
+            <Dices />
+            Surprise me
+          </Button>
+          <Button type="button" variant="ghost" onClick={reset}>
+            <RotateCcw />
+            Reset
+          </Button>
+        </div>
       </div>
 
       <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1.15fr_1fr]">
-        <MemeCanvas
-          canvasRef={canvasRef}
-          imageUrl={imageUrl}
-          topText={topText}
-          bottomText={bottomText}
-          fontSize={fontSize}
-          watermark={watermark}
-        />
+        <div>
+          <MemeCanvas
+            canvasRef={canvasRef}
+            opts={opts}
+            onMoveY={onMoveY}
+            onResize={onResize}
+            onTap={(which) => {
+              const el = which === "top" ? topInput.current : bottomInput.current;
+              el?.focus();
+              el?.select();
+            }}
+          />
+          <canvas ref={exportRef} className="hidden" aria-hidden width={MEME_CANVAS} height={MEME_CANVAS} />
+          <p className="mt-2 text-xs text-subtle">
+            Drag a line to move it. Drag a corner or pinch to resize. Tap a line to edit. Ghost text
+            is a preview — it will not download.
+          </p>
+          <ActionBar
+            className="sticky bottom-3 z-20 mt-4 rounded-xl border border-border bg-bg/95 p-2 backdrop-blur lg:hidden"
+            onDownload={download}
+            onCopy={copyImage}
+            onShareX={shareX}
+          />
+        </div>
 
-        <div className="space-y-7 rounded-xl border border-border bg-surface p-5 sm:p-6">
-          <TemplatePicker value={imageUrl} onChange={setImageUrl} />
+        <div className="space-y-6 rounded-xl border border-border bg-surface p-5 pb-24 sm:p-6 lg:pb-6">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-medium tracking-[0.2em] text-muted uppercase">Template</p>
+              <button
+                type="button"
+                onClick={() => setPackOpen((open) => !open)}
+                className="text-xs font-medium text-gold hover:underline"
+              >
+                {packOpen ? "Hide packs" : "Browse packs"}
+              </button>
+            </div>
+            {packOpen ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {MEME_PACKS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setPack(item.id)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium",
+                      pack === item.id
+                        ? "border-gold bg-gold text-gold-fg"
+                        : "border-border text-muted hover:text-fg",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {plates.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  title={item.name}
+                  onClick={() => pickPlate(item)}
+                  className={cn(
+                    "relative aspect-square overflow-hidden rounded-lg border text-left transition-all",
+                    plate.id === item.id
+                      ? "border-gold ring-2 ring-gold/40"
+                      : "border-border hover:border-muted",
+                  )}
+                >
+                  <img src={item.url} alt={item.label} className="size-full object-cover" />
+                  <span className="absolute inset-x-0 bottom-0 truncate bg-bg/80 px-1.5 py-1 text-[10px] font-medium text-fg">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-medium tracking-[0.2em] text-muted uppercase">One-tap captions</p>
+            <div className="mt-2 flex flex-col gap-1.5">
+              {plate.captions.map((caption) => {
+                const active = topText === caption.top && bottomText === caption.bottom;
+                return (
+                  <button
+                    key={`${caption.top}-${caption.bottom}`}
+                    type="button"
+                    onClick={() => applyCaption(caption)}
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-left text-sm leading-snug",
+                      active
+                        ? "border-gold bg-gold/10 text-fg"
+                        : "border-border text-muted hover:border-muted hover:text-fg",
+                    )}
+                  >
+                    <span className="block font-medium text-fg">{caption.top}</span>
+                    <span>{caption.bottom}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-medium tracking-[0.2em] text-muted uppercase">Look</p>
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              {MEME_LOOKS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setLook(item.id)}
+                  className={cn(
+                    "rounded-lg border px-2 py-2 text-center",
+                    look === item.id
+                      ? "border-gold bg-gold/10"
+                      : "border-border hover:border-muted",
+                  )}
+                >
+                  <span className="block text-sm font-medium text-fg">{item.label}</span>
+                  <span className="text-[10px] text-subtle">{item.hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <label className="block text-xs tracking-wide text-muted uppercase">
             Top text
             <input
+              ref={topInput}
               className={field}
               value={topText}
               maxLength={140}
-              placeholder="Bones are about to list"
+              placeholder={ghost.top}
               onChange={(event) => setTopText(event.target.value)}
             />
           </label>
@@ -312,214 +846,27 @@ function Generator() {
           <label className="block text-xs tracking-wide text-muted uppercase">
             Bottom text
             <input
+              ref={bottomInput}
               className={field}
               value={bottomText}
               maxLength={140}
-              placeholder="We built the city first"
+              placeholder={ghost.bottom}
               onChange={(event) => setBottomText(event.target.value)}
             />
           </label>
 
-          <label className="block text-xs tracking-wide text-muted uppercase">
-            Font size · {fontSize}
-            <input
-              type="range"
-              min={4}
-              max={14}
-              step={1}
-              value={fontSize}
-              onChange={(event) => setFontSize(Number(event.target.value))}
-              className="mt-3 w-full accent-[var(--color-accent)]"
-            />
-          </label>
+          <p className="text-xs text-subtle">
+            Every meme is stamped {TOKEN.ticker} in the corner.
+          </p>
 
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-sm text-muted">{TOKEN.ticker} watermark</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={watermark}
-              onClick={() => setWatermark((v) => !v)}
-              className={cn(
-                "relative h-7 w-12 rounded-full border transition-colors",
-                watermark ? "border-accent bg-accent" : "border-border bg-surface-2",
-              )}
-            >
-              <span
-                className={cn(
-                  "absolute top-0.5 size-5 rounded-full bg-bg transition-transform",
-                  watermark ? "left-6" : "left-0.5",
-                )}
-              />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <Button type="button" variant="secondary" className="h-12" onClick={download}>
-              <Download />
-              Download
-            </Button>
-            {authEnabled && !user ? (
-              <Button asChild className="h-12">
-                <Link to="/login" search={{ next: "/memes" }}>
-                  <Upload />
-                  Sign in to post
-                </Link>
-              </Button>
-            ) : (
-              <Button type="button" className="h-12" disabled={posting} onClick={() => void post()}>
-                {posting ? <Loader2 className="animate-spin" /> : <Upload />}
-                Post to wall
-              </Button>
-            )}
-          </div>
+          <ActionBar
+            className="hidden lg:grid"
+            onDownload={download}
+            onCopy={copyImage}
+            onShareX={shareX}
+          />
         </div>
       </div>
     </div>
   );
-}
-
-function Wall({ sort, empty }: { sort: "new" | "likes" | "mine"; empty: string }) {
-  const { user } = useCurrentUserState();
-  const [rows, setRows] = useState<MemeCard[] | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-
-  const load = useCallback(() => {
-    void listMemes({ data: { sort } })
-      .then(setRows)
-      .catch(() => setRows([]));
-  }, [sort]);
-
-  useEffect(() => {
-    setRows(null);
-    load();
-  }, [load]);
-
-  const like = async (id: string) => {
-    if (!user) {
-      toast("Sign in to like a meme.");
-      return;
-    }
-    setBusyId(id);
-    try {
-      const next = await toggleMemeLike({ data: { id } });
-      setRows((prev) =>
-        prev
-          ? prev.map((row) => (row.id === id ? { ...row, likes: next.likes, liked: next.liked } : row))
-          : prev,
-      );
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Could not like that.");
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  if (!rows) {
-    return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="size-6 animate-spin text-muted" />
-      </div>
-    );
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div className="py-24 text-center text-muted">
-        {empty}{" "}
-        {sort !== "new" ? (
-          <Link to="/memes" search={{ view: "generator" }} className="text-accent hover:underline">
-            Make one
-          </Link>
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
-    <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {rows.map((meme) => (
-        <li
-          key={meme.id}
-          className="overflow-hidden rounded-xl border border-border bg-surface transition-colors hover:border-muted"
-        >
-          <a href={meme.imageData} target="_blank" rel="noreferrer">
-            <img
-              src={meme.imageData}
-              alt={meme.topText || "Dinoverse meme"}
-              className="aspect-square w-full object-cover"
-            />
-          </a>
-          <div className="flex items-center justify-between gap-3 px-3 py-2.5">
-            <span className="truncate text-xs text-muted">by {meme.creatorName}</span>
-            <button
-              type="button"
-              disabled={busyId === meme.id}
-              onClick={() => void like(meme.id)}
-              className={cn(
-                "inline-flex items-center gap-1 text-xs transition-colors",
-                meme.liked ? "text-accent" : "text-muted hover:text-fg",
-              )}
-            >
-              {busyId === meme.id ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Heart className={cn("size-3.5", meme.liked && "fill-accent")} />
-              )}
-              {meme.likes}
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export function MemeMaker({ view }: { view: MemeView }) {
-  const { user } = useCurrentUserState();
-
-  if (view === "wall") {
-    return (
-      <div>
-        <h1 className="font-display text-3xl font-medium tracking-tight sm:text-5xl">The Meme Wall</h1>
-        <p className="mt-3 text-muted">Everything the floor has posted.</p>
-        <Wall sort="new" empty="Nothing on the wall yet." />
-      </div>
-    );
-  }
-
-  if (view === "trending") {
-    return (
-      <div>
-        <h1 className="font-display text-3xl font-medium tracking-tight sm:text-5xl">Trending memes</h1>
-        <p className="mt-3 text-muted">The most-liked plates from the whole Dinoverse floor.</p>
-        <Wall sort="likes" empty="No memes yet. Be the first to hit the wall." />
-      </div>
-    );
-  }
-
-  if (view === "mine") {
-    return (
-      <div>
-        <h1 className="font-display text-3xl font-medium tracking-tight sm:text-5xl">My creations</h1>
-        <p className="mt-3 text-muted">
-          Every meme you have saved to the floor
-          {user?.displayName ? `, ${user.displayName}` : ""}.
-        </p>
-        {authEnabled && !user ? (
-          <div className="mt-8">
-            <Button asChild>
-              <Link to="/login" search={{ next: "/memes" }}>
-                Sign in to see yours
-              </Link>
-            </Button>
-          </div>
-        ) : (
-          <Wall sort="mine" empty="Nothing saved yet." />
-        )}
-      </div>
-    );
-  }
-
-  return <Generator />;
 }

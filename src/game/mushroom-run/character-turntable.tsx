@@ -89,7 +89,13 @@ function StudioRig({
       </mesh>
       <group ref={spin} scale={FRAME.scale}>
         <group rotation={[0, Math.PI, 0]}>
-          <RexRunner getX={() => 0} getY={() => 0} running={false} loadout={loadout} />
+          <RexRunner
+            key={`${loadout.tie}-${loadout.face}-${loadout.chain}-${loadout.coffee}`}
+            getX={() => 0}
+            getY={() => 0}
+            running={false}
+            loadout={loadout}
+          />
         </group>
       </group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>

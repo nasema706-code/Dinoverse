@@ -36,6 +36,7 @@ import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
+import { sendResetPasswordEmail } from "./send-reset-email.server";
 import { GROK_PROVIDERS } from "./providers";
 import { pgliteDialect } from "./pglite-dialect";
 import {
@@ -205,7 +206,36 @@ export const auth = betterAuth({
   session: { cookieCache: { enabled: true, maxAge: 300 } },
 
   // Local email/password — toggled only via `./email-password` (not a plugin).
-  ...(emailAndPasswordEnabled ? { emailAndPassword: { enabled: true } } : {}),
+  ...(emailAndPasswordEnabled
+    ? {
+        emailAndPassword: {
+          enabled: true,
+          resetPasswordTokenExpiresIn: 60 * 60,
+          revokeSessionsOnPasswordReset: true,
+          sendResetPassword: async (
+            {
+              user,
+              token,
+            }: {
+              user: { email: string; name: string };
+              token: string;
+            },
+            request?: Request,
+          ) => {
+            let origin = explicitBaseURL ?? "http://localhost:8080";
+            if (!explicitBaseURL && request) {
+              try {
+                origin = new URL(request.url).origin;
+              } catch {
+                /* keep fallback */
+              }
+            }
+            const page = `${origin.replace(/\/+$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+            await sendResetPasswordEmail({ to: user.email, name: user.name, url: page });
+          },
+        },
+      }
+    : {}),
 
   // `__Host-` prefixed cookies: the browser REFUSES any same-named cookie that
   // carries a `Domain` attribute, so a sibling `*.grok.me` app cannot "toss" a

@@ -143,37 +143,37 @@ function RexHead({
         <meshStandardMaterial color="#2a2e36" metalness={0.48} roughness={0.24} />
       </mesh>
       {face === "visor" ? (
-        <mesh position={[0, 0.06, -0.16]} rotation={[0.18, 0, 0]}>
-          <boxGeometry args={[0.26, 0.055, 0.04]} />
+        <mesh position={[0, 0.07, -0.2]} rotation={[0.22, 0, 0]}>
+          <boxGeometry args={[0.34, 0.08, 0.055]} />
           <meshStandardMaterial
-            color="#5ec8ff"
+            color="#7ae0ff"
             emissive="#2aa8ff"
-            emissiveIntensity={0.7}
+            emissiveIntensity={1.15}
             metalness={0.55}
-            roughness={0.18}
+            roughness={0.14}
             transparent
-            opacity={0.72}
+            opacity={0.88}
           />
         </mesh>
       ) : null}
       {face === "shades" ? (
-        <group position={[0, 0.055, -0.14]}>
+        <group position={[0, 0.06, -0.18]}>
           {([-1, 1] as const).map((side) => (
-            <mesh key={side} position={[side * 0.07, 0, 0]} rotation={[0.12, 0, 0]}>
-              <boxGeometry args={[0.1, 0.042, 0.03]} />
-              <meshStandardMaterial color="#0c0c10" metalness={0.7} roughness={0.16} />
+            <mesh key={side} position={[side * 0.085, 0, 0]} rotation={[0.14, 0, 0]}>
+              <boxGeometry args={[0.13, 0.058, 0.04]} />
+              <meshStandardMaterial color="#0c0c10" metalness={0.78} roughness={0.12} />
             </mesh>
           ))}
-          <mesh position={[0, 0.01, 0.01]}>
-            <boxGeometry args={[0.06, 0.012, 0.018]} />
+          <mesh position={[0, 0.012, 0.012]}>
+            <boxGeometry args={[0.08, 0.016, 0.022]} />
             <meshStandardMaterial color="#1a1a20" metalness={0.5} roughness={0.3} />
           </mesh>
         </group>
       ) : null}
       {chain ? (
-        <mesh position={[0, -0.06, 0.02]} rotation={[0.55, 0, 0]}>
-          <torusGeometry args={[0.12, 0.016, 8, 18]} />
-          <meshStandardMaterial color="#e0c56a" metalness={0.82} roughness={0.22} />
+        <mesh position={[0, -0.04, -0.04]} rotation={[0.7, 0, 0]}>
+          <torusGeometry args={[0.145, 0.026, 8, 20]} />
+          <meshStandardMaterial color="#f0d56a" metalness={0.88} roughness={0.16} emissive="#8a6a18" emissiveIntensity={0.25} />
         </mesh>
       ) : null}
     </group>
@@ -476,8 +476,8 @@ export function RexRunner({
               </mesh>
               <group ref={tie} position={[0, 0.12, -0.145]}>
                 <mesh>
-                  <boxGeometry args={[0.042, 0.22, 0.016]} />
-                  <meshStandardMaterial color={TIE_COLOR[kit.tie]} roughness={0.4} metalness={kit.tie === "default" ? 0.05 : 0.45} />
+                  <boxGeometry args={[0.058, 0.26, 0.022]} />
+                  <meshStandardMaterial color={TIE_COLOR[kit.tie]} roughness={0.4} metalness={kit.tie === "default" ? 0.05 : 0.55} />
                 </mesh>
               </group>
 
@@ -498,7 +498,7 @@ export function RexRunner({
                   <group position={[0, -0.24, 0]}>
                     <ClawHand side={-1} curl={leftClaw} />
                     {kit.coffee ? (
-                      <group position={[0.02, -0.06, -0.05]} rotation={[0.55, 0.2, 0.15]}>
+                      <group position={[0.04, -0.08, -0.08]} rotation={[0.45, 0.15, 0.1]} scale={1.45}>
                         <mesh position={[0, 0.02, 0]}>
                           <cylinderGeometry args={[0.032, 0.028, 0.07, 10]} />
                           <meshStandardMaterial color="#f4f1ea" roughness={0.42} />

@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 
 const PRINCIPLES = [
   {
-    k: "Handshake",
-    v: "If he nods, the stall is under protection for the hour. No contract longer than a meal.",
+    k: "Executives",
+    v: "Velociraptors became financial executives. At the centre is Rex Volt — live tablet in one claw, coffee in the other.",
   },
   {
-    k: "Ledger",
-    v: "The tablet is not a prop. It is the tape. $DINOVERSE moves when the floor is ready.",
+    k: "Institutions",
+    v: "Triceratops built the institutions. Pteranodons mastered aviation. The city kept a balance sheet while humans studied the leftovers.",
   },
   {
-    k: "Floor",
-    v: "Charcoal three-piece, burgundy tie, coffee in one claw, the schematic in the other. Headset on. He dresses like the listing already happened.",
+    k: "Security",
+    v: "Ankylosaurs took over security — because nobody argues with the dinosaur carrying a natural wrecking ball.",
   },
 ];
 
@@ -47,9 +47,9 @@ function AboutIntro() {
     <div className="relative mt-6 overflow-hidden rounded-xl border border-border bg-black">
       <video
         ref={ref}
-        className="aspect-video w-full cursor-pointer object-cover"
-        src="/brand/dinoverse-intro.mp4"
-        poster="/hero.png"
+        className="aspect-video max-h-[22rem] w-full cursor-pointer object-cover sm:max-h-[28rem]"
+        src="/intro.mp4?v=5"
+        poster="/hero.jpg?v=5"
         playsInline
         preload="metadata"
         controls={false}
@@ -70,7 +70,7 @@ function AboutIntro() {
           onClick={togglePlay}
           aria-label="Play intro"
         >
-          <span className="inline-flex size-14 items-center justify-center rounded-full bg-accent/50 text-accent-fg sm:size-16">
+          <span className="inline-flex size-14 items-center justify-center rounded-full bg-gold/80 text-gold-fg sm:size-16">
             <Play className="size-6 fill-current sm:size-7" />
           </span>
         </button>
@@ -107,10 +107,11 @@ export function RexDossier() {
   const rex = CHARACTER_BY_ID.rex;
 
   return (
-    <section className="border-t border-border px-4 py-16 sm:py-24">
+    <section className="px-4 py-16 sm:py-24">
       <div className="mx-auto max-w-7xl">
         <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
-          Welcome to the Dinoverse
+          Humans found the bones.
+          <span className="mt-1 block">The dinosaurs kept the balance sheet.</span>
         </h2>
         <AboutIntro />
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-center">
@@ -118,7 +119,7 @@ export function RexDossier() {
             <img
               src={rex.figure ?? rex.portrait}
               alt="Rex Volt, velociraptor Floor Chief in a charcoal three-piece suit"
-              className="mx-auto h-auto max-h-[70dvh] w-full object-contain object-bottom sm:aspect-[2/3] sm:max-h-none sm:min-h-[36rem] lg:min-h-[44rem]"
+              className="mx-auto h-auto max-h-[22rem] w-full object-contain object-bottom sm:max-h-[28rem]"
             />
             <div className="rex-seam" />
             <div className="p-4">
@@ -131,15 +132,19 @@ export function RexDossier() {
 
           <div>
             <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Built like a listing
+              For millions of years, humans studied the leftovers.
             </h2>
             <p className="mt-4 max-w-xl text-muted">
-              Rex Volt is the face of $DINOVERSE because he already treats dinosaurs like a public
-              market. The fossils are lining up to list. He listed the lifestyle first — coffee in
-              one claw, the live tape in the other. The crew keeps him honest. He keeps the floor
-              open.
+              They assumed they were looking at an extinct civilisation. They were only looking at
+              what the dinosaurs left behind. Beyond the human world, the DinoVerse kept evolving.
             </p>
-            <blockquote className="mt-6 border-l-2 border-accent pl-4 text-lg text-fg">
+            <p className="mt-4 max-w-xl text-muted">
+              $DINOVERSE is the independent meme token at the centre of this story-world:
+              original characters, playable experiences, animated lore and a hidden dinosaur city
+              being built in public. It is a meme coin with a world — not a claim on a real-world
+              fossil.
+            </p>
+            <blockquote className="mt-6 border-l-2 border-gold pl-4 text-lg text-fg">
               {rex.tagline}
             </blockquote>
             <ul className="mt-8 grid gap-3 sm:grid-cols-3">

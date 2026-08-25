@@ -20,7 +20,7 @@ export function CharacterGrid({
           onClick={() => onSelect(featured.id)}
           className={cn(
             "group grid w-full min-w-0 overflow-hidden rounded-xl border bg-black text-left transition-[border-color] duration-200 sm:grid-cols-[14rem_1fr]",
-            selected === featured.id ? "border-accent" : "border-border hover:border-muted",
+            selected === featured.id ? "border-gold" : "border-border hover:border-muted",
           )}
         >
           <img
@@ -55,7 +55,7 @@ export function CharacterGrid({
                 onClick={() => onSelect(c.id)}
                 className={cn(
                   "flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border bg-surface text-left transition-[border-color] duration-200",
-                  active ? "border-accent" : "border-border hover:border-muted",
+                  active ? "border-gold" : "border-border hover:border-muted",
                 )}
               >
                 <img
@@ -67,6 +67,7 @@ export function CharacterGrid({
                   <Badge>{c.title}</Badge>
                   <p className="font-display text-lg font-medium tracking-tight">{c.name}</p>
                   <p className="text-sm text-muted">{c.tagline}</p>
+                  <p className="text-sm text-muted">{c.blurb}</p>
                 </div>
               </button>
             </li>

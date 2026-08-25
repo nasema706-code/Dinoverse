@@ -662,7 +662,7 @@ export function ExplorerCanvas({
         <div className="absolute inset-x-0 top-20 z-10 mx-auto w-[min(100%-1.5rem,28rem)] rounded-xl border border-accent/40 bg-surface p-4">
           <p className="font-display text-lg">Bag secured</p>
           <p className="mt-1 text-sm text-muted">
-            You walked the four districts as {character.name}. The listing window is watching.
+            You walked the four districts as {character.name}. The Floor is still open. The other districts are still pouring.
           </p>
         </div>
       ) : null}

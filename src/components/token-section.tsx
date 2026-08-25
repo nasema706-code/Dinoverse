@@ -3,14 +3,15 @@ import { Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JurassicCitations } from "@/components/jurassic-citations";
 import { useHydrated } from "@/lib/use-hydrated";
-import { BUY_STEPS, FAQS, ROADMAP, TOKEN, TOKENOMICS } from "@/lib/token";
+import { BUY_STEPS, FAQS, TOKEN, TOKENOMICS } from "@/lib/token";
 
-const TABS = ["tokenomics", "buy", "roadmap", "faq"] as const;
+const TABS = ["tokenomics", "buy"] as const;
 type Tab = (typeof TABS)[number];
 
 function tabFromHash(hash: string): Tab {
-  if (hash === "buy" || hash === "roadmap" || hash === "faq") return hash;
+  if (hash === "buy") return "buy";
   return "tokenomics";
 }
 
@@ -24,23 +25,23 @@ export function TokenSection() {
     <section className="border-t border-border px-4 py-16 sm:py-24">
       <div id="token" className="h-0 scroll-mt-20" />
       <div id="buy" className="h-0 scroll-mt-20" />
-      <div id="roadmap" className="h-0 scroll-mt-20" />
-      <div id="faq" className="h-0 scroll-mt-20" />
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">The listing</p>
+        <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">
+          {TOKEN.ticker} token facts
+        </p>
         <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <h2 className="min-w-0 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-            {TOKEN.ticker} on {TOKEN.chain}
+            {TOKEN.tokenName} on {TOKEN.chain}
           </h2>
           <p className="max-w-md text-sm text-muted">
-            Fair launch. Zero tax. Live on Solana — copy the CA below.
+            Live on PumpSwap. Zero token transfer tax. Confirm this CA before you swap.
           </p>
         </div>
-        <div className="mt-8 max-w-3xl space-y-4 text-base leading-relaxed text-muted sm:text-lg">
-          {TOKEN.lore.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
+        <p className="mt-6 max-w-3xl text-base leading-relaxed text-muted sm:text-lg">
+          {TOKEN.ticker} is the independent meme token at the centre of this story-world: original
+          characters, playable experiences, animated lore and a hidden dinosaur city being built in
+          public. It is a meme coin with a world — not a claim on a real-world fossil.
+        </p>
 
         <Tabs
           value={tab}
@@ -55,10 +56,8 @@ export function TokenSection() {
           className="mt-10"
         >
           <TabsList>
-            <TabsTrigger value="tokenomics">Tokenomics</TabsTrigger>
+            <TabsTrigger value="tokenomics">Token facts</TabsTrigger>
             <TabsTrigger value="buy">How to buy</TabsTrigger>
-            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-            <TabsTrigger value="faq">FAQ</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tokenomics">
@@ -88,9 +87,20 @@ export function TokenSection() {
                   Copy CA
                 </Button>
               </div>
-              <p className="mt-3 text-xs text-subtle">
-                Live mint. Confirm this CA on DexScreener before you swap.
-              </p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <Button asChild variant="outline" size="sm">
+                  <a href={TOKEN.solscan} target="_blank" rel="noreferrer">
+                    Verify on Solscan
+                    <ExternalLink />
+                  </a>
+                </Button>
+                <Button asChild variant="tape" size="sm">
+                  <a href={TOKEN.dexscreener} target="_blank" rel="noreferrer">
+                    View live DexScreener data
+                    <ExternalLink />
+                  </a>
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
@@ -98,11 +108,11 @@ export function TokenSection() {
             <ol className="grid gap-4 sm:grid-cols-2">
               {BUY_STEPS.map((step) => (
                 <li key={step.n} className="rounded-xl border border-border bg-surface p-5">
-                  <p className="font-mono text-xs text-accent">{step.n}</p>
+                  <p className="font-mono text-xs text-gold">{step.n}</p>
                   <p className="mt-2 font-display text-xl font-medium">{step.title}</p>
                   <p className="mt-2 text-sm text-muted">{step.body}</p>
                   {"href" in step && step.href ? (
-                    <Button asChild variant="secondary" size="sm" className="mt-4">
+                    <Button asChild variant="outline" size="sm" className="mt-4">
                       <a href={step.href} target="_blank" rel="noreferrer">
                         {step.cta}
                         <ExternalLink />
@@ -113,25 +123,19 @@ export function TokenSection() {
               ))}
             </ol>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button asChild className="max-sm:w-full">
-                <a href={TOKEN.buy} target="_blank" rel="noreferrer">
-                  Buy {TOKEN.ticker}
+              <Button asChild variant="tape" className="max-sm:w-full">
+                <a href={TOKEN.dexscreener} target="_blank" rel="noreferrer">
+                  View live chart
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild variant="secondary" className="max-sm:w-full">
-                <a href={TOKEN.buy} target="_blank" rel="noreferrer">
-                  Chart on DexScreener
-                  <ExternalLink />
-                </a>
-              </Button>
-              <Button asChild className="max-sm:w-full">
+              <Button asChild variant="outline" className="max-sm:w-full">
                 <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
                   Telegram
                   <ExternalLink />
                 </a>
               </Button>
-              <Button asChild className="max-sm:w-full">
+              <Button asChild variant="outline" className="max-sm:w-full">
                 <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
                   Follow on X
                   <ExternalLink />
@@ -139,31 +143,30 @@ export function TokenSection() {
               </Button>
             </div>
           </TabsContent>
-
-          <TabsContent value="roadmap">
-            <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {ROADMAP.map((item) => (
-                <li key={item.phase} className="rounded-xl border border-border bg-surface p-5">
-                  <p className="font-mono text-xs text-accent">Phase {item.phase}</p>
-                  <p className="mt-1 text-xs tracking-wide text-muted uppercase">{item.when}</p>
-                  <p className="mt-3 font-display text-lg font-medium">{item.title}</p>
-                  <p className="mt-2 text-sm text-muted">{item.body}</p>
-                </li>
-              ))}
-            </ol>
-          </TabsContent>
-
-          <TabsContent value="faq">
-            <ul className="space-y-3">
-              {FAQS.map((item) => (
-                <li key={item.q} className="rounded-xl border border-border bg-surface p-5">
-                  <p className="font-medium">{item.q}</p>
-                  <p className="mt-2 text-sm text-muted">{item.a}</p>
-                </li>
-              ))}
-            </ul>
-          </TabsContent>
         </Tabs>
+      </div>
+    </section>
+  );
+}
+
+export function TokenFaq() {
+  return (
+    <section className="border-t border-border bg-lore px-4 py-16 sm:py-24">
+      <div id="faq" className="h-0 scroll-mt-24" />
+      <div className="mx-auto max-w-6xl">
+        <p className="text-xs font-medium tracking-[0.18em] text-gold uppercase">FAQ</p>
+        <h2 className="mt-3 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+          Independent of the fossil SPV. Built as a city.
+        </h2>
+        <ul className="mt-8 space-y-3">
+          {FAQS.map((item) => (
+            <li key={item.q} className="rounded-xl border border-gold/20 bg-surface p-5">
+              <p className="font-medium">{item.q}</p>
+              <p className="mt-2 text-sm text-muted">{item.a}</p>
+            </li>
+          ))}
+        </ul>
+        <JurassicCitations className="mt-6" />
       </div>
     </section>
   );

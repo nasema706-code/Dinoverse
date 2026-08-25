@@ -1,6 +1,6 @@
 ﻿import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group, Mesh } from "three";
+import type { Group, Mesh, MeshStandardMaterial } from "three";
 import {
   CanvasTexture,
   CatmullRomCurve3,
@@ -470,7 +470,10 @@ function DoorPortal({
     const on = !liftBusy() && (floor === "g" ? cab < 0.25 : cab > L2_HEIGHT - 0.25);
     const pulse = on ? 1.25 + Math.sin(clock.elapsedTime * 3.2) * 0.7 : 0.22;
     for (const mesh of bars.current) {
-      if (mesh) (mesh.material as { emissiveIntensity: number }).emissiveIntensity = pulse;
+      const mat = mesh?.material;
+      if (mat && !Array.isArray(mat)) {
+        (mat as MeshStandardMaterial).emissiveIntensity = pulse;
+      }
     }
     if (pad.current) {
       (pad.current.material as { opacity: number }).opacity = on ? 0.42 : 0.16;

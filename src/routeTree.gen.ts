@@ -12,10 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as FossilTokenisationRouteImport } from './routes/fossil-tokenisation'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MemesRouteImport } from './routes/memes'
 import { Route as PlayRouteImport } from './routes/play'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as TransparencyRouteImport } from './routes/transparency'
 import { Route as WorldsRouteImport } from './routes/worlds'
 import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -33,6 +36,11 @@ const CrewRoute = CrewRouteImport.update({
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FossilTokenisationRoute = FossilTokenisationRouteImport.update({
+  id: '/fossil-tokenisation',
+  path: '/fossil-tokenisation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -55,6 +63,16 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransparencyRoute = TransparencyRouteImport.update({
+  id: '/transparency',
+  path: '/transparency',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorldsRoute = WorldsRouteImport.update({
   id: '/worlds',
   path: '/worlds',
@@ -75,10 +93,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/transparency': typeof TransparencyRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -87,10 +108,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/transparency': typeof TransparencyRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -100,10 +124,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/transparency': typeof TransparencyRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -114,10 +141,13 @@ export interface FileRouteTypes {
     | '/'
     | '/crew'
     | '/explore'
+    | '/fossil-tokenisation'
     | '/leaderboard'
     | '/login'
     | '/memes'
     | '/play'
+    | '/reset-password'
+    | '/transparency'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
@@ -126,10 +156,13 @@ export interface FileRouteTypes {
     | '/'
     | '/crew'
     | '/explore'
+    | '/fossil-tokenisation'
     | '/leaderboard'
     | '/login'
     | '/memes'
     | '/play'
+    | '/reset-password'
+    | '/transparency'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
@@ -138,10 +171,13 @@ export interface FileRouteTypes {
     | '/'
     | '/crew'
     | '/explore'
+    | '/fossil-tokenisation'
     | '/leaderboard'
     | '/login'
     | '/memes'
     | '/play'
+    | '/reset-password'
+    | '/transparency'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
@@ -151,10 +187,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
+  FossilTokenisationRoute: typeof FossilTokenisationRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   MemesRoute: typeof MemesRoute
   PlayRoute: typeof PlayRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  TransparencyRoute: typeof TransparencyRoute
   WorldsRoute: typeof WorldsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -181,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fossil-tokenisation': {
+      id: '/fossil-tokenisation'
+      path: '/fossil-tokenisation'
+      fullPath: '/fossil-tokenisation'
+      preLoaderRoute: typeof FossilTokenisationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -211,6 +257,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transparency': {
+      id: '/transparency'
+      path: '/transparency'
+      fullPath: '/transparency'
+      preLoaderRoute: typeof TransparencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/worlds': {
       id: '/worlds'
       path: '/worlds'
@@ -239,10 +299,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
+  FossilTokenisationRoute: FossilTokenisationRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   MemesRoute: MemesRoute,
   PlayRoute: PlayRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  TransparencyRoute: TransparencyRoute,
   WorldsRoute: WorldsRoute,
   AdminMembersRoute: AdminMembersRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

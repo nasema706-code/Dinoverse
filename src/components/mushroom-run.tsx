@@ -63,15 +63,51 @@ const HOW_TO = [
 
 type Screen = "start" | "play" | "over";
 
-function CharacterSelect({ loadout }: { loadout: Loadout }) {
+function wornKit(owned: AccId[], loadout: Loadout) {
+  return ACCESSORIES.filter((item) => owned.includes(item.id) && isEquipped(loadout, item.id));
+}
+
+function RexKit({
+  vault,
+  banked,
+  owned,
+  loadout,
+  onBuyGear,
+  onEquip,
+  shop = true,
+  compact = false,
+}: {
+  vault: number;
+  banked: number | null;
+  owned: AccId[];
+  loadout: Loadout;
+  onBuyGear: (id: AccId) => void;
+  onEquip: (id: AccId) => void;
+  shop?: boolean;
+  compact?: boolean;
+}) {
+  const worn = wornKit(owned, loadout);
   return (
-    <div className="mt-4 rounded-xl border border-white/15 bg-black/45 p-3 text-left">
-      <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Play as</p>
-      <p className="mt-1 text-[13px] leading-snug text-white/85">
-        Rex Volt only. Drag for a full 360°. Equipped kit shows here and on the tape.
-      </p>
+    <div className="pointer-events-auto mt-3 rounded-xl border border-gold/35 bg-black/55 p-3 text-left">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium tracking-[0.18em] text-gold uppercase">Rex Volt</p>
+        {shop ? <p className="font-mono text-[12px] text-white/80">{vault} vault</p> : null}
+      </div>
+      {shop ? (
+        <p className="mt-1 text-[13px] leading-snug text-white/85">
+          {banked && banked > 0 ? `This run banked +${banked}. ` : null}
+          Buy with vault energy, then tap EQUIP / ON. Kit shows on Rex here and on the tape.
+        </p>
+      ) : (
+        <p className="mt-1 text-[13px] leading-snug text-white/85">
+          Drag to rotate. Pick a track. Kit opens after you crash.
+        </p>
+      )}
       <div
-        className="relative mt-3 h-[230px] cursor-grab touch-none overflow-hidden rounded-lg border border-white/12 bg-black pointer-events-auto active:cursor-grabbing"
+        className={cn(
+          "relative mt-3 cursor-grab touch-none overflow-hidden rounded-lg border border-white/12 bg-black active:cursor-grabbing",
+          compact ? "h-[140px]" : "h-[210px]",
+        )}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerMove={(e) => e.stopPropagation()}
         onWheel={(e) => e.stopPropagation()}
@@ -81,66 +117,44 @@ function CharacterSelect({ loadout }: { loadout: Loadout }) {
           Drag to rotate · 360°
         </p>
       </div>
-      <p className="mt-2.5 font-display text-lg leading-none text-white">Rex Volt</p>
-      <p className="mt-1 text-[12px] text-white/65">Floor Chief</p>
-      <p className="mt-2 text-[12px] font-medium text-accent">On the tape.</p>
-    </div>
-  );
-}
-
-function EnergyShop({
-  vault,
-  banked,
-  owned,
-  loadout,
-  onBuyGear,
-  onEquip,
-}: {
-  vault: number;
-  banked: number | null;
-  owned: AccId[];
-  loadout: Loadout;
-  onBuyGear: (id: AccId) => void;
-  onEquip: (id: AccId) => void;
-}) {
-  return (
-    <div className="mt-3 rounded-xl border border-white/15 bg-black/45 p-3 text-left">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-medium tracking-[0.18em] text-accent uppercase">Energy shop</p>
-        <p className="font-mono text-[12px] text-white/80">{vault} vault</p>
-      </div>
-      <p className="mt-1 text-[13px] leading-snug text-white/85">
-        {banked && banked > 0 ? `This run banked +${banked}. ` : null}
-        Spend banked energy on Rex's kit. Nothing here touches the ticker.
-      </p>
-      <ul className="mt-2 space-y-1.5">
-        {ACCESSORIES.map((item) => {
-          const has = owned.includes(item.id);
-          const on = has && isEquipped(loadout, item.id);
-          const canBuy = !has && vault >= item.cost;
-          return (
-            <li key={item.id}>
-              <button
-                type="button"
-                onClick={() => (has ? onEquip(item.id) : onBuyGear(item.id))}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left",
-                  on ? "border-accent/50 bg-accent/10" : "border-white/10 bg-black/20",
-                  !has && !canBuy ? "opacity-70" : null,
-                )}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium text-white">{item.name}</span>
-                  <span className="block text-[11px] text-white/60">{item.blurb}</span>
-                </span>
-                <span className={cn("shrink-0 font-mono text-[12px]", on ? "text-accent" : "text-white")}>
-                  {has ? (on ? "ON" : "EQUIP") : `${item.cost} E`}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {shop ? (
+        <>
+          <p className="mt-2 font-display text-lg leading-none text-white">Rex Volt</p>
+          <p className="mt-1 text-[12px] text-gold">
+            {worn.length
+              ? `On Rex: ${worn.map((item) => item.name).join(" · ")}`
+              : "Default three-piece. Buy kit below to decorate him."}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {ACCESSORIES.map((item) => {
+              const has = owned.includes(item.id);
+              const on = has && isEquipped(loadout, item.id);
+              const canBuy = !has && vault >= item.cost;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => (has ? onEquip(item.id) : onBuyGear(item.id))}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left",
+                      on ? "border-gold/50 bg-gold/10" : "border-white/10 bg-black/20",
+                      !has && !canBuy ? "opacity-70" : null,
+                    )}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-medium text-white">{item.name}</span>
+                      <span className="block text-[11px] text-white/60">{item.blurb}</span>
+                    </span>
+                    <span className={cn("shrink-0 font-mono text-[12px]", on ? "text-gold" : "text-white")}>
+                      {has ? (on ? "ON REX" : "EQUIP") : `${item.cost} E`}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -164,7 +178,7 @@ function StagePicker({
             className={cn(
               "rounded-lg border px-1.5 py-2 text-center transition-colors",
               stage === id
-                ? "border-accent bg-accent/20 text-accent"
+                ? "border-gold bg-gold/20 text-gold"
                 : "border-white/20 bg-white/5 text-white/75 hover:border-white/40 hover:text-white",
             )}
           >
@@ -206,6 +220,7 @@ export function MushroomRun() {
   const [newBest, setNewBest] = useState(false);
   const [finalLine, setFinalLine] = useState("Score: 0");
   const [boardNote, setBoardNote] = useState<string | null>(null);
+  const [showHow, setShowHow] = useState(false);
 
   const theme = STAGES[stage];
 
@@ -546,8 +561,8 @@ export function MushroomRun() {
         ) : null}
 
         {screen !== "play" ? (
-          <div className="absolute inset-0 z-20 overflow-y-auto bg-black/86">
-            <div className="mx-auto flex min-h-full max-w-[400px] flex-col justify-start px-5 py-6">
+          <div className="absolute inset-0 z-20 overflow-y-auto overscroll-contain bg-black/86 [touch-action:pan-y]">
+            <div className="pointer-events-auto mx-auto flex min-h-full max-w-[400px] flex-col justify-start px-5 py-6">
               {screen === "start" ? (
                 <>
                   <p className="text-[11px] font-medium tracking-[0.22em] text-accent uppercase">
@@ -557,45 +572,28 @@ export function MushroomRun() {
                     REX VOLT
                   </h2>
                   <p className="mt-1 text-sm text-white/80">
-                    Mushroom Run — bank energy, kit Rex, dodge mushrooms. Rex holds the tape.
+                    No token purchase is required. Pick a track and start.
                   </p>
-
-                  <CharacterSelect loadout={loadout} />
-
-                  <div className="mt-4 rounded-xl border border-white/15 bg-black/45 p-3">
-                    <p className="text-[11px] font-medium tracking-[0.18em] text-white uppercase">
-                      How to play
-                    </p>
-                    <ul className="mt-2 space-y-2">
-                      {HOW_TO.map((row) => (
-                        <li key={row.key} className="flex gap-2.5 text-left">
-                          <span className="mt-px w-[4.75rem] shrink-0 rounded-md bg-accent/15 px-1 py-0.5 text-center font-mono text-[10px] font-semibold tracking-wide text-accent">
-                            {row.key}
-                          </span>
-                          <span className="text-[13px] leading-snug text-white">{row.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <p className="mt-4 text-[11px] font-medium tracking-[0.16em] text-white/55 uppercase">
+                  <p className="mt-3 text-[11px] font-medium tracking-[0.16em] text-white/55 uppercase">
                     Track
                   </p>
                   <div className="mt-1.5">
                     <StagePicker stage={stage} onPick={pickStage} />
                   </div>
                   <p className="mt-2 text-[12px] leading-snug text-white/75">{theme.tagline}</p>
-                  <EnergyShop
+                  <Button size="lg" className="mt-3 w-full" disabled={!ready} onClick={startGame}>
+                    {ready ? "Start as Rex Volt" : "Loading…"}
+                  </Button>
+                  <RexKit
                     vault={vault}
                     banked={null}
                     owned={ownedGear}
                     loadout={loadout}
                     onBuyGear={buyNextGear}
                     onEquip={equipGear}
+                    shop={false}
+                    compact
                   />
-                  <Button size="lg" className="mt-3 w-full" disabled={!ready} onClick={startGame}>
-                    {ready ? "Start as Rex Volt" : "Loading…"}
-                  </Button>
                 </>
               ) : (
                 <>
@@ -607,7 +605,7 @@ export function MushroomRun() {
                   </h2>
                   <p className="mt-2 font-display text-xl text-accent tabular-nums">{finalLine}</p>
                   <p className="mt-1 text-sm text-white/75">{theme.name}</p>
-                  <EnergyShop
+                  <RexKit
                     vault={vault}
                     banked={banked}
                     owned={ownedGear}
@@ -615,7 +613,6 @@ export function MushroomRun() {
                     onBuyGear={buyNextGear}
                     onEquip={equipGear}
                   />
-                  <CharacterSelect loadout={loadout} />
                   {newBest ? <p className="mt-2 text-sm font-medium text-accent">New personal best.</p> : null}
                   {boardNote ? (
                     <p className="mb-3 text-sm text-white/80">
@@ -642,6 +639,27 @@ export function MushroomRun() {
                   <Button size="lg" className="mt-3 w-full" onClick={startGame}>
                     Run {theme.name}
                   </Button>
+                  <button
+                    type="button"
+                    className="mt-3 w-full text-center text-[12px] text-white/70 hover:text-white"
+                    onClick={() => setShowHow((open) => !open)}
+                  >
+                    {showHow ? "Hide how to play" : "How to play"}
+                  </button>
+                  {showHow ? (
+                    <div className="mt-2 rounded-xl border border-white/15 bg-black/45 p-3">
+                      <ul className="space-y-2">
+                        {HOW_TO.map((row) => (
+                          <li key={row.key} className="flex gap-2.5 text-left">
+                            <span className="mt-px w-[4.75rem] shrink-0 rounded-md bg-gold/15 px-1 py-0.5 text-center font-mono text-[10px] font-semibold tracking-wide text-gold">
+                              {row.key}
+                            </span>
+                            <span className="text-[13px] leading-snug text-white">{row.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

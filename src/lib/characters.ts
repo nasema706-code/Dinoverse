@@ -33,7 +33,7 @@ export const CHARACTERS: Character[] = [
     walkSheet: "/characters/rex/walk.png",
     homeKicker: "Seen through the Floor Chief",
     homeLead:
-      "The Dinoverse is not a rumor. It is a city that already clocks in — coffee, gyms, the floor. I keep the tape honest and $DINOVERSE listed like it belongs here.",
+      "The Dinoverse is not a rumor. It is a city that already clocks in — coffee, gyms, the floor. I keep the tape honest.",
   },
   {
     id: "vex",

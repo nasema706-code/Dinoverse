@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 export function WorldPreview({
   district,
   variant = "embed",
+  className,
 }: {
   district: WorldId;
   variant?: "embed" | "stage";
+  className?: string;
 }) {
   const d = DISTRICTS_3D[district];
   const forum = district === "forum";
@@ -25,6 +27,7 @@ export function WorldPreview({
         variant === "stage"
           ? "h-[min(62dvh,44rem)] min-h-[16rem] sm:h-[min(78dvh,44rem)] sm:min-h-[22rem]"
           : "aspect-video",
+        className,
       )}
     >
       <Canvas
