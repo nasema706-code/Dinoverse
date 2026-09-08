@@ -99,10 +99,13 @@ export function LaunchHero() {
           <div className="flex flex-wrap gap-2">
             <Badge>{TOKEN.kicker}</Badge>
           </div>
-          <h1 className="mt-4 font-display text-[clamp(1.85rem,8vw,3.75rem)] font-medium tracking-tight break-words leading-[1.08]">
+          <h1 className="mt-4 font-display text-[clamp(2rem,10.6vw,4.5rem)] font-medium tracking-tight break-words">
+            {TOKEN.ticker}
+          </h1>
+          <p className="mt-3 max-w-xl font-display text-[clamp(1.15rem,4.2vw,1.75rem)] font-medium tracking-tight leading-[1.15] text-fg/90">
             {TOKEN.headline}
             <span className="mt-1 block">{TOKEN.headlineTwo}</span>
-          </h1>
+          </p>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
             Humans believed dinosaurs disappeared 65 million years ago. The dinosaurs were happy to
             let them believe it. While humanity invented paperwork, traffic jams and financial crises,
@@ -139,7 +142,7 @@ export function LaunchHero() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="secondary" className="max-sm:w-full">
               <Link to="/explore">
-                Explore the DinoVerse
+                Explore the Floor
                 <ArrowRight />
               </Link>
             </Button>
@@ -147,11 +150,14 @@ export function LaunchHero() {
               <Link to="/play">Play Mushroom Run</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="max-sm:w-full">
-              <a href={TOKEN.dexscreener} target="_blank" rel="noopener noreferrer">
-                View live chart
+              <a href={TOKEN.buy} target="_blank" rel="noopener noreferrer">
+                Buy
               </a>
             </Button>
           </div>
+          <p className="mt-3 text-sm text-muted">
+            Walk as you or pick a character. The Floor is walkable. The city is still being built.
+          </p>
           <UsDisclosure compact className="mt-4" />
         </div>
 

@@ -1,16 +1,11 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { Button } from "@/components/ui/button";
 import { SignedIn } from "@/lib/auth/gates";
 import { authEnabled } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import {
-  listLeaderboard,
-  updateRunnerName,
-  type BoardPayload,
-} from "@/lib/leaderboard";
+import { listLeaderboard, type BoardPayload } from "@/lib/leaderboard";
 import { TOKEN } from "@/lib/token";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +24,6 @@ function LeaderboardPage() {
   const initial = Route.useLoaderData();
   const { user, isPending } = useCurrentUserState();
   const [board, setBoard] = useState<BoardPayload>(initial);
-  const [name, setName] = useState(initial.you?.displayName ?? "");
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,28 +31,12 @@ function LeaderboardPage() {
       .then((next) => {
         if (cancelled) return;
         setBoard(next);
-        if (next.you?.displayName) setName(next.you.displayName);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [user?.id]);
-
-  const saveName = async (event: FormEvent) => {
-    event.preventDefault();
-    setSaving(true);
-    try {
-      const next = await updateRunnerName({ data: { displayName: name } });
-      setName(next.displayName);
-      toast("Runner name saved");
-      setBoard(await listLeaderboard());
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Could not save the name.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <SiteShell>
@@ -69,8 +46,8 @@ function LeaderboardPage() {
           Mushroom Run leaderboard
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          Sign in, run the floor, and your best score is stored on your account. Rank is highest
-          score first. Ties go to whoever posted it first.
+          Claim a unique runner name and password, run the floor, and your best score is stored on that Floor pass.
+          Rank is highest score first. Ties go to whoever posted it first.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-2">
@@ -80,7 +57,7 @@ function LeaderboardPage() {
           {authEnabled && !user ? (
             <Button asChild variant="secondary">
               <Link to="/login" search={{ next: "/leaderboard" }}>
-                Sign in to post
+                Claim a name
               </Link>
             </Button>
           ) : null}
@@ -88,24 +65,13 @@ function LeaderboardPage() {
 
         {authEnabled && !isPending ? (
           <SignedIn>
-            <form
-              className="mt-8 flex flex-col gap-2 rounded-xl border border-border bg-surface/80 p-4 sm:flex-row sm:items-end"
-              onSubmit={(event) => void saveName(event)}
-            >
-              <label className="min-w-0 flex-1 text-xs tracking-wide text-muted uppercase">
-                Your runner name
-                <input
-                  className="mt-1.5 h-11 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg outline-none focus:border-accent"
-                  maxLength={24}
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Rex Volt"
-                />
-              </label>
-              <Button type="submit" variant="secondary" disabled={saving}>
-                {saving ? "Saving…" : "Save name"}
-              </Button>
-            </form>
+            <div className="mt-8 rounded-xl border border-border bg-surface/80 p-4">
+              <p className="text-[10px] tracking-[0.18em] text-gold uppercase">Floor pass</p>
+              <p className="mt-2 font-display text-xl">{user?.displayName ?? board.you?.displayName}</p>
+              <p className="mt-1 text-sm text-muted">
+                This name is locked to your password. Nobody else can take it.
+              </p>
+            </div>
             {board.you ? (
               <p className="mt-3 text-sm text-muted">
                 You are rank{" "}

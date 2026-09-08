@@ -26,8 +26,8 @@ function CrewPage() {
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
           The site talks as the Floor Chief by default — charcoal three-piece, headset, coffee and a live tablet.
-          Switch guides if you want another pair of eyes. The listing stays his. Walk HQ now — the
-          next floors open when they are honest.
+          Switch guides if you want another pair of eyes, or walk The Floor as yourself. The listing
+          stays his. Walk HQ now — the next floors open when they are honest.
         </p>
 
         <div className="mt-8">
@@ -39,8 +39,23 @@ function CrewPage() {
             <Companion line={current.blurb} />
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => navigate({ to: "/worlds" })}>Walk their districts</Button>
-              <Button variant="secondary" onClick={() => navigate({ to: "/explore" })}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setCharacter(current.id);
+                  void navigate({ to: "/explore" });
+                }}
+              >
                 Walk as {current.name}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  useDinoverse.getState().setWalkAsSelf(true);
+                  void navigate({ to: "/explore" });
+                }}
+              >
+                Walk as you
               </Button>
             </div>
           </div>

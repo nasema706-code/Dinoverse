@@ -357,7 +357,7 @@ export function MushroomRun() {
     setBoardNote(null);
     const snapshot = { score: run.score, stage: run.stage };
     if (!authEnabled || !userRef.current) {
-      setBoardNote("Sign in to post this run on the Floor Board.");
+                    setBoardNote("Claim a Floor name to post this run on the Floor Board.");
       return;
     }
     void submitRunScore({ data: snapshot })
@@ -460,7 +460,7 @@ export function MushroomRun() {
           theme.wrap,
         )}
       >
-        {ready ? (
+        {ready && screen === "play" ? (
           <Canvas
             className="absolute inset-0 touch-none"
             shadows={false}
@@ -479,7 +479,7 @@ export function MushroomRun() {
             <RunScene
               run={runRef}
               collected={collectedRef}
-              playing={screen === "play"}
+              playing
               stage={stage}
               onHud={onHud}
               onCrash={onCrash}
@@ -489,7 +489,7 @@ export function MushroomRun() {
               runnerId="rex"
             />
           </Canvas>
-        ) : (
+        ) : ready ? null : (
           <div className="grid size-full place-items-center text-sm text-muted">Loading the floor…</div>
         )}
 
@@ -623,7 +623,7 @@ export function MushroomRun() {
                           search={{ next: "/play" }}
                           className="pointer-events-auto font-medium text-accent hover:underline"
                         >
-                          Sign in
+                          Claim a name
                         </Link>
                       ) : (
                         <Link

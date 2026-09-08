@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CanyonRouteImport } from './routes/canyon'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FossilTokenisationRouteImport } from './routes/fossil-tokenisation'
@@ -17,8 +18,8 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MemesRouteImport } from './routes/memes'
 import { Route as PlayRouteImport } from './routes/play'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TransparencyRouteImport } from './routes/transparency'
+import { Route as VisionsRouteImport } from './routes/visions'
 import { Route as WorldsRouteImport } from './routes/worlds'
 import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -26,6 +27,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanyonRoute = CanyonRouteImport.update({
+  id: '/canyon',
+  path: '/canyon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewRoute = CrewRouteImport.update({
@@ -63,14 +69,14 @@ const PlayRoute = PlayRouteImport.update({
   path: '/play',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TransparencyRoute = TransparencyRouteImport.update({
   id: '/transparency',
   path: '/transparency',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisionsRoute = VisionsRouteImport.update({
+  id: '/visions',
+  path: '/visions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WorldsRoute = WorldsRouteImport.update({
@@ -91,6 +97,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -98,14 +105,15 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -113,8 +121,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -129,8 +138,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/canyon'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -146,14 +156,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/memes'
     | '/play'
-    | '/reset-password'
     | '/transparency'
+    | '/visions'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/canyon'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -161,14 +172,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/memes'
     | '/play'
-    | '/reset-password'
     | '/transparency'
+    | '/visions'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
+    | '/canyon'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -176,8 +188,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/memes'
     | '/play'
-    | '/reset-password'
     | '/transparency'
+    | '/visions'
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CanyonRoute: typeof CanyonRoute
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
   FossilTokenisationRoute: typeof FossilTokenisationRoute
@@ -192,8 +205,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MemesRoute: typeof MemesRoute
   PlayRoute: typeof PlayRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   TransparencyRoute: typeof TransparencyRoute
+  VisionsRoute: typeof VisionsRoute
   WorldsRoute: typeof WorldsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canyon': {
+      id: '/canyon'
+      path: '/canyon'
+      fullPath: '/canyon'
+      preLoaderRoute: typeof CanyonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew': {
@@ -257,18 +277,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/transparency': {
       id: '/transparency'
       path: '/transparency'
       fullPath: '/transparency'
       preLoaderRoute: typeof TransparencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visions': {
+      id: '/visions'
+      path: '/visions'
+      fullPath: '/visions'
+      preLoaderRoute: typeof VisionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/worlds': {
@@ -297,6 +317,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CanyonRoute: CanyonRoute,
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
   FossilTokenisationRoute: FossilTokenisationRoute,
@@ -304,8 +325,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MemesRoute: MemesRoute,
   PlayRoute: PlayRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   TransparencyRoute: TransparencyRoute,
+  VisionsRoute: VisionsRoute,
   WorldsRoute: WorldsRoute,
   AdminMembersRoute: AdminMembersRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

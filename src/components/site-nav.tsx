@@ -16,7 +16,9 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 type DropItem = { to: string; hash?: string; label: string };
 
 const CITY_ITEMS: DropItem[] = [
-  { to: "/explore", label: "The Floor" },
+  { to: "/explore", label: "The Floor · building" },
+  { to: "/visions", label: "Four Visions" },
+  { to: "/canyon", label: "Skull Gate Canyon" },
   { to: "/worlds", label: "Districts" },
   { to: "/crew", label: "Crew" },
 ];
@@ -35,7 +37,7 @@ const MORE_ITEMS: DropItem[] = [
 ];
 
 const FACT_HASHES = new Set(["token", "buy", "faq", "market"]);
-const CITY_PATHS = new Set(["/explore", "/worlds", "/crew"]);
+const CITY_PATHS = new Set(["/explore", "/visions", "/canyon", "/worlds", "/crew"]);
 const MORE_PATHS = new Set(["/memes", "/leaderboard", "/fossil-tokenisation"]);
 
 function XGlyph({ className }: { className?: string }) {
@@ -184,6 +186,7 @@ export function SiteNav() {
   const hydrated = useHydrated();
   const { user } = useCurrentUserState();
   const characterId = useDinoverse((s) => (hydrated ? s.characterId : "rex"));
+  const walkAsSelf = useDinoverse((s) => (hydrated ? s.walkAsSelf : true));
   const character = CHARACTERS.find((c) => c.id === characterId) ?? null;
 
   return (
@@ -202,41 +205,48 @@ export function SiteNav() {
             alt=""
             className="size-8 shrink-0 rounded-md border border-gold/35 object-cover object-[center_18%]"
           />
-          <span className="truncate font-display text-sm font-medium tracking-tight">DinoVerse</span>
+          <span className="truncate font-display text-sm font-medium tracking-tight">
+            {TOKEN.ticker}
+          </span>
         </Link>
 
         <DesktopNav />
 
-        <div className="flex min-w-0 shrink-0 items-center gap-1">
-          <Button asChild size="sm" className="lg:hidden max-sm:whitespace-nowrap">
-            <Link to="/explore">Explore</Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label="X">
+        <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
+          <Button asChild variant="ghost" size="icon" className="hidden size-11 sm:inline-flex" aria-label="X">
             <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
               <XGlyph className="size-4" />
             </a>
           </Button>
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="hidden lg:inline-flex"
-            aria-label="Telegram"
-          >
+          <Button asChild variant="ghost" size="icon" className="hidden size-11 sm:inline-flex" aria-label="Telegram">
             <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
               <TelegramGlyph className="size-4" />
             </a>
           </Button>
-          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex">
-            <Link to="/explore">Explore</Link>
-          </Button>
-          <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex">
-            <a href={TOKEN.dexscreener} target="_blank" rel="noreferrer">
-              Chart
+          <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+            <a href={TOKEN.buy} target="_blank" rel="noopener noreferrer">
+              Buy
             </a>
           </Button>
+          <Button asChild size="sm">
+            <Link to="/explore">
+              <span className="sm:hidden">Floor</span>
+              <span className="hidden sm:inline">Explore</span>
+            </Link>
+          </Button>
           <AccountChip />
-          {character ? (
+          {walkAsSelf ? (
+            <Link
+              to="/explore"
+              title="Walking as you"
+              className="hidden items-center gap-2 rounded-full border border-gold/30 bg-lore py-1 pr-3 pl-2 lg:flex"
+            >
+              <span className="grid size-7 place-items-center rounded-full bg-gold/20 text-[10px] font-medium tracking-wide text-gold uppercase">
+                You
+              </span>
+              <span className="text-xs font-medium">Guest walk</span>
+            </Link>
+          ) : character ? (
             <Link
               to="/crew"
               title={`${character.name} · crew`}
@@ -264,14 +274,42 @@ export function SiteNav() {
               <div className="flex flex-col pb-2">
                 <SheetClose asChild>
                   <Button asChild size="lg" className="justify-center">
-                    <Link to="/explore">Explore the Floor</Link>
+                    <Link to="/explore">Walk The Floor</Link>
                   </Button>
                 </SheetClose>
+                <p className="mt-2 px-1 text-xs leading-relaxed text-subtle">
+                  Walk as you or pick a character. The Floor is open. The city is still being built.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <SheetClose asChild>
+                    <Button asChild variant="outline" className="flex-1 justify-center">
+                      <a href={TOKEN.buy} target="_blank" rel="noopener noreferrer">
+                        Buy
+                      </a>
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button asChild variant="ghost" size="icon" aria-label="X">
+                      <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
+                        <XGlyph className="size-4" />
+                      </a>
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button asChild variant="ghost" size="icon" aria-label="Telegram">
+                      <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
+                        <TelegramGlyph className="size-4" />
+                      </a>
+                    </Button>
+                  </SheetClose>
+                </div>
                 <SheetGroup title="Go">
                   <SheetLink to="/" hash="about">
                     Story
                   </SheetLink>
                   <SheetLink to="/play">Play</SheetLink>
+                  <SheetLink to="/visions">Four Visions</SheetLink>
+                  <SheetLink to="/canyon">Skull Gate Canyon</SheetLink>
                   <SheetLink to="/memes">Memes</SheetLink>
                   <SheetLink to="/crew">Crew</SheetLink>
                 </SheetGroup>
@@ -292,22 +330,6 @@ export function SiteNav() {
                   <SheetLink to="/leaderboard">Floor Board</SheetLink>
                   <SheetLink to="/fossil-tokenisation">Fossils</SheetLink>
                 </SheetGroup>
-                <div className="mt-4 flex gap-2 px-1">
-                  <SheetClose asChild>
-                    <Button asChild variant="ghost" size="icon" aria-label="X">
-                      <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
-                        <XGlyph className="size-4" />
-                      </a>
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button asChild variant="ghost" size="icon" aria-label="Telegram">
-                      <a href={TOKEN.telegram} target="_blank" rel="noopener noreferrer">
-                        <TelegramGlyph className="size-4" />
-                      </a>
-                    </Button>
-                  </SheetClose>
-                </div>
                 {authEnabled && !user ? (
                   <SheetClose asChild>
                     <Link
@@ -315,7 +337,7 @@ export function SiteNav() {
                       search={{ next: "/play" }}
                       className="inline-flex h-11 items-center px-3 text-sm font-medium text-muted"
                     >
-                      Sign in
+                      Claim a name
                     </Link>
                   </SheetClose>
                 ) : null}

@@ -42,6 +42,7 @@ export function LEDStrip({
   );
 }
 
+/** Backrest on local −Z → seat faces +Z at rotY 0 (opposite player look yaw). */
 export function ExecChair({ position, rotY = 0 }: { position: [number, number, number]; rotY?: number }) {
   return (
     <group position={position} rotation={[0, rotY, 0]}>
@@ -62,6 +63,7 @@ export function ExecChair({ position, rotY = 0 }: { position: [number, number, n
   );
 }
 
+/** Backrest on local −Z → seat faces +Z at rotY 0 (opposite player look yaw). */
 export function MeshChair({ position, rotY = 0 }: { position: [number, number, number]; rotY?: number }) {
   return (
     <group position={position} rotation={[0, rotY, 0]}>
@@ -322,7 +324,8 @@ export function TroughPlanter({
 export function LandingPad({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
+      {/* Cylinder is already Y-up — do not -90° it or it stands on edge through the heli. */}
+      <mesh position={[0, 0.04, 0]}>
         <cylinderGeometry args={[3.6, 3.6, 0.08, 32]} />
         <meshStandardMaterial color="#2a2d33" metalness={0.45} roughness={0.38} />
       </mesh>

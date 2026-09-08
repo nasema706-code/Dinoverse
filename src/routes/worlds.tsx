@@ -48,11 +48,11 @@ function WorldsPage() {
       <main className="mx-auto max-w-6xl min-w-0 px-4 py-8 sm:py-16">
         <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Districts</p>
         <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
-          The Floor is open. Three districts still pouring.
+          The city is still being built.
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          Walk HQ in first person. Dino Mart, the Mall, and the Arena stay plates while we build the
-          next section.
+          The Floor is open to walk — as yourself or as a character. Dino Mart, the Mall, and the
+          Arena stay plates while we pour the next section. Expect scaffold.
         </p>
 
         {isDistrictOpen(tab) ? (
@@ -108,7 +108,7 @@ function WorldsPage() {
                     <p className="text-muted">{w.summary}</p>
                     {isDistrictWalkable(w.id) ? (
                       <p className="text-sm text-accent">
-                        First-person walking is live. WASD on The Floor. Arrows look. E use.
+                        First-person walking is live on The Floor. The rest of the city is still being built.
                       </p>
                     ) : (
                       <p className="text-sm text-accent">

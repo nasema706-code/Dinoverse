@@ -31,6 +31,8 @@ function TelegramGlyph({ className }: { className?: string }) {
 
 const EXPERIENCE = [
   { to: "/play", label: "Play" },
+  { to: "/visions", label: "Four Visions" },
+  { to: "/canyon", label: "Skull Gate Canyon" },
   { to: "/explore", label: "The Floor" },
   { to: "/memes", label: "Memes" },
 ] as const;

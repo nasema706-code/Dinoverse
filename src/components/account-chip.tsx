@@ -14,7 +14,7 @@ export function AccountChip({ className }: { className?: string }) {
     return (
       <Button asChild size="sm" variant="secondary" className={cn("hidden lg:inline-flex", className)}>
         <Link to="/login" search={{ next: "/play" }}>
-          Sign in
+          Floor pass
         </Link>
       </Button>
     );

@@ -5,6 +5,8 @@ import {
   FLOOR_INSPECT,
   FLOOR_SEATS,
   FLOOR_SPAWN,
+  PTERA_PAD,
+  ENZO_PLAZA,
   type FloorSeat,
 } from "./floor/layout";
 
@@ -80,11 +82,13 @@ export const DISTRICTS_3D: Record<WorldId, District3D> = {
       { id: "crater-b", position: [-2.2, 1.15, -8.4] },
     ],
     npcs: [
-      { id: "rex", position: [2.2, 0, 21.5] },
       { id: "knox", position: [-3.2, 0, 16.9] },
       { id: "sela", position: [3.2, 0, 16.9] },
       { id: "grav", position: [0, 0, 9.3] },
       { id: "mica", position: [-6.2, 0, 0.42] },
+      { id: "cal", position: [-9.2, 0, 12.85] },
+      { id: "ptera", position: [PTERA_PAD.x, 0, PTERA_PAD.z] },
+      { id: "enzo", position: [ENZO_PLAZA.x, 0, ENZO_PLAZA.z] },
     ],
     inspect: FLOOR_INSPECT,
     seats: FLOOR_SEATS,

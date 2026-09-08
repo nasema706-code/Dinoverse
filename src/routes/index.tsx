@@ -40,18 +40,37 @@ function Home() {
               Walk it. Run it. Stamp it.
             </h2>
             <p className="mt-3 max-w-lg text-sm text-muted">
-              The city, the game, and the plates — no token purchase required.
+              Walk the Floor while we pour the rest of the city. Play and memes are live — no token
+              purchase required.
             </p>
-            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <ExperienceTile
+                to="/visions"
+                kicker="Visions · live 3D"
+                title="Four worlds"
+                body="Skull megacity, crystal racetrack, night jungle, bone coliseum. Orbit, fly, or press 1–4."
+                image="/visions/fossil-megacity.jpg"
+                imageAlt="A T-Rex skull mountain split into a vertical city at dusk"
+                cta="Open the visions"
+                primary
+              />
+              <ExperienceTile
+                to="/canyon"
+                kicker="World · live 3D"
+                title="Skull Gate Canyon"
+                body="A bone bridge crosses the dusk path. The Bone Spire closes the far mouth. Orbit, or press Fly."
+                image="/hero.jpg"
+                imageAlt="Skull Gate Canyon"
+                cta="Enter the canyon"
+              />
               <ExperienceTile
                 to="/explore"
-                kicker="The Floor"
+                kicker="The Floor · still building"
                 title="Walk HQ"
-                body="Orbit DinoVerse Financial, then walk the plaza in first person."
+                body="Walk as yourself or pick Rex, Vex, Tria, or Ptera. The rest of the city is still being built — expect scaffold."
                 image={WORLDS[0].cinematic}
                 imageAlt={WORLDS[0].summary}
                 cta="Walk The Floor"
-                primary
                 preview
               />
               <ExperienceTile
@@ -86,7 +105,8 @@ function Home() {
                 Rex holds the tape. The crew keeps him honest.
               </h2>
               <p className="max-w-md text-sm text-muted">
-                Rex holds the tape by default, or switch guides. The city stays. The voice changes.
+                Rex holds the tape by default, or switch guides. On the Floor you can also walk as
+                yourself. The city stays. The voice changes.
               </p>
             </div>
             <div className="mt-8">
@@ -186,7 +206,7 @@ function ExperienceTile({
   primary = false,
   preview = false,
 }: {
-  to: "/explore" | "/play" | "/memes";
+  to: "/explore" | "/play" | "/memes" | "/canyon" | "/visions";
   kicker: string;
   title: string;
   body: string;

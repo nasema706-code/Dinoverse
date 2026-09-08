@@ -1,10 +1,9 @@
+import { Suspense } from "react";
 import { FLOOR_BOUNDS, FLOOR_DESKS } from "./layout";
 import {
   CeilingLight,
-  CoffeeBar,
   Column,
   ElevatorCore,
-  Helicopter,
   GlassCurtain,
   GlassFacade,
   LampPost,
@@ -12,8 +11,8 @@ import {
   TickerRail,
   Box,
   CheapGlass,
-  TransmissionPane,
 } from "./kit";
+import { AutoSlidingDoor } from "./entrance-door";
 import { Atrium } from "./atrium";
 import { Cityscape, PlazaTiles } from "./cityscape";
 import { MarbleSlab } from "./env";
@@ -22,6 +21,12 @@ import { ShardOrb } from "../shard-orb";
 import { useQuality } from "../quality";
 import { FloorCrew } from "./dinos";
 import { PalmPlanter } from "./furniture";
+import { PteraPilot } from "./ptera-pilot";
+import { EnzoPlaza } from "./enzo";
+import { HintzeHall } from "./hintze-hall";
+import { MeshyAvatar } from "./meshy-character";
+import { InspectSpots } from "./inspect-spots";
+import { DinoLoveLounge } from "./dino-lounge";
 import {
   Boardroom,
   CeilingLeds,
@@ -33,9 +38,10 @@ import {
   PlazaDressing,
   ReceptionDesk,
   RexStation,
+  RoofHelipad,
 } from "./zones";
 
-export function FloorScene({ collected }: { collected: string[] }) {
+export function FloorScene({ collected, preview = false }: { collected: string[]; preview?: boolean }) {
   const hud = useHudTextures();
   const { settings } = useQuality();
   const { minX, maxX, minZ } = FLOOR_BOUNDS;
@@ -46,7 +52,8 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <Cityscape />
       <PlazaTiles />
       <PlazaDressing hud={hud} />
-      <FloorCrew />
+      <FloorCrew preview={preview} />
+      <InspectSpots preview={preview} />
 
       <MarbleSlab
         position={[0, 0.02, -4]}
@@ -94,8 +101,12 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <GlassCurtain position={[14, 19, 2]} size={[26, 22]} rotY={Math.PI / 2} />
 
       <GlassFacade position={[-8.4, 6.1, 16]} size={[11.2, 12.2, 0.12]} />
-      <GlassFacade position={[8.4, 6.1, 16]} size={[11.2, 12.2, 0.12]} />
+      {/* East plaza glass — open at L2 for the roof helipad bridge. */}
+      <GlassFacade position={[8.4, 2.55, 16]} size={[11.2, 5.1, 0.12]} />
+      <GlassFacade position={[8.4, 10.35, 16]} size={[11.2, 3.7, 0.12]} />
       <Box position={[0, 12.15, 16]} size={[5.2, 0.28, 0.18]} color="#c9d4dc" metal={0.75} />
+      <Box position={[8.4, 8.45, 16]} size={[11.2, 0.16, 0.2]} color="#c9d4dc" metal={0.75} />
+      <Box position={[8.4, 5.25, 16]} size={[11.2, 0.16, 0.2]} color="#c9d4dc" metal={0.75} />
       <GlassFacade position={[-14.1, 6.1, 11]} size={[0.12, 12.2, 10.2]} />
       <GlassFacade position={[14.1, 6.1, 11]} size={[0.12, 12.2, 10.2]} />
 
@@ -111,9 +122,8 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <GlassFacade position={[minX, 6.1, -20]} size={[0.12, 12.2, 24]} />
       <GlassFacade position={[maxX, 6.1, -20]} size={[0.12, 12.2, 24]} />
 
-      <GlassCurtain position={[0, 6.1, 16.12]} size={[5.2, 11.4]} />
-      <TransmissionPane position={[-0.64, 0.9, 16.22]} rotation={[0, 0.16, 0]} />
-      <TransmissionPane position={[0.64, 0.9, 16.22]} rotation={[0, -0.16, 0]} />
+      <GlassFacade position={[0, 7.78, 16]} size={[5.5, 8.9, 0.12]} />
+      <AutoSlidingDoor preview={preview} />
 
       {hud ? (
         <>
@@ -146,7 +156,7 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <DinoseHolo hud={hud} />
 
       <ReceptionDesk hud={hud} />
-      <CoffeeBar position={[-10.4, 0, 12.2]} />
+      <DinoLoveLounge />
       <CommandStation hud={hud} />
 
       <TickerRail position={[0, 3.4, 2.6]} w={10.4} />
@@ -168,7 +178,14 @@ export function FloorScene({ collected }: { collected: string[] }) {
       <Boardroom hud={hud} />
       <CeilingLeds />
 
-      <Helicopter position={[10.4, 0, 27.6]} />
+      <RoofHelipad />
+      <Suspense fallback={null}>
+        <HintzeHall />
+      </Suspense>
+      <PteraPilot preview={preview} />
+      <EnzoPlaza preview={preview} />
+      {/* Heavy Meshy rig — load only in the walkable explorer, not the orbit preview. */}
+      {preview ? null : <MeshyAvatar />}
 
       <LampPost position={[-16, 0, 20]} />
       <LampPost position={[16, 0, 20]} />
@@ -202,7 +219,7 @@ export function FloorScene({ collected }: { collected: string[] }) {
           <pointLight position={[0, 4.2, 10]} intensity={1.2} distance={16} color="#f0ead8" />
           <pointLight position={[0, 4.2, -2]} intensity={1} distance={16} color="#e4eef8" />
           <pointLight position={[16, 3.6, -1]} intensity={1.4} distance={14} color="#3ecf8e" />
-          <pointLight position={[10.4, 3.2, 27.6]} intensity={1.05} distance={14} color="#ffd9a0" />
+          <pointLight position={[10.4, 8.4, 27.6]} intensity={1.15} distance={16} color="#ffd9a0" />
         </>
       ) : null}
 

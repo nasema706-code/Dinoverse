@@ -18,14 +18,16 @@ export function HqEnvironment() {
         mieCoefficient={0.0045}
         mieDirectionalG={0.8}
       />
-      <Suspense fallback={null}>
-        <Environment
-          preset="city"
-          background={false}
-          environmentIntensity={level === "low" ? 0.72 : 1.05}
-          environmentRotation={[0, Math.PI * 0.28, 0]}
-        />
-      </Suspense>
+      {level === "low" ? null : (
+        <Suspense fallback={null}>
+          <Environment
+            preset="city"
+            background={false}
+            environmentIntensity={level === "high" ? 1.05 : 0.62}
+            environmentRotation={[0, Math.PI * 0.28, 0]}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

@@ -203,9 +203,23 @@ function waitForPopupToken(popup: Window): Promise<string | null> {
 /** Sign out of THIS app's local session, clear the preview token, then redirect. */
 export async function signOut(redirectTo = "/"): Promise<void> {
   try {
-    await authClient.signOut();
-  } finally {
-    setBearerToken(null);
+    const { leaveFloorPass } = await import("@/lib/floor-pass");
+    const { setFloorUserCache } = await import("@/lib/floor-session");
+    await leaveFloorPass();
+    setFloorUserCache(null);
+  } catch {
+    /* Floor pass already clear */
   }
+  try {
+    await Promise.race([
+      authClient.signOut(),
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 600);
+      }),
+    ]);
+  } catch {
+    /* Better Auth sign-out can 403 on a bad origin — Floor pass is already clear */
+  }
+  setBearerToken(null);
   window.location.href = redirectTo;
 }

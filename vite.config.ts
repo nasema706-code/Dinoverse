@@ -136,7 +136,12 @@ export default defineConfig(({ command }) => ({
     port: 8080,
     strictPort: true,
     watch: {
-      ignored: ["**/public/**/*.mov", "**/public/**/*.mp4"],
+      ignored: [
+        "**/public/**/*.mov",
+        "**/public/**/*.mp4",
+        "**/public/**/*.glb",
+        "**/tmp/**", // large models are static; ignore so watchers stay stable
+      ],
     },
   },
   resolve: { tsconfigPaths: true },

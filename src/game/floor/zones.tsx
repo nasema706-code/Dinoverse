@@ -1,7 +1,8 @@
 import type { Texture } from "three";
 import type { FloorDesk } from "./layout";
+import { HELI_PAD } from "./layout";
 import { L2_HEIGHT } from "./levels";
-import { Box, CheapGlass, TransmissionGlass } from "./kit";
+import { Box, CheapGlass, Helicopter, TransmissionGlass } from "./kit";
 import { useQuality } from "../quality";
 import {
   CharacterSlot,
@@ -13,13 +14,10 @@ import {
   HqLetteringBoard,
   LEDStrip,
   LandingPad,
-  LoungeSeat,
   MarkSculpture,
   MeshChair,
   PalmPlanter,
   PlazaBench,
-  Rope,
-  Stanchion,
   TroughPlanter,
   WasteBin,
   WoodDesk,
@@ -43,10 +41,46 @@ type Hud = {
   grid: Texture;
 } | null;
 
+/** North roof helipad — walk east from the mezzanine after the lift or spiral. */
+export function RoofHelipad() {
+  const y = L2_HEIGHT;
+  const { x, z } = HELI_PAD;
+  return (
+    <group>
+      <Box position={[x, y, 18.9]} size={[8.8, 0.14, 9.4]} color="#9aa3ad" metal={0.22} rough={0.28} />
+      <Box position={[x, y, z]} size={[9.8, 0.14, 9.4]} color="#8a929c" metal={0.26} rough={0.3} />
+      <Box position={[x, y - 0.42, 23.2]} size={[8.4, 0.7, 16.8]} color="#1e2228" metal={0.42} rough={0.48} />
+      {([16.2, 20.4, 24.6, 28.8] as const).map((cz) => (
+        <group key={cz}>
+          <Box position={[6.35, 3, cz]} size={[0.38, 6, 0.38]} color="#2a2d33" metal={0.45} rough={0.4} />
+          <Box position={[14.45, 3, cz]} size={[0.38, 6, 0.38]} color="#2a2d33" metal={0.45} rough={0.4} />
+        </group>
+      ))}
+      <RoofRail x={5.75} z={23.2} w={0.08} d={17.8} />
+      <RoofRail x={15.05} z={15.5} w={0.08} d={2.4} />
+      <RoofRail x={15.05} z={31.35} w={0.08} d={1.6} />
+      <RoofRail x={x} z={32.25} w={9.6} d={0.08} />
+      <LandingPad position={[x, y, z]} />
+      <Helicopter position={[x, y, z]} />
+    </group>
+  );
+}
+
+function RoofRail({ x, z, w, d }: { x: number; z: number; w: number; d: number }) {
+  return (
+    <group position={[x, L2_HEIGHT + 0.52, z]}>
+      <mesh>
+        <boxGeometry args={[Math.max(w, 0.08), 1.02, Math.max(d, 0.08)]} />
+        <CheapGlass opacity={0.2} />
+      </mesh>
+      <Box position={[0, 0.52, 0]} size={[Math.max(w, 0.1), 0.05, Math.max(d, 0.1)]} color="#c5d0d8" metal={0.7} />
+    </group>
+  );
+}
+
 export function PlazaDressing({ hud }: { hud: Hud }) {
   return (
     <group>
-      <LandingPad position={[10.4, 0, 27.6]} />
       <PalmPlanter position={[-4.2, 0, 18.2]} />
       <PalmPlanter position={[4.2, 0, 18.2]} />
       <TroughPlanter position={[-7.2, 0, 17.4]} w={1.6} d={0.42} />
@@ -57,21 +91,12 @@ export function PlazaDressing({ hud }: { hud: Hud }) {
       <PlazaBench position={[-10.2, 0, 22.4]} rotY={0.4} />
       <PlazaBench position={[6.6, 0, 21.8]} rotY={-0.35} />
       <PlazaBench position={[-1.8, 0, 30.2]} rotY={Math.PI} />
-      <Stanchion position={[-1.85, 0, 16.55]} />
-      <Stanchion position={[1.85, 0, 16.55]} />
-      <Stanchion position={[-1.85, 0, 15.15]} />
-      <Stanchion position={[1.85, 0, 15.15]} />
-      <Rope from={[-1.85, 0, 16.55]} to={[-1.85, 0, 15.15]} />
-      <Rope from={[1.85, 0, 16.55]} to={[1.85, 0, 15.15]} />
       <Bollard position={[-2.8, 0, 19.4]} />
       <Bollard position={[2.8, 0, 19.4]} />
       <Bollard position={[-2.8, 0, 23.2]} />
       <Bollard position={[2.8, 0, 23.2]} />
       <WasteBin position={[-9.4, 0, 17.8]} />
       <WasteBin position={[8.8, 0, 17.8]} />
-      <LoungeSeat position={[-8.6, 0, 13.55]} rotY={0.35} />
-      <LoungeSeat position={[-7.4, 0, 12.6]} rotY={-0.9} />
-      <Box position={[-8.1, 0.28, 13.05]} size={[0.55, 0.08, 0.55]} color="#2a2d33" metal={0.35} />
     </group>
   );
 }
@@ -108,7 +133,8 @@ export function ReceptionDesk({ hud }: { hud: Hud }) {
           <HoloPanel map={hud.visitors} position={[0.95, 1.85, 0.15]} w={1.25} h={0.82} />
         </>
       ) : null}
-      <ExecChair position={[0, 0, -0.85]} rotY={Math.PI} />
+      {/* Chair mesh faces +Z at rotY 0; sit on the −Z side looking toward the desk (+Z). */}
+      <ExecChair position={[0, 0, -0.85]} rotY={0} />
       <CharacterSlot name="slot-sec-desk" position={[0, 0, -0.85]} />
     </group>
   );
@@ -182,7 +208,8 @@ export function OpsStation({ desk, hud }: { desk: FloorDesk; hud: Hud }) {
           </>
         ) : null}
       </group>
-      <ExecChair position={chair} rotY={desk.rotY} />
+      {/* Monitors sit on local −Z; chair is on +Z, so face it toward the desk. */}
+      <ExecChair position={chair} rotY={desk.rotY + Math.PI} />
       <CharacterSlot name={`slot-ops-${desk.id}`} position={chair} />
     </group>
   );
@@ -202,7 +229,7 @@ export function OfficeStation({ desk, hud }: { desk: FloorDesk; hud: Hud }) {
         <DeskProjector position={[-0.35, 0.82, -0.12]} />
         {hud ? <HoloPanel map={hud.code} position={[-0.2, 1.42, -0.16]} w={1.15} h={0.72} /> : null}
       </group>
-      <MeshChair position={chair} rotY={desk.rotY} />
+      <MeshChair position={chair} rotY={desk.rotY + Math.PI} />
       <CharacterSlot name={`slot-dev-${desk.id}`} position={chair} />
     </group>
   );
@@ -226,7 +253,7 @@ export function RexStation({ desk, hud }: { desk: FloorDesk; hud: Hud }) {
           </>
         ) : null}
       </group>
-      <ExecChair position={chair} rotY={desk.rotY} />
+      <ExecChair position={chair} rotY={desk.rotY + Math.PI} />
       <CharacterSlot name="slot-rex-desk" position={chair} />
     </group>
   );

@@ -63,11 +63,11 @@ export function WorldPreview({
       </Canvas>
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
         <span className="max-w-[min(100%,18rem)] rounded-full border border-accent/40 bg-bg/80 px-2.5 py-1 text-[10px] leading-snug font-medium tracking-wide text-accent uppercase">
-          {walkable ? "Walkable" : "3D preview · under construction"}
+          {walkable ? "Walkable · still being built" : "3D preview · under construction"}
         </span>
       </div>
       <p className="pointer-events-none absolute right-3 bottom-3 left-3 max-w-[min(100%-1.5rem,28rem)] text-xs leading-snug tracking-wide text-fg/85 uppercase">
-        {walkable ? "Live 3D · drag to orbit · walking is open" : "Look only · drag to orbit · walking locked"}
+        {walkable ? "Live 3D · walk open · city still pouring" : "Look only · drag to orbit · walking locked"}
       </p>
     </div>
   );
