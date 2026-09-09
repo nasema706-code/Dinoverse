@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Quality = "low" | "mid" | "high";
 
@@ -49,9 +49,9 @@ export const QUALITY: Record<Quality, QualitySettings> = {
     crafts: 3,
     contactShadows: false,
     headlamp: true,
-    extraLights: true,
+    extraLights: false,
     extraProps: true,
-    atriumDetail: true,
+    atriumDetail: false,
     preview3d: true,
     videoHero: true,
   },
@@ -74,7 +74,16 @@ export const QUALITY: Record<Quality, QualitySettings> = {
   },
 };
 
+const QUALITY_KEY = "dinoverse-quality";
+
 type NavConn = { saveData?: boolean; effectiveType?: string };
+
+export function readQualityOverride(): Quality | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(QUALITY_KEY);
+  if (raw === "low" || raw === "mid" || raw === "high") return raw;
+  return null;
+}
 
 export function detectQuality(): Quality {
   if (typeof window === "undefined" || typeof navigator === "undefined") return "mid";
@@ -98,9 +107,14 @@ export function detectQuality(): Quality {
   return "high";
 }
 
-const QualityCtx = createContext<{ level: Quality; settings: QualitySettings }>({
+const QualityCtx = createContext<{
+  level: Quality;
+  settings: QualitySettings;
+  setLevel: (next: Quality) => void;
+}>({
   level: "mid",
   settings: QUALITY.mid,
+  setLevel: () => {},
 });
 
 export function useQuality() {
@@ -108,10 +122,15 @@ export function useQuality() {
 }
 
 export function QualityProvider({ children }: { children: ReactNode }) {
-  const [level, setLevel] = useState<Quality>(() => detectQuality());
+  const [level, setLevelState] = useState<Quality>(() => readQualityOverride() ?? detectQuality());
   useEffect(() => {
-    setLevel(detectQuality());
+    if (readQualityOverride()) return;
+    setLevelState(detectQuality());
   }, []);
-  const value = useMemo(() => ({ level, settings: QUALITY[level] }), [level]);
+  const setLevel = useCallback((next: Quality) => {
+    if (typeof window !== "undefined") window.localStorage.setItem(QUALITY_KEY, next);
+    setLevelState(next);
+  }, []);
+  const value = useMemo(() => ({ level, settings: QUALITY[level], setLevel }), [level, setLevel]);
   return createElement(QualityCtx.Provider, { value }, children);
 }

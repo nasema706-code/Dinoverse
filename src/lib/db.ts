@@ -105,17 +105,26 @@ function createNeonSql(): Promise<Sql> {
 
 async function createPgliteSql(): Promise<Sql> {
   // Embedded Postgres, imported on demand so it never loads on the Neon path.
-  // One in-memory instance per process, shared across HMR module instances, so
-  // data survives source edits (it resets on dev-server restart).
+  // One instance per process, persisted under data/pglite so email accounts
+  // survive a local/dev-server restart. (Deployed apps use Neon via DATABASE_URL.)
   globalRef.__pgliteInstance__ ??= (async () => {
+    const { mkdirSync } = await import("node:fs");
+    const { join } = await import("node:path");
     const { PGlite } = await import("@electric-sql/pglite");
-    const pg = new PGlite({
-      parsers: {
-        [OID_INT8]: Number,
-        [OID_DATE]: identity,
-        [OID_INTERVAL]: identity,
-      },
-    });
+    const parsers = {
+      [OID_INT8]: Number,
+      [OID_DATE]: identity,
+      [OID_INTERVAL]: identity,
+    };
+    const dir = join(process.cwd(), "data", "pglite");
+    let pg: InstanceType<typeof PGlite>;
+    try {
+      mkdirSync(dir, { recursive: true });
+      pg = new PGlite(dir, { parsers });
+    } catch (err) {
+      console.warn("[db] Could not persist PGLite to disk; using memory.", err);
+      pg = new PGlite({ parsers });
+    }
     await pg.waitReady;
     await pg.exec(
       "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
@@ -127,7 +136,8 @@ async function createPgliteSql(): Promise<Sql> {
   });
   const pg = await globalRef.__pgliteInstance__;
 
-  // Apply migrations/ (the single schema source) so preview matches production.
+  // Apply migrations/ (the single schema source: auth, saves, scores, memes)
+  // so preview matches production.
   // SQL is inlined by the bundler via import.meta.glob (no runtime fs); applied
   // files are tracked in _migrations. Runs once per module instance — so an HMR
   // reload after adding a migration file applies it live — with passes
@@ -212,8 +222,9 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
 /**
  * Finish DB bootstrap before the server handles traffic.
  *
- * - **PGLite** (preview / no `DATABASE_URL`): open the in-memory DB and apply
- *   `migrations/*.sql`. Idempotent — concurrent callers share one promise.
+ * - **PGLite** (preview / no `DATABASE_URL`): open the on-disk DB (`data/pglite`)
+ *   so email accounts survive a restart, then apply `migrations/*.sql`.
+ *   Idempotent — concurrent callers share one promise.
  * - **Neon**: no-op (pool is created lazily on first query).
  *
  * Vite `configureServer` awaits this at dev startup; production imports of this

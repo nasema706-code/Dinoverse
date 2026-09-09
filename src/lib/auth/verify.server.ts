@@ -1,5 +1,4 @@
-import { getRequest } from "@tanstack/react-start/server";
-import { auth, authConfigured } from "./server";
+import { authConfigured } from "./server";
 
 /**
  * Server-side session resolution (server-only).
@@ -41,32 +40,21 @@ export class UnauthorizedError extends Error {
   }
 }
 
-export type VerifiedUser = { id: string; email: string | null };
+export type VerifiedUser = { id: string; email: string | null; displayName?: string | null };
 
 /**
- * Resolve the signed-in user from the current request, or `null` when auth isn't
- * configured / nobody is signed in. Safe to call from server functions and SSR
- * loaders.
- *
- * `bearerToken` is for the LIVE PREVIEW: the app runs in a partitioned iframe
- * whose cookies don't reach the server, so `authMiddleware` forwards the session
- * as a bearer token, which we present as `Authorization: Bearer …` (the `bearer`
- * plugin resolves it). When deployed no token is passed and the cookie is used.
+ * Resolve the signed-in runner from the Floor pass cookie, or `null`.
+ * Email/password is off — Better Auth sessions are not used for scores.
  */
 export async function getSessionUser(
-  bearerToken?: string,
+  _bearerToken?: string,
 ): Promise<VerifiedUser | null> {
-  if (!authConfigured) return null;
-  const request = getRequest();
-  if (!request) return null;
-  let headers = request.headers;
-  if (bearerToken) {
-    headers = new Headers(request.headers);
-    headers.set("Authorization", `Bearer ${bearerToken}`);
+  try {
+    const { readFloorSessionUser } = await import("@/lib/floor-session.server");
+    return await readFloorSessionUser();
+  } catch {
+    return null;
   }
-  const session = await auth.api.getSession({ headers });
-  if (!session?.user) return null;
-  return { id: session.user.id, email: session.user.email ?? null };
 }
 
 /**

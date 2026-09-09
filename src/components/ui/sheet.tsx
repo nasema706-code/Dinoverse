@@ -25,20 +25,22 @@ export function SheetContent({
         className={cn(
           "fixed z-50 bg-surface text-fg border-border shadow-xl focus:outline-none",
           side === "right" &&
-            "inset-y-0 right-0 h-full w-[min(100%,22rem)] border-l p-5 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+            "inset-y-0 right-0 flex h-full w-[min(100%,22rem)] max-w-[100vw] flex-col overflow-hidden border-l p-4 pt-[max(1.25rem,env(safe-area-inset-top))] pr-[max(1.25rem,env(safe-area-inset-right))] pb-[max(1.25rem,env(safe-area-inset-bottom))] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
           side === "bottom" &&
-            "inset-x-0 bottom-0 rounded-t-xl border-t p-5 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+            "inset-x-0 bottom-0 flex max-h-[min(88dvh,40rem)] flex-col overflow-hidden rounded-t-xl border-t p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
           className,
         )}
       >
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
           <Dialog.Title className="font-display text-base font-medium">{title}</Dialog.Title>
-          <Dialog.Close className="grid size-11 place-items-center rounded-sm text-muted hover:bg-surface-2 hover:text-fg">
+          <Dialog.Close className="grid size-11 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-fg">
             <X className="size-4" />
             <span className="sr-only">Close</span>
           </Dialog.Close>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          {children}
+        </div>
       </Dialog.Content>
     </Dialog.Portal>
   );

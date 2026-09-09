@@ -1,4 +1,5 @@
-import { authClient, authEnabled } from "./client";
+import { authEnabled } from "./client";
+import { useFloorUserState } from "@/lib/floor-session";
 
 /** Normalized user shape used across the app, auth on or off. */
 export type AppUser = {
@@ -34,12 +35,10 @@ export type CurrentUserState = {
 };
 
 /**
- * Current user + loading state. Same behavior in live preview and when deployed:
- *   - Auth enabled (default) -> the real signed-in user; `user` is `null` while
- *                            the session resolves (`isPending: true`) and when
- *                            signed out (`isPending: false`). Session comes from
- *                            Better Auth `useSession()` → `/api/auth/get-session`
- *                            (cookie when deployed; bearer in live preview).
+ * Current user + loading state:
+ *   - Auth enabled (default) -> Floor pass session (unique runner name + password).
+ *                            `user` is `null` while that session resolves
+ *                            (`isPending: true`) and when signed out.
  *   - Auth disabled (`VITE_AUTH_ENABLED=false`) -> `DEV_USER`, never pending.
  *
  * Protect a route by waiting out `isPending` before acting on `user` —
@@ -57,20 +56,20 @@ export type CurrentUserState = {
 export function useCurrentUserState(): CurrentUserState {
   if (!authEnabled) return { user: DEV_USER, isPending: false };
   // eslint-disable-next-line react-hooks/rules-of-hooks -- authEnabled is constant for the app's lifetime
-  const { data, isPending } = authClient.useSession();
-  const user = data?.user;
-  return {
-    user: user
-      ? {
-          id: user.id,
-          displayName: user.name ?? null,
-          primaryEmail: user.email ?? null,
-          profileImageUrl: user.image ?? null,
-          isDevFallback: false,
-        }
-      : null,
-    isPending,
-  };
+  const floor = useFloorUserState();
+  if (floor.user) {
+    return {
+      user: {
+        id: floor.user.id,
+        displayName: floor.user.name,
+        primaryEmail: null,
+        profileImageUrl: null,
+        isDevFallback: false,
+      },
+      isPending: false,
+    };
+  }
+  return { user: null, isPending: floor.isPending };
 }
 
 /**

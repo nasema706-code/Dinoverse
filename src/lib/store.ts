@@ -12,7 +12,10 @@ export type CloudSave = {
 };
 
 type DinoverseState = CloudSave & {
+  /** First-person guest walk. Characters stay optional. */
+  walkAsSelf: boolean;
   setCharacter: (id: CharacterId) => void;
+  setWalkAsSelf: (value: boolean) => void;
   collectShard: (id: string) => void;
   visitWorld: (id: WorldId) => void;
   completeQuest: () => void;
@@ -24,11 +27,13 @@ export const useDinoverse = create<DinoverseState>()(
   persist(
     (set, get) => ({
       characterId: "rex",
+      walkAsSelf: true,
       collected: [],
       visited: [],
       questDone: false,
       hasOnboarded: false,
-      setCharacter: (id) => set({ characterId: id, hasOnboarded: true }),
+      setCharacter: (id) => set({ characterId: id, hasOnboarded: true, walkAsSelf: false }),
+      setWalkAsSelf: (value) => set({ walkAsSelf: value, hasOnboarded: true }),
       collectShard: (id) => {
         if (get().collected.includes(id)) return;
         set({ collected: [...get().collected, id] });
@@ -45,6 +50,7 @@ export const useDinoverse = create<DinoverseState>()(
       name: "dinoverse-save-v1",
       partialize: (s) => ({
         characterId: s.characterId,
+        walkAsSelf: s.walkAsSelf,
         collected: s.collected,
         visited: s.visited,
         questDone: s.questDone,
@@ -56,6 +62,7 @@ export const useDinoverse = create<DinoverseState>()(
           ...current,
           ...p,
           characterId: isCharacterId(p.characterId) ? p.characterId : "rex",
+          walkAsSelf: p.walkAsSelf !== false,
           collected: Array.isArray(p.collected) ? p.collected.filter((id) => typeof id === "string") : [],
           visited: Array.isArray(p.visited) ? p.visited.filter(isWorldId) : [],
           questDone: Boolean(p.questDone),

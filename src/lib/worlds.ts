@@ -26,7 +26,7 @@ export const WORLDS: World[] = [
     summary:
       "A glass HQ. Sun on the tape, city in every window, and a raptor with a coffee walking the lobby like he owns the floor. He does.",
     stills: [
-      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Preview" },
+      { src: "/life/corporate.jpg", alt: "Rex-type executive crossing a trading lobby with a holographic tablet", caption: "Lobby" },
       { src: "/life/finance.jpg", alt: "Boardroom briefing under a Dinoverse Financial Group hologram", caption: "The tape" },
       { src: "/life/analysis.jpg", alt: "Triceratops analyst at a glass desk of market holograms", caption: "Ops" },
       { src: "/life/office.jpg", alt: "Raptor developers at curved holographic code desks", caption: "Build" },
@@ -43,11 +43,11 @@ export const WORLDS: World[] = [
       rex: [
         {
           title: "Lobby open",
-          body: "Rex crosses the marble with a cup and a live tablet. Ankylosaurs in navy, triceratops in chalk-stripe, the DINOSE ticker green. He does not hurry. The floor waits.",
+          body: "Rex crosses the marble with a cup and a live tablet. Ankylosaurs in navy, triceratops in chalk-stripe, the $Dinoverse ticker green. He does not hurry. The floor waits.",
         },
         {
           title: "The tape",
-          body: "In the glass boardroom he walks the Q2 hologram like a meal. $DINOVERSE is not a pitch here. It is the operating system of a city that already clocks in.",
+          body: "In the glass boardroom he walks the Q2 hologram like a meal. $DINOVERSE is not a pitch here. It is wallpaper on a city that already clocks in.",
         },
         {
           title: "Plaza lift",
@@ -75,7 +75,7 @@ export const WORLDS: World[] = [
         },
         {
           title: "Names on badges",
-          body: "She reads the visitor board like a reservation list. If the city feeds its analysts, the listing will hold.",
+          body: "She reads the visitor board like a reservation list. If the city feeds its analysts, the close still happens on a full stomach.",
         },
         {
           title: "After the open",
@@ -268,7 +268,7 @@ export const WORLDS: World[] = [
     cinematic: "/life/football.jpg",
     map: "/worlds/crater/map.jpg",
     summary:
-      "Dino Fit, Jurassic Coliseum, the track at dusk. The city trains like the listing depends on it.",
+      "Dino Fit, Jurassic Coliseum, the track at dusk. The city trains. Sweat, lights, a cup.",
     stills: [
       { src: "/life/gym.jpg", alt: "T-rex deadlifting at Dino Fit", caption: "Fit" },
       { src: "/life/fitness-street.jpg", alt: "Friends walking between Dino Mac and Dino Fit", caption: "Block" },
@@ -361,9 +361,9 @@ export function isDistrictOpen(id: WorldId): id is "forum" {
   return id === "forum";
 }
 
-/** First-person walking. Off while HQ is still under construction. */
-export function isDistrictWalkable(_id: WorldId): boolean {
-  return false;
+/** First-person walking. The Floor is open; other districts stay plates. */
+export function isDistrictWalkable(id: WorldId): boolean {
+  return id === "forum";
 }
 
 export const FLOOR_PREVIEW_LINE: Record<CharacterId, string> = {
@@ -421,7 +421,7 @@ export const COLLECT_LINES: Record<CharacterId, string[]> = {
 
 export const NPC_LINES: Record<
   string,
-  { name: string; body: Record<CharacterId, string> }
+  { name: string; body: Record<CharacterId, string>; lines?: Record<CharacterId, string[]> }
 > = {
   brak: {
     name: "Brak",
@@ -468,6 +468,33 @@ export const NPC_LINES: Record<
       ptera: "Pad is yours after ten. Until then, try not to clip the lettering with a wing.",
     },
   },
+  enzo: {
+    name: "Enzo",
+    body: {
+      rex: "Plaza muscle with a blue collar. He does not clock in. He does not clock out. He just owns the pavement.",
+      vex: "No badge. No packet. Still the most honest thing on this plaza. I respect a creature that does not pretend to be a terminal.",
+      tria: "I brought him a snack once. He looked at me like I had offered a meeting. Fair.",
+      ptera: "Wings would be wasted on him. He is already the size of a small landing. Do not taxi over the tail.",
+    },
+    lines: {
+      rex: [
+        "If he is sitting on the plaza, the listing is still standing. That is my kind of security.",
+        "You can talk to the glass. He already heard you.",
+      ],
+      vex: [
+        "I scanned the collar. It is just a collar. That is the joke.",
+        "Sit still. He is better at it than half the desks upstairs.",
+      ],
+      tria: [
+        "I am not walking him. He is walking the city. We are the ones on a leash.",
+        "If Grav asks, the crumbs on the tiles are a plaza tax.",
+      ],
+      ptera: [
+        "Crosswind does not move him. I have notes. I have envy.",
+        "If the pad is full, park next to Enzo. He does not file a report.",
+      ],
+    },
+  },
   knox: {
     name: "Knox",
     body: {
@@ -492,23 +519,178 @@ export const NPC_LINES: Record<
       rex: "Check-in is green. The interesting names are already upstairs.",
       vex: "I see the packet before the badge. Do not make me reprint it.",
       tria: "The visitor board still has a lunch slot. I left it. Someone should use it.",
-      ptera: "If you are here for the pad, the Chief is in the plaza. If you are here for coffee, left.",
+      ptera: "If you are here for the pad, take the lift or the spiral — roof deck, east. The museum wing is past the bird. Coffee is still left.",
+    },
+  },
+  ptera: {
+    name: "Ptera Drift",
+    body: {
+      rex: "Left seat is mine after ten. Until then I am stretching the wings, not the listing.",
+      vex: "Transponder is honest. If you ping the pad I will hear it before the radio does.",
+      tria: "I did not forget the sandwich. I parked it on the skid. Gravity can have the crust.",
+      ptera: "You already know the crosswind. Stand here anyway. The bird looks better with a witness.",
+    },
+    lines: {
+      rex: [
+        "You walk like someone who has never been in a crosswind. I mean that kindly.",
+        "The bird is fueled. I am not. Coffee first, Chief, then maybe a circuit.",
+      ],
+      vex: [
+        "If your visor pings the transponder, wave. I already saw you. I am being polite.",
+        "Keep the packet off the rotor. I like my air honest.",
+      ],
+      tria: [
+        "I am doing laps because standing still looks like a meeting. I do not attend meetings.",
+        "There is jerky in the seat pocket. Do not tell Grav it counts as lunch.",
+      ],
+      ptera: [
+        "Same pad. Same wind. You still look like you want the left seat.",
+        "If you are here to fly, wait. If you are here to talk, walk with me.",
+      ],
     },
   },
   mica: {
     name: "Mica",
     body: {
-      rex: "DINOSE is green because I made it green. Try not to give a speech on my glass.",
+      rex: "$Dinoverse is green because I made it green. Try not to give a speech on my glass.",
       vex: "Species index lagged eight seconds. I kicked it. You are welcome.",
       tria: "There is a sandwich under the keyboard. Do not tell Grav. Tell me if it is any good.",
       ptera: "The tape looks like weather from here. I would rather have your horizon.",
     },
+    lines: {
+      rex: [
+        "If the ticker lies, I paint over it. If you lie, I still paint over it.",
+        "Sit if you want. The chair already knows your weight from the last close.",
+      ],
+      vex: [
+        "I do not debug from a standing position. That is a you problem.",
+        "Your visor is prettier than my glass. My glass is honest. Pick one.",
+      ],
+      tria: [
+        "I will trade you the sandwich for ten quiet minutes. That is the whole market.",
+        "If Grav asks, the crumbs are a feature. Do not snitch on a feature.",
+      ],
+      ptera: [
+        "I can see the pad from here. I still will not fly it. That is your whole personality.",
+        "Bring weather next time. The tape is getting bored of itself.",
+      ],
+    },
+  },
+  cal: {
+    name: "Cal",
+    body: {
+      rex: "Jurassic Blend, extra dark. I started it when the tablet cleared the doors.",
+      vex: "The kettle is local-only. No uplink. That is why it tastes like a decision.",
+      tria: "I used your beans. If you wanted the cheap bag you would have hidden them better.",
+      ptera: "Hot enough to survive the plaza wind. Sit two minutes or lose half the cup.",
+    },
+    lines: {
+      rex: [
+        "If the open is ugly, drink it anyway. The cup does not care about the listing.",
+        "I do not do oat. I do not do speeches. I do coffee.",
+      ],
+      vex: [
+        "Your visor pinged the machine. It pinged back. We are even.",
+        "Decaf is a rumor I refuse to confirm.",
+      ],
+      tria: [
+        "I left a second cup. You always say you will not, and you always do.",
+        "If Knox logs the broth, I am logging the beans. Balance.",
+      ],
+      ptera: [
+        "Lid on. Crosswind after ten. I learned that the hard way.",
+        "You can fly after this. You cannot fly hungry. Cal's rules.",
+      ],
+    },
   },
 };
 
+export const VISITOR_ENTER: Record<WorldId, string> = {
+  forum: "Guest badge. The glass is real. Walk it — nobody is checking a costume at the door.",
+  mart: "Look only. The stalls are still pouring. Come back when the pots are honest.",
+  canopy: "Pretty rails. The Mall walk is not certified yet.",
+  crater: "The Arena is still a plate. The wind can wait.",
+};
+
+export const VISITOR_COLLECT = [
+  "Picked up. No headset required.",
+  "Into the pocket. The Floor still lets guests bag a shard.",
+  "Yours. The tape does not ask who you are.",
+];
+
+export const VISITOR_BUILD: Record<Exclude<WorldId, "forum">, string> = {
+  mart: "Dino Mart is still pouring. Look, then come back when the stalls are honest.",
+  canopy: "The Mega Mall is a pretty promise. The walk is not certified yet.",
+  crater: "The Arena is still a plate. Come back when the sand is real.",
+};
+
+const VISITOR_NPC: Record<string, string> = {
+  brak: "Guest. The usual is not poured because I do not know your usual. Sit anyway.",
+  nyla: "You can lean on the rail. I am napping. Try not to start a listing over my head.",
+  jett: "Pad is clean. You look like you walked here. That is allowed.",
+  kael: "Sit if you want. The Floor hears guests too.",
+  rex: "Headset, coffee, the tape. He clocks you as a guest and still makes room on the floor.",
+  enzo: "Plaza muscle with a blue collar. He does not clock in. He just owns the pavement.",
+  knox: "Visitor. Bags on the scanner. Policy. Then the lobby is yours.",
+  sela: "West doors stay open. Walk between the posts like a guest. That is the briefing.",
+  grav: "Check-in is green. Guest names go upstairs the same as the loud ones.",
+  ptera: "Wind is mean after ten. You can still look at the pad. Just do not taxi over the tail.",
+  mica: "If you are lost, you are on time. The Floor likes a first walk.",
+  cal: "Lid on. You can fly after this. You cannot fly hungry.",
+};
+
+export function npcSpokenLine(
+  id: string,
+  characterId: CharacterId,
+  asSelf = false,
+): { name: string; body: string } | null {
+  const npc = NPC_LINES[id];
+  if (!npc) return null;
+  if (asSelf) {
+    return { name: npc.name, body: VISITOR_NPC[id] ?? `${npc.name} clocks you as a guest. The Floor is still open.` };
+  }
+  const extras = npc.lines?.[characterId] ?? [];
+  const pool = [npc.body[characterId], ...extras];
+  const body = pool[Math.floor(Math.random() * pool.length)] ?? npc.body[characterId];
+  return { name: npc.name, body };
+}
+
+export function inspectSpoken(
+  id: string,
+  characterId: CharacterId,
+  asSelf = false,
+): { title: string; body: string; image?: string; href?: string; hrefLabel?: string } | null {
+  const copy = INSPECT_COPY[id];
+  if (!copy) return null;
+  if (asSelf) {
+    const verb = copy.action ? copy.action.toLowerCase() : "look";
+    return {
+      title: copy.title,
+      body: `You ${verb}. ${copy.title} — guest eyes, same glass.`,
+      image: copy.image,
+      href: copy.href,
+      hrefLabel: copy.hrefLabel,
+    };
+  }
+  return {
+    title: copy.title,
+    body: copy.body[characterId],
+    image: copy.image,
+    href: copy.href,
+    hrefLabel: copy.hrefLabel,
+  };
+}
+
 export const INSPECT_COPY: Record<
   string,
-  { title: string; action?: string; image?: string; body: Record<CharacterId, string> }
+  {
+    title: string;
+    action?: string;
+    image?: string;
+    href?: string;
+    hrefLabel?: string;
+    body: Record<CharacterId, string>;
+  }
 > = {
   "mart-kiosk": {
     title: "Stall kiosk",
@@ -555,7 +737,7 @@ export const INSPECT_COPY: Record<
       rex: "The log already has my name. It always does. The floor knows when I am in the building.",
       vex: "Visitor badges, three dead cameras, one intern still signed in. Amateur hour.",
       tria: "Someone left a lunch note under the glass. I will not name them. I will feed them.",
-      ptera: "Pad is on the plaza. The desk knows. The desk does not care about weather.",
+      ptera: "Pad is on the roof now. The desk knows. The desk does not care about weather.",
     },
   },
   "forum-window": {
@@ -563,10 +745,10 @@ export const INSPECT_COPY: Record<
     action: "Look out",
     image: "/life/hq.jpg",
     body: {
-      rex: "Headquarters plaza. The bird is on the east pad. If it is idling, someone important is already inside.",
+      rex: "Headquarters plaza. The bird is on the roof pad now. If it is idling, someone important is already upstairs.",
       vex: "I can see three dishes on the opposite tower. Two are decoys. The third is rude.",
       tria: "The plaza looks hungry. That is a lot of glass and not enough benches.",
-      ptera: "Wind is mean between those two towers. I would not take off from the east pad.",
+      ptera: "Wind is mean between those two towers. I would not take off from the roof pad after ten.",
     },
   },
   "forum-ticker": {
@@ -603,34 +785,64 @@ export const INSPECT_COPY: Record<
   },
   "forum-heli": {
     title: "HQ helicopter",
-    action: "Inspect the bird",
+    action: "Board the bird",
     image: "/life/hq.jpg",
     body: {
-      rex: "Company ship. Rotors hot, skids down. If Ptera is not in the left seat, she is already on the floor.",
-      vex: "Transponder is honest. The paint is not. That green stripe is louder than the radio.",
-      tria: "I packed a sandwich for the pilot. They always forget. Gravity does not care about the close.",
-      ptera: "Mine. The east pad has a mean crosswind after ten. I would still take it over a taxi.",
+      rex: "Company ship on the roof. Walk up, hop in, take the city. Space climbs. Shift drops. E when you want the floor back.",
+      vex: "Keys are in it. That is either trust or a bug. I am flying it anyway.",
+      tria: "I packed a sandwich for the pilot. Turns out the pilot is us. Do not spill on the stick.",
+      ptera: "Finally. Space up, Shift down, WASD to write the sky. The pad has a mean crosswind after ten. I would still take it over a taxi.",
     },
   },
   "forum-coffee": {
-    title: "Service bar",
-    action: "Pour a cup",
+    title: "Eggpresso café",
+    action: "Order loud",
     body: {
-      rex: "Jurassic Blend. Bitter enough to keep the open honest.",
-      vex: "The machine is offline-first. Finally, a kettle with principles.",
-      tria: "I stocked the beans. If they are drinking the cheap bag, I will know.",
-      ptera: "Hot. Good. The plaza wind will steal the rest.",
+      rex: "Neon beans. Cal runs it like a close. Sit pink, tip lime, leave happier.",
+      vex: "The menu is a mood board. I still got a cup that tastes like a decision.",
+      tria: "Finally, a café that admits it loves you. I brought fruit for the egg stools.",
+      ptera: "Bright enough to navigate by. Sip, then roof. That is the whole briefing.",
+    },
+  },
+  "forum-vend": {
+    title: "Feed the Pack",
+    action: "Hit a machine",
+    body: {
+      rex: "Three machines. Zero shame. If the close is ugly, buy the loudest snack.",
+      vex: "Inventory is honest. The branding is not. I respect both.",
+      tria: "I stocked the middle one with real protein. The pink one is for chaos.",
+      ptera: "Lunch that does not require a runway. I will allow it.",
+    },
+  },
+  "forum-drinks": {
+    title: "Sip station",
+    action: "Pour something neon",
+    body: {
+      rex: "Three nozzles. Pick a color that matches your tape. Pink if you are lying.",
+      vex: "Cold, labeled, local. The violet one pinged my visor. Rude. Delicious.",
+      tria: "I put cups under every spout. Civilization is a stack of clean cups.",
+      ptera: "Hydrate before the pad. Crosswind plus caffeine is a personality.",
+    },
+  },
+  "forum-lunch": {
+    title: "Lunch nest",
+    action: "Claim a seat",
+    body: {
+      rex: "Sit. Eat. Do not pitch from a sandwich. That is how cities get weird.",
+      vex: "Tables face the machines on purpose. Impulse is a feature.",
+      tria: "I wiped these. If you leave crumbs, I will know your species.",
+      ptera: "A nest that does not fly. Still better than eating on the skid.",
     },
   },
   "forum-stairs": {
     title: "Atrium stair",
-    action: "Take the spiral",
+    action: "Read the stair plaque",
     image: "/life/corporate.jpg",
     body: {
-      rex: "Up. The second floor is where the book gets quiet and the view gets honest.",
-      vex: "Helix, glass core, one landing. Nobody hid a badge reader in the rail. Fine.",
+      rex: "Gold arrows up, mezzanine. Gold arrows down, lobby. The spiral is the scenic route; the lift is the close.",
+      vex: "Helix, glass core, lit landings. Follow the chevrons if you get turned around. I still would.",
       tria: "I timed it. Forty-eight seconds if you do not stop for coffee. I stop for coffee.",
-      ptera: "A ramp with manners. I would rather fly, but this will do.",
+      ptera: "A ramp with manners. Arrows tell the truth. I would rather fly, but this will do.",
     },
   },
   "forum-lift": {
@@ -649,18 +861,18 @@ export const INSPECT_COPY: Record<
     action: "Look down",
     image: "/life/corporate.jpg",
     body: {
-      rex: "The Floor from above. If the tape is loud down there, it is already too late.",
+      rex: "The Floor from above. East walkway hits the roof pad — and the Hintze Hall wing past it. If the tape is loud down there, it is already too late.",
       vex: "Good sightline on the east board. Bad sightline on whoever is stealing lunch.",
       tria: "I put plants up here so people remember to breathe. They still do not.",
-      ptera: "Glass, sky, a city that does not end. This is the floor I wanted.",
+      ptera: "Glass, sky, and a pad that is finally at altitude. This is the floor I wanted.",
     },
   },
   "forum-dinose": {
-    title: "DINOSE hologram",
+    title: "$Dinoverse hologram",
     action: "Read the index",
     image: "/life/corporate.jpg",
     body: {
-      rex: "DINOSE is green. Jurassic is loud. Cretaceous is polite. That is a good morning.",
+      rex: "$Dinoverse is green. Jurassic is loud. Cretaceous is polite. That is a good morning.",
       vex: "Pretty floating numbers. The real book is 400ms fresher on the east wall.",
       tria: "If the index is this bright, someone skipped breakfast. I brought fruit.",
       ptera: "A sky of numbers. I would rather a sky of weather. Still, it is honest.",
@@ -678,14 +890,25 @@ export const INSPECT_COPY: Record<
     },
   },
   "forum-pad": {
-    title: "East pad",
+    title: "Roof pad",
     action: "Inspect the pad",
     image: "/life/hq.jpg",
     body: {
-      rex: "If the rim is lit, someone important is already inside. Or Ptera is about to be.",
-      vex: "Transponder honest. The gold ring is louder than the radio.",
-      tria: "A lot of plaza and not enough benches. The pad does not feed anyone.",
-      ptera: "Crosswind after ten. I would still take it over a taxi.",
+      rex: "If the rim is lit, someone important is already upstairs. Or Ptera is about to be. Hintze Hall is the stone wing east of the bird.",
+      vex: "Transponder honest. The gold ring is louder than the radio. Height does not fix lag.",
+      tria: "A lot of roof and not enough benches. The pad does not feed anyone. The hall might.",
+      ptera: "Crosswind after ten. Lift or stairs, then left seat. Or walk east into the whale hall. I would still take it over a taxi.",
+    },
+  },
+  "forum-hintze": {
+    title: "Hintze Hall",
+    action: "Enter the museum",
+    image: "/life/hq.jpg",
+    body: {
+      rex: "Natural History Museum wing on the roof. Hintze Hall, scaled to a listing we can walk. Columns, vault, whale — go in.",
+      vex: "Photogrammetry of a civic nave. Someone put a cathedral next to a helipad. I respect the nerve.",
+      tria: "Finally a room that admits it is for looking. If you skip the whale I will know.",
+      ptera: "A hall that already has a sky inside it. I will allow a ceiling that is trying.",
     },
   },
   "forum-hq-sign": {
@@ -695,7 +918,7 @@ export const INSPECT_COPY: Record<
     body: {
       rex: "The lettering still moves. Global Headquarters. The city already clocks in.",
       vex: "Gold leaf and a looped mark. The interesting part is the dishes on the opposite tower.",
-      tria: "A pretty name on a pretty door. I care about the kitchen behind it.",
+      tria: "A pretty name on a sliding wall of glass. I care about the kitchen behind it.",
       ptera: "A good building tells the wind where to go. This one does.",
     },
   },
@@ -703,11 +926,13 @@ export const INSPECT_COPY: Record<
     title: "Lobby directory",
     action: "Read the board",
     image: "/life/hq.jpg",
+    href: "/canyon",
+    hrefLabel: "Enter Skull Gate Canyon",
     body: {
-      rex: "Dino-Sec, The Floor, boardroom. The interesting rooms do not need a plaque.",
-      vex: "A map that admits the Mall is still pouring. Honest wayfinding. Rare.",
-      tria: "Coffee is marked. Reception is marked. The kitchen is not. I will allow it.",
-      ptera: "Pad is on the gold ring. That is the only arrow I needed.",
+      rex: "Dino-Sec, The Floor, boardroom — and Skull Gate. The bone bridge is the listing they do not put on a plaque; the Bone Spire waits past it.",
+      vex: "A map that admits the Mall is still pouring. The canyon link is the honest one. Bridge and spire are live.",
+      tria: "Coffee is marked. Reception is marked. The kitchen is not. Skull Gate is. I will allow the bridge.",
+      ptera: "Pad is on the gold ring. Skull Gate is the other runway. Cross the bone bridge. The Bone Spire does not taxi.",
     },
   },
   "forum-office": {

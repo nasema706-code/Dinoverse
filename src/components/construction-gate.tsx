@@ -28,32 +28,34 @@ export function ConstructionGate({
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
       <div className="relative bg-black">
-        <img
-          src="/brand/coming-soon.png"
-          alt="Dinoverse coming soon on Solana"
-          className="aspect-square w-full object-cover sm:aspect-[16/10]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent" />
-        {rex.figure ? (
+        <div className="relative">
           <img
-            src={rex.figure}
-            alt="Rex Volt, Floor Chief"
-            className="pointer-events-none absolute right-0 bottom-0 hidden h-[88%] w-auto object-contain sm:block"
+            src="/brand/coming-soon.png"
+            alt="Dinoverse coming soon on Solana"
+            className="aspect-[4/3] w-full object-cover sm:aspect-[16/10]"
           />
-        ) : null}
-        <div className="absolute inset-0 flex flex-col justify-end gap-3 p-5 sm:max-w-[62%] sm:p-7">
+          <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/50 to-transparent sm:via-bg/40" />
+          {rex.figure ? (
+            <img
+              src={rex.figure}
+              alt="Rex Volt, Floor Chief"
+              className="pointer-events-none absolute right-0 bottom-0 hidden h-[88%] w-auto object-contain sm:block"
+            />
+          ) : null}
+        </div>
+        <div className="relative space-y-3 p-4 sm:absolute sm:inset-0 sm:flex sm:max-w-[62%] sm:flex-col sm:justify-end sm:space-y-3 sm:p-7">
           <div className="flex flex-wrap gap-2">
             <Badge className="border-accent/40 text-accent">Under construction</Badge>
             <Badge>{world.district}</Badge>
           </div>
           <h2 className="font-display text-2xl font-medium tracking-tight sm:text-3xl">{world.name}</h2>
-          <p className="max-w-xl text-sm text-fg/90">
+          <p className="max-w-xl text-sm leading-relaxed text-fg/90">
             Under construction. The plates are up. The 3D walk is not. {world.name} opens when the
             floor is honest.
           </p>
         </div>
       </div>
-      <div className="space-y-5 p-5 sm:p-7">
+      <div className="space-y-5 p-4 sm:p-7">
         <div className="flex items-end gap-4">
           {rex.figure ? (
             <img
@@ -71,7 +73,7 @@ export function ConstructionGate({
             {world.stills.map((still) => (
               <li key={still.src} className="overflow-hidden rounded-lg border border-border">
                 <img src={still.src} alt={still.alt} className="aspect-video w-full object-cover" />
-                <p className="px-2 py-1.5 text-[11px] tracking-wide text-subtle uppercase">
+                <p className="px-2 py-1.5 text-[11px] leading-snug tracking-wide break-words text-subtle uppercase">
                   {still.caption}
                 </p>
               </li>
@@ -79,9 +81,9 @@ export function ConstructionGate({
           </ul>
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="secondary">
-            <Link to="/worlds" search={{ district: "forum" }}>
-              Back to The Floor preview
+          <Button asChild variant="secondary" className="max-sm:w-full">
+            <Link to="/explore" search={{ district: "forum" }}>
+              Walk The Floor
             </Link>
           </Button>
         </div>

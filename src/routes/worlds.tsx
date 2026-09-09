@@ -45,14 +45,14 @@ function WorldsPage() {
 
   return (
     <SiteShell>
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
+      <main className="mx-auto max-w-6xl min-w-0 px-4 py-8 sm:py-16">
         <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">Districts</p>
         <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
-          Four districts. One floor still pouring.
+          The city is still being built.
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          The Floor is a live 3D preview — look, do not walk. Dino Mart, the Mall, and the Arena are
-          still pouring. Come back when the rooms exist.
+          The Floor is open to walk — as yourself or as a character. Dino Mart, the Mall, and the
+          Arena stay plates while we pour the next section. Expect scaffold.
         </p>
 
         {isDistrictOpen(tab) ? (
@@ -98,19 +98,23 @@ function WorldsPage() {
                   ) : (
                     <img src={w.cinematic} alt={w.summary} className="aspect-video w-full object-cover" />
                   )}
-                  <div className="space-y-5 p-5 sm:p-7">
+                  <div className="space-y-5 p-4 sm:p-7">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge>{w.district}</Badge>
-                      <Badge>3D preview</Badge>
+                      <Badge>{isDistrictWalkable(w.id) ? "Walkable" : "3D preview"}</Badge>
                       <Badge>With {character.name}</Badge>
                     </div>
                     <h2 className="font-display text-2xl font-medium">{w.name}</h2>
                     <p className="text-muted">{w.summary}</p>
-                    {!isDistrictWalkable(w.id) ? (
+                    {isDistrictWalkable(w.id) ? (
                       <p className="text-sm text-accent">
-                        Walking is locked. Orbit the 3D preview until HQ construction is done.
+                        First-person walking is live on The Floor. The rest of the city is still being built.
                       </p>
-                    ) : null}
+                    ) : (
+                      <p className="text-sm text-accent">
+                        Walking is locked here. Orbit until this floor is done.
+                      </p>
+                    )}
                     {w.stills.length > 0 ? (
                       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                         {w.stills.map((still) => (

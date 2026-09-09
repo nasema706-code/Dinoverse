@@ -45,8 +45,8 @@ function ExplorePage() {
 
   if (!hydrated) {
     return (
-      <SiteShell>
-        <main className="grid min-h-[calc(100dvh-8rem)] place-items-center px-4">
+      <SiteShell mode="floor">
+        <main className="grid h-full place-items-center px-4">
           <p className="text-sm text-muted">Opening the floor…</p>
         </main>
       </SiteShell>
@@ -65,10 +65,10 @@ function ExplorePage() {
 
   if (isDistrictWalkable(start)) {
     return (
-      <SiteShell>
+      <SiteShell mode="floor">
         <Suspense
           fallback={
-            <main className="grid min-h-[calc(100dvh-8rem)] place-items-center px-4">
+            <main className="grid h-full place-items-center px-4">
               <p className="text-sm text-muted">Opening the floor…</p>
             </main>
           }
@@ -93,7 +93,7 @@ function ExplorePage() {
             <WorldPreview district={world.id} variant="stage" />
           </Suspense>
         </div>
-        <div className="mx-auto max-w-6xl space-y-5 px-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-6xl min-w-0 space-y-5 px-4 py-8 sm:py-10">
           <div className="flex flex-wrap gap-2">
             <Badge className="border-accent/40 text-accent">Under construction</Badge>
             <Badge>3D preview</Badge>

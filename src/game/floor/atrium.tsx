@@ -1,6 +1,6 @@
 ﻿import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group, Mesh } from "three";
+import type { Group, Mesh, MeshStandardMaterial } from "three";
 import {
   CanvasTexture,
   CatmullRomCurve3,
@@ -18,8 +18,9 @@ import { useQuality } from "../quality";
 import { L2_HEIGHT, MEZZ, SPIRAL, spiralPoint } from "./levels";
 import { getLiftFloorY, LIFT, LIFT_GROUND_ANG, liftBusy, liftMezzAng } from "./lift";
 
-const STEPS = 52;
+const STEPS = 72;
 const STEP_W = SPIRAL.r1 - SPIRAL.r0;
+const STEP_DEPTH = 0.78;
 const METAL = "#c5d0d8";
 const STONE = "#9aa3ad";
 
@@ -92,7 +93,7 @@ function MezzWest() {
   );
 }
 
-function HelixRail({ radius, yOff }: { radius: number; yOff: number }) {
+function HelixRail({ radius, yOff, thick = 0.032 }: { radius: number; yOff: number; thick?: number }) {
   const geom = useMemo(() => {
     const pts = Array.from({ length: 72 }, (_, i) => {
       const t = i / 71;
@@ -103,13 +104,134 @@ function HelixRail({ radius, yOff }: { radius: number; yOff: number }) {
         SPIRAL.cz + Math.cos(p.ang) * radius,
       );
     });
-    return new TubeGeometry(new CatmullRomCurve3(pts), 72, 0.032, 6, false);
-  }, [radius, yOff]);
+    return new TubeGeometry(new CatmullRomCurve3(pts), 72, thick, 6, false);
+  }, [radius, yOff, thick]);
 
   return (
     <mesh geometry={geom}>
       <meshStandardMaterial color={METAL} metalness={0.82} roughness={0.2} />
     </mesh>
+  );
+}
+
+function stairSign(text: string, w = 640, h = 180) {
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = "#0c1016";
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "#d4af6a";
+  ctx.lineWidth = 12;
+  ctx.strokeRect(10, 10, w - 20, h - 20);
+  ctx.fillStyle = "#d4af6a";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `bold ${h * 0.38}px ui-sans-serif, system-ui, sans-serif`;
+  ctx.fillText(text, w / 2, h / 2 + 4);
+  const map = new CanvasTexture(canvas);
+  map.colorSpace = SRGBColorSpace;
+  map.needsUpdate = true;
+  return map;
+}
+
+function StairChevron({ position, rotation }: { position: [number, number, number]; rotation: [number, number, number] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.16, 0.34, 3]} />
+        <meshBasicMaterial color="#f0d78a" toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.025, -0.22]} rotation={[-Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.12, 0.26, 3]} />
+        <meshBasicMaterial color="#d4af6a" toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/** Landings, direction arrows, stronger rails — makes the spiral readable at a glance. */
+function StairWayfinding() {
+  const foot = spiralPoint(0);
+  const top = spiralPoint(1);
+  const upMap = useMemo(() => stairSign("MEZZANINE  ↑"), []);
+  const downMap = useMemo(() => stairSign("LOBBY  ↓"), []);
+  const midR = (SPIRAL.r0 + SPIRAL.r1) / 2;
+
+  return (
+    <group>
+      {/* Bottom approach pad */}
+      <mesh position={[foot.x, 0.06, foot.z]} rotation={[-Math.PI / 2, 0, foot.ang]}>
+        <circleGeometry args={[1.55, 28]} />
+        <meshStandardMaterial color="#1a1e24" metalness={0.45} roughness={0.32} emissive="#d4af6a" emissiveIntensity={0.12} />
+      </mesh>
+      <mesh position={[foot.x, 0.08, foot.z]} rotation={[-Math.PI / 2, 0, foot.ang]}>
+        <ringGeometry args={[1.15, 1.45, 28]} />
+        <meshBasicMaterial color="#d4af6a" transparent opacity={0.55} toneMapped={false} />
+      </mesh>
+      <StairChevron position={[foot.x, 0.1, foot.z]} rotation={[0, foot.ang, 0]} />
+      {upMap ? (
+        <mesh
+          position={[foot.x + Math.sin(foot.ang) * 0.15, 1.55, foot.z + Math.cos(foot.ang) * 0.15]}
+          rotation={[0, foot.ang + Math.PI, 0]}
+        >
+          <planeGeometry args={[1.65, 0.48]} />
+          <meshBasicMaterial map={upMap} toneMapped={false} side={DoubleSide} />
+        </mesh>
+      ) : null}
+
+      {/* Top landing cue */}
+      <mesh
+        position={[top.x + Math.sin(top.ang) * 0.35, L2_HEIGHT + 0.04, top.z + Math.cos(top.ang) * 0.35]}
+        rotation={[-Math.PI / 2, 0, top.ang]}
+      >
+        <ringGeometry args={[0.9, 1.35, 28]} />
+        <meshBasicMaterial color="#d4af6a" transparent opacity={0.5} toneMapped={false} />
+      </mesh>
+      <StairChevron
+        position={[top.x + Math.sin(top.ang) * 0.2, L2_HEIGHT + 0.08, top.z + Math.cos(top.ang) * 0.2]}
+        rotation={[0, top.ang + Math.PI, 0]}
+      />
+      {downMap ? (
+        <mesh
+          position={[top.x + Math.sin(top.ang) * 0.55, L2_HEIGHT + 1.45, top.z + Math.cos(top.ang) * 0.55]}
+          rotation={[0, top.ang, 0]}
+        >
+          <planeGeometry args={[1.55, 0.44]} />
+          <meshBasicMaterial map={downMap} toneMapped={false} side={DoubleSide} />
+        </mesh>
+      ) : null}
+
+      {/* Gold direction chevrons along the climb */}
+      {Array.from({ length: 14 }, (_, i) => {
+        const t = 0.06 + (i / 13) * 0.88;
+        const p = spiralPoint(t);
+        const x = SPIRAL.cx + Math.sin(p.ang) * midR;
+        const z = SPIRAL.cz + Math.cos(p.ang) * midR;
+        return <StairChevron key={`chev-${i}`} position={[x, p.y + 0.16, z]} rotation={[0, p.ang, 0]} />;
+      })}
+
+      {/* Outer kick plate — always on so the edge reads even on low quality */}
+      <HelixRail radius={SPIRAL.r1 + 0.02} yOff={0.18} thick={0.045} />
+      <HelixRail radius={SPIRAL.r1 + 0.02} yOff={1.12} thick={0.04} />
+      <HelixRail radius={SPIRAL.r0 - 0.02} yOff={1.12} thick={0.036} />
+      {Array.from({ length: 22 }, (_, i) => {
+        const t = i / 21;
+        const p = spiralPoint(t);
+        const r = SPIRAL.r1 + 0.02;
+        return (
+          <mesh
+            key={`post-${i}`}
+            position={[SPIRAL.cx + Math.sin(p.ang) * r, p.y + 0.62, SPIRAL.cz + Math.cos(p.ang) * r]}
+          >
+            <cylinderGeometry args={[0.04, 0.04, 1.15, 6]} />
+            <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
+          </mesh>
+        );
+      })}
+    </group>
   );
 }
 
@@ -119,9 +241,9 @@ export function Atrium() {
   const stair = useMemo(() => steps(), []);
   const top = spiralPoint(1);
   const landRadial: [number, number, number] = [
-    top.x + Math.sin(top.ang) * 0.85,
+    top.x + Math.sin(top.ang) * 1.05,
     L2_HEIGHT,
-    top.z + Math.cos(top.ang) * 0.85,
+    top.z + Math.cos(top.ang) * 1.05,
   ];
 
   return (
@@ -136,24 +258,31 @@ export function Atrium() {
         <meshStandardMaterial color="#7f8892" metalness={0.2} roughness={0.38} />
       </mesh>
 
+      <StairWayfinding />
+
       {stair.map((s) => (
         <group key={s.i} position={[s.x, s.y + 0.07, s.z]} rotation={[0, s.ang, 0]}>
           <mesh castShadow={settings.shadows} receiveShadow={settings.shadows}>
-            <boxGeometry args={[STEP_W, 0.16, 0.5]} />
+            <boxGeometry args={[STEP_W, 0.14, STEP_DEPTH]} />
             <meshStandardMaterial color={STONE} metalness={0.22} roughness={0.28} />
+          </mesh>
+          {/* Outer edge tip — always visible so the drop reads clearly */}
+          <mesh position={[STEP_W / 2 - 0.04, 0.1, 0]}>
+            <boxGeometry args={[0.08, 0.06, STEP_DEPTH + 0.04]} />
+            <meshStandardMaterial color="#d4af6a" metalness={0.7} roughness={0.28} emissive="#d4af6a" emissiveIntensity={0.35} />
           </mesh>
           {settings.atriumDetail ? (
             <>
-              <mesh position={[0, 0.52, -0.2]}>
-                <boxGeometry args={[STEP_W + 0.04, 0.92, 0.04]} />
-                <CheapGlass opacity={0.22} />
+              <mesh position={[0, 0.58, -STEP_DEPTH * 0.42]}>
+                <boxGeometry args={[STEP_W + 0.1, 1.08, 0.05]} />
+                <CheapGlass opacity={0.26} />
               </mesh>
-              <mesh position={[-STEP_W / 2, 0.52, -0.2]}>
-                <boxGeometry args={[0.05, 1.04, 0.05]} />
+              <mesh position={[-STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]}>
+                <boxGeometry args={[0.06, 1.18, 0.06]} />
                 <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
               </mesh>
-              <mesh position={[STEP_W / 2, 0.52, -0.2]}>
-                <boxGeometry args={[0.05, 1.04, 0.05]} />
+              <mesh position={[STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]}>
+                <boxGeometry args={[0.06, 1.18, 0.06]} />
                 <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
               </mesh>
             </>
@@ -163,18 +292,18 @@ export function Atrium() {
 
       {settings.atriumDetail ? (
         <>
-          <HelixRail radius={SPIRAL.r1 - 0.04} yOff={1.04} />
-          <HelixRail radius={SPIRAL.r0 + 0.04} yOff={1.04} />
-          {Array.from({ length: 18 }, (_, i) => {
-            const t = i / 17;
+          <HelixRail radius={SPIRAL.r1 - 0.06} yOff={1.08} thick={0.038} />
+          <HelixRail radius={SPIRAL.r0 + 0.06} yOff={1.08} thick={0.034} />
+          {Array.from({ length: 20 }, (_, i) => {
+            const t = i / 19;
             const p = spiralPoint(t);
-            const r = SPIRAL.r0 - 0.08;
+            const r = SPIRAL.r0 - 0.06;
             return (
               <mesh
                 key={`inner-${i}`}
-                position={[SPIRAL.cx + Math.sin(p.ang) * r, p.y + 0.55, SPIRAL.cz + Math.cos(p.ang) * r]}
+                position={[SPIRAL.cx + Math.sin(p.ang) * r, p.y + 0.58, SPIRAL.cz + Math.cos(p.ang) * r]}
               >
-                <cylinderGeometry args={[0.035, 0.035, 1.05, 6]} />
+                <cylinderGeometry args={[0.038, 0.038, 1.12, 6]} />
                 <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
               </mesh>
             );
@@ -216,7 +345,7 @@ export function Atrium() {
             const a = (i / 16) * Math.PI * 2;
             const x = SPIRAL.cx + Math.sin(a) * (SPIRAL.r1 + 0.14);
             const z = SPIRAL.cz + Math.cos(a) * (SPIRAL.r1 + 0.14);
-            if (Math.hypot(x - top.x, z - top.z) < 1.7) return null;
+            if (Math.hypot(x - top.x, z - top.z) < 2.7) return null;
             return (
               <group key={`well-${i}`} position={[x, L2_HEIGHT + 0.52, z]}>
                 <mesh>
@@ -233,8 +362,18 @@ export function Atrium() {
         : null}
 
       <mesh position={landRadial} rotation={[0, top.ang, 0]}>
-        <boxGeometry args={[STEP_W + 0.55, 0.12, 2.15]} />
+        <boxGeometry args={[STEP_W + 0.55, 0.12, 2.35]} />
         <meshStandardMaterial color={STONE} metalness={0.22} roughness={0.28} />
+      </mesh>
+      <mesh position={landRadial} rotation={[0, top.ang, 0]}>
+        <boxGeometry args={[STEP_W + 0.7, 0.04, 2.5]} />
+        <meshStandardMaterial
+          color="#d4af6a"
+          metalness={0.75}
+          roughness={0.25}
+          emissive="#d4af6a"
+          emissiveIntensity={0.28}
+        />
       </mesh>
       <LiftBridge ang={top.ang} />
 
@@ -353,7 +492,7 @@ function LiftSign({
 function GroundApron() {
   const ang = LIFT_GROUND_ANG;
   const r0 = LIFT.r + 0.08;
-  const r1 = 2.65;
+  const r1 = SPIRAL.r0 + 0.28;
   const mid = (r0 + r1) / 2;
   const len = r1 - r0;
   return (
@@ -470,7 +609,10 @@ function DoorPortal({
     const on = !liftBusy() && (floor === "g" ? cab < 0.25 : cab > L2_HEIGHT - 0.25);
     const pulse = on ? 1.25 + Math.sin(clock.elapsedTime * 3.2) * 0.7 : 0.22;
     for (const mesh of bars.current) {
-      if (mesh) (mesh.material as { emissiveIntensity: number }).emissiveIntensity = pulse;
+      const mat = mesh?.material;
+      if (mat && !Array.isArray(mat)) {
+        (mat as MeshStandardMaterial).emissiveIntensity = pulse;
+      }
     }
     if (pad.current) {
       (pad.current.material as { opacity: number }).opacity = on ? 0.42 : 0.16;

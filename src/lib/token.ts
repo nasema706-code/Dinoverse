@@ -1,121 +1,170 @@
 export const TOKEN = {
   ticker: "$DINOVERSE",
-  name: "The Dinoverse",
+  name: "The DinoVerse",
+  tokenName: "Dino Universe",
   chain: "Solana",
+  dex: "PumpSwap",
   ca: "CUTuufCBBFA4AwvB3LNwtPqZvCDEg25L9PsKSkx3pump",
   taxBuy: "0%",
   taxSell: "0%",
-  supply: "1,000,000,000",
-  lp: "Locked at launch",
-  mint: "Revoked at launch",
-  freeze: "Revoked at launch",
-  tagline: "Bones are about to list. We built the city first.",
+  decimals: 6,
+  supply: "957,027,168.351375",
+  supplyShort: "957,027,168",
+  supplyWas: "1,000,000,000",
+  lp: "Reported 100% locked",
+  mint: "Revoked",
+  freeze: "Revoked",
+  kicker: "Independent Solana meme universe",
+  headline: "The bones went on-chain.",
+  headlineTwo: "The dinosaurs never left.",
+  tagline: "The bones went on-chain. The dinosaurs never left.",
   blurb:
-    "Real dinosaur fossils are heading on-chain. $DINOVERSE is the Solana ticket that got there early — a working HQ, a Floor Chief with a coffee, and a city you can walk while the rest of crypto is still googling Jurassic.",
-  lore: [
-    "For 65 million years the bones waited in stone. Now they are waiting on a contract. Museums, private vaults, and serious desks are lining up to tokenize real dinosaur fossils — provenance, custody, a market that will treat a T-rex like a treasury asset. When that window opens, dinosaurs stop being a costume and become a category.",
-    "$DINOVERSE is the front-run. Not a whitepaper about bones. A Solana meme coin with a city that already clocks in: The Floor, Dino Mart, the Mega Mall, the Arena. Rex Volt walks the tape in a three-piece because the listing is a lifestyle, not a screenshot. You do not wait for the fossil IPO. You take the spiral stairs, buy the coffee, and live the meta while it is still an adventure.",
-    "Fair launch. Zero tax. One billion supply. The bones are coming. The city is open.",
-  ],
+    "Humans believed dinosaurs disappeared 65 million years ago. The dinosaurs were happy to let them believe it. Welcome to The DinoVerse: an independent Solana meme universe inspired by dinosaur fossil tokenisation on-chain.",
+  independence:
+    "Independent project. Not affiliated with or endorsed by Jurassic Finance, Solana, the Solana Foundation or Anatoly Yakovenko.",
+  usDisclosure:
+    "$DINOVERSE is an independent, speculative meme token created for entertainment, cultural participation and community engagement. It does not represent equity, debt, revenue rights, fossil ownership or any interest in Jurassic Finance, $TRCH1, $RAWR or a fossil SPV. Its value is determined by market demand and may fall to zero. No profit, yield, price appreciation or financial return is promised.",
+  disclaimer:
+    "$DINOVERSE is a speculative memecoin and may lose all its value. It is not a share, fossil-backed asset or claim against Jurassic Finance. This website is provided for information and entertainment and is not financial advice.",
+  taxNote:
+    "A 0% token transfer tax does not mean trading is free. Solana network fees, PumpSwap fees, platform charges and price slippage may still apply.",
+  lockAmount: "151,930,204.648219",
+  lockShare: "15.88%",
+  lockUnlock: "21 September 2026 · 04:00 UTC",
   x: "https://x.com/dinoversesol",
   telegram: "https://t.me/dinoverseonsol",
-  buy: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
-  jupiter: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
-  raydium: "https://dexscreener.com/solana/czvhuqbd6srmh3phfpxibfvpcfcyovxypammxxepm8hc",
+  buy: "https://dexscreener.com/solana/d4ej9orc39h6yjyglhppamjtncxkn4ty6fyn3vnbkyqp",
+  dexscreener: "https://dexscreener.com/solana/d4ej9orc39h6yjyglhppamjtncxkn4ty6fyn3vnbkyqp",
+  solscan: "https://solscan.io/token/CUTuufCBBFA4AwvB3LNwtPqZvCDEg25L9PsKSkx3pump",
+  streamflow:
+    "https://app.streamflow.finance/token-dashboard/solana/mainnet/CUTuufCBBFA4AwvB3LNwtPqZvCDEg25L9PsKSkx3pump",
+  jurassic: "https://jurassic.finance/",
+  jupiter: "https://jup.ag/swap/SOL-CUTuufCBBFA4AwvB3LNwtPqZvCDEg25L9PsKSkx3pump",
+  raydium: "https://dexscreener.com/solana/d4ej9orc39h6yjyglhppamjtncxkn4ty6fyn3vnbkyqp",
   phantom: "https://phantom.app/",
 } as const;
 
 export const TOKEN_STATS = [
-  { k: "Chain", v: TOKEN.chain },
-  { k: "Ticker", v: TOKEN.ticker },
-  { k: "Tax", v: `${TOKEN.taxBuy} / ${TOKEN.taxSell}` },
-  { k: "Supply", v: TOKEN.supply },
+  { k: "Network", v: TOKEN.chain },
+  { k: "DEX", v: TOKEN.dex },
+  { k: "Tax", v: TOKEN.taxBuy },
+  { k: "Supply", v: TOKEN.supplyShort },
 ] as const;
 
 export const TOKENOMICS = [
-  { k: "Total supply", v: TOKEN.supply, d: "Fixed. No stealth mints after the window opens." },
-  { k: "Buy / sell tax", v: `${TOKEN.taxBuy} / ${TOKEN.taxSell}`, d: "Zero tax. The floor does not skim the tape." },
-  { k: "LP", v: TOKEN.lp, d: "Liquidity locked when the listing goes live." },
-  { k: "Mint & freeze", v: "Revoked", d: `${TOKEN.mint}. ${TOKEN.freeze}.` },
+  { k: "Token name", v: TOKEN.tokenName, d: `Ticker ${TOKEN.ticker} on ${TOKEN.chain}.` },
+  { k: "On-chain supply", v: TOKEN.supply, d: `Previously shown as ${TOKEN.supplyWas}. Verify live on Solscan.` },
+  { k: "Token transfer tax", v: `${TOKEN.taxBuy} / ${TOKEN.taxSell}`, d: TOKEN.taxNote },
+  { k: "Mint & freeze", v: "Revoked", d: "Mint authority revoked. Freeze authority revoked." },
+  { k: "Decimals", v: String(TOKEN.decimals), d: `Primary ${TOKEN.ticker}/SOL market on ${TOKEN.dex}.` },
+  { k: "Liquidity", v: TOKEN.lp, d: "Verify the current lock on the live chart. Do not rely only on this page." },
 ] as const;
 
 export const BUY_STEPS = [
   {
     n: "01",
     title: "Wallet",
-    body: "Install Phantom or any Solana wallet. This is a Solana listing — EVM wallets will not see the tape.",
+    body: "Install Phantom or any Solana wallet. $DINOVERSE is a Solana token — EVM wallets will not see it.",
     href: TOKEN.phantom,
     cta: "Get Phantom",
   },
   {
     n: "02",
     title: "Fund SOL",
-    body: "Bridge or buy SOL. Keep a little extra for fees. The Floor does not run on IOUs.",
+    body: "Bridge or buy SOL. Keep a little extra for network fees. The Floor does not run on IOUs.",
   },
   {
     n: "03",
-    title: "Open DexScreener",
-    body: "Open the $DINOVERSE chart. Confirm the pair, then swap from there. Check the ticker before you sign.",
-    href: TOKEN.buy,
-    cta: "Open DexScreener",
+    title: "Confirm the CA",
+    body: "Open Solscan or DexScreener and match the contract on this page before you sign anything.",
+    href: TOKEN.solscan,
+    cta: "Verify on Solscan",
   },
   {
     n: "04",
-    title: "Swap",
-    body: "SOL in. $DINOVERSE out. Then look at The Floor in 3D — the city is the product, not a whitepaper.",
-  },
-] as const;
-
-export const ROADMAP = [
-  {
-    phase: "00",
-    title: "Front-run the bone market",
-    when: "Now",
-    body: "The fossil tokenization wave is coming. We built the city first. The Floor is a live 3D preview. Rex holds the cuff.",
-  },
-  {
-    phase: "01",
-    title: "The listing window",
-    when: "Live",
-    body: "Fair launch on Solana. LP locked. Mint and freeze revoked. $DINOVERSE is the ticker on a city that already works.",
-  },
-  {
-    phase: "02",
-    title: "Walk the floors",
-    when: "Next",
-    body: "First-person HQ, then Dino Mart, the Mega Mall, and the Arena. Utility is a place you can stand, not a slide.",
-  },
-  {
-    phase: "03",
-    title: "Live the meta",
-    when: "After",
-    body: "Coffee, combos, gym time, and Coliseum seats in $DINOVERSE. When the bones list, we are already on the floor.",
+    title: "Swap on PumpSwap",
+    body: "SOL in. $DINOVERSE out. Use the live DexScreener pair so you land on the PumpSwap market.",
+    href: TOKEN.dexscreener,
+    cta: "View live chart",
   },
 ] as const;
 
 export const FAQS = [
   {
-    q: "What is $DINOVERSE?",
-    a: "A Solana meme coin built to front-run the dinosaur meta. Real fossils are heading on-chain. We turned that into a city you can walk — coffee, The Floor, Dino Mart, the mall, the Coliseum — with Rex Volt on the tape.",
+    q: "Is DinoVerse part of Jurassic Finance?",
+    a: "No. DinoVerse is an independent Solana meme universe and entertainment project. It is inspired by dinosaur fossil tokenisation. It is not affiliated with or endorsed by Jurassic Finance, Solana, the Solana Foundation or Anatoly Yakovenko.",
   },
   {
-    q: "Why dinosaurs?",
-    a: "Because the bones are next. Tokenized fossils, museum provenance, private collections — a serious market is lining up. $DINOVERSE is the fun way to be early: live the adventure now, instead of waiting for a whitepaper about a T-rex in a vault.",
+    q: "Does $DINOVERSE represent ownership of Deaton?",
+    a: "No. $DINOVERSE provides no legal, economic or beneficial ownership of Deaton or any other fossil. According to Jurassic Finance, Deaton is represented separately through that project's own SPV structure — not through this token.",
   },
   {
-    q: "When does it launch?",
-    a: `Live on Solana. CA ${TOKEN.ca}. Copy it from this site or open the DexScreener chart before you swap.`,
+    q: "What is $TRCH1?",
+    a: "According to Jurassic Finance, $TRCH1 is the separate Solana token associated with the Deaton fossil SPV. It is not connected to the $DINOVERSE contract. See jurassic.finance.",
   },
   {
-    q: "Is there tax?",
-    a: "0% buy, 0% sell. If someone quotes a tax, they are not on our floor.",
+    q: "What is $RAWR?",
+    a: "According to Jurassic Finance, $RAWR is part of that project's own ecosystem. Holding $DINOVERSE does not provide $RAWR, Jurassic Finance governance rights or participation in its treasury.",
   },
   {
-    q: "Where do I buy?",
-    a: "Phantom (or any Solana wallet) → DexScreener → swap $DINOVERSE. Use the chart link on this site so you land on the live pair.",
+    q: "What is $DINOVERSE for?",
+    a: "$DINOVERSE is a speculative meme token for entertainment, cultural participation and community engagement around original characters, a live game and a 3D city. Current experiences include this website, the 3D Floor preview and Mushroom Run. No token purchase is required to play. No profit, yield, price appreciation or financial return is promised.",
   },
   {
-    q: "What can I do on the site now?",
-    a: "Orbit The Floor in 3D. Read the city plates. Walking HQ, Dino Mart, the Mall, and the Arena are under construction.",
+    q: "Where can I verify the token?",
+    a: `Use the contract address ${TOKEN.ca} and verify it independently on DexScreener and Solscan.`,
+  },
+] as const;
+
+/** Specimen and tokenisation claims below are according to Jurassic Finance, not DinoVerse. */
+export const DEATON = [
+  "Approximately 66 million years old",
+  "60–65% complete by original bone mass",
+  "All three original horns present",
+  "Represented separately by $TRCH1",
+  "One-million stated $TRCH1 supply",
+  "660,000 USDC acquisition and coordination target",
+] as const;
+
+export const JURASSIC_SOURCES = [
+  {
+    label: "Jurassic Finance",
+    href: "https://jurassic.finance/",
+    note: "Primary source for SPV, SPL, authentication, custody, Deaton and $TRCH1 claims on this website.",
+  },
+] as const;
+
+export const TREASURY_WALLETS: { label: string; address: string; note: string }[] = [];
+
+export const ALLOCATION_POLICY = [
+  {
+    k: "On-chain supply",
+    v: TOKEN.supply,
+    d: `Previously shown as ${TOKEN.supplyWas}. Verify the live figure on Solscan before you rely on it.`,
+  },
+  {
+    k: "Streamflow lock",
+    v: `${TOKEN.lockAmount} (${TOKEN.lockShare})`,
+    d: `Non-cancellable, non-transferable lock. Fully claimable by the developer wallet on ${TOKEN.lockUnlock}.`,
+  },
+  {
+    k: "Circulating remainder",
+    v: "About 84.12%",
+    d: "Treated as circulating unless a labelled wallet or additional lock is published. Confirm holders on Solscan.",
+  },
+  {
+    k: "Liquidity",
+    v: TOKEN.lp,
+    d: `Primary ${TOKEN.ticker}/SOL market on ${TOKEN.dex}. Verify the current lock on DexScreener rather than this page alone.`,
+  },
+  {
+    k: "Post-unlock policy",
+    v: "Not yet published",
+    d: `What happens to the locked allocation after ${TOKEN.lockUnlock} should be published here before that date. Until then, do not assume burns, re-locks or treasury transfers.`,
+  },
+  {
+    k: "Play and access",
+    v: "No purchase required",
+    d: "Mushroom Run, the Floor preview and this website do not require a $DINOVERSE purchase.",
   },
 ] as const;

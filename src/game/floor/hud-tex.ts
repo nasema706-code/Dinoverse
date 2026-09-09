@@ -23,6 +23,9 @@ type HudTextures = {
 };
 
 let hudCache: HudTextures | null = null;
+let hudCacheRev = -1;
+/** Bump when screen copy changes so HMR does not keep stale canvases. */
+const HUD_TEX_REV = 2;
 
 function canvasTex(
   w: number,
@@ -45,14 +48,15 @@ function canvasTex(
 export function useHudTextures() {
   return useMemo(() => {
     if (typeof document === "undefined") return null;
-    if (hudCache) return hudCache;
+    if (hudCache && hudCacheRev === HUD_TEX_REV) return hudCache;
+    hudCacheRev = HUD_TEX_REV;
 
     const ticker = canvasTex(1024, 512, (ctx, w, h) => {
       ctx.fillStyle = "#0c1018";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#3ecf8e";
-      ctx.font = "bold 64px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINOSE  +2.34%", 48, 88);
+      ctx.font = "bold 56px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse  +2.34%", 48, 88);
       ctx.strokeStyle = "#3ecf8e";
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -65,14 +69,15 @@ export function useHudTextures() {
       ctx.lineTo(960, 70);
       ctx.stroke();
       const ticks = [
-        ["DNVR", "+1.62%", true],
-        ["DINOSE", "+2.34%", true],
+        ["$Dinoverse", "+2.34%", true],
         ["JURA", "+0.38%", true],
         ["CRETA", "-0.68%", false],
         ["TRIAS", "+0.88%", true],
         ["PERM", "-0.12%", false],
-        ["$DINOVERSE", "+1.62%", true],
+        ["PTERA", "+1.04%", true],
+        ["ANKY", "+0.62%", true],
       ] as const;
+      ctx.font = "bold 28px ui-sans-serif, system-ui, sans-serif";
       ticks.forEach((row, i) => {
         ctx.fillStyle = "#9aa8b8";
         ctx.fillText(row[0], 48, 260 + i * 34);
@@ -85,11 +90,11 @@ export function useHudTextures() {
       ctx.fillStyle = "#0b0e14";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#3ecf8e";
-      ctx.font = "bold 42px ui-sans-serif, system-ui, sans-serif";
+      ctx.font = "bold 34px ui-sans-serif, system-ui, sans-serif";
       ctx.save();
       ctx.translate(w / 2, 80);
       ctx.rotate(-Math.PI / 2);
-      ctx.fillText("DNVR", 0, 0);
+      ctx.fillText("$Dinoverse", 0, 0);
       ctx.restore();
       ctx.font = "32px ui-monospace, monospace";
       ["+1.62%", "+0.38%", "-0.68%", "+0.88%", "+2.10%", "-0.14%", "+1.04%"].forEach((n, i) => {
@@ -102,8 +107,8 @@ export function useHudTextures() {
       ctx.fillStyle = "rgba(8, 24, 40, 0.15)";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#7ec8ff";
-      ctx.font = "bold 36px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINOVERSE FINANCIAL GROUP", 40, 56);
+      ctx.font = "bold 32px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse FINANCIAL GROUP", 40, 56);
       ctx.font = "28px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("Q2 PERFORMANCE OVERVIEW", 40, 100);
       ctx.fillText("REVENUE GROWTH  +27.4%", 40, 180);
@@ -129,7 +134,7 @@ export function useHudTextures() {
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#6ecfff";
       ctx.font = "bold 28px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINO-OPS ANALYTICS", 28, 48);
+      ctx.fillText("$Dinoverse OPS", 28, 48);
       ctx.font = "22px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("Portfolio  74.8%", 28, 100);
       ctx.fillText("Species index  live", 28, 140);
@@ -160,8 +165,8 @@ export function useHudTextures() {
       ctx.fillStyle = "#0a0a0c";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#d4af6a";
-      ctx.font = "bold 72px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINOVERSE", 80, 140);
+      ctx.font = "bold 64px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse", 80, 140);
       ctx.font = "bold 48px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("GLOBAL HEADQUARTERS", 80, 220);
     });
@@ -268,8 +273,8 @@ export function useHudTextures() {
       ctx.lineWidth = 3;
       ctx.strokeRect(16, 16, w - 32, h - 32);
       ctx.fillStyle = "#e8f6ff";
-      ctx.font = "bold 92px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINOSE", 48, 140);
+      ctx.font = "bold 72px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse", 48, 140);
       ctx.fillStyle = "#3ecf8e";
       ctx.font = "bold 64px ui-sans-serif, system-ui, sans-serif";
       ctx.fillText("+2.34%", 520, 140);
@@ -286,7 +291,7 @@ export function useHudTextures() {
       });
       ctx.fillStyle = "#7ec8ff";
       ctx.font = "22px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("$DINOVERSE  live book", 48, 500);
+      ctx.fillText("$Dinoverse  live book", 48, 500);
     });
 
     const portfolio = canvasTex(640, 480, (ctx, w, h) => {
@@ -349,8 +354,8 @@ export function useHudTextures() {
       ctx.closePath();
       ctx.fill();
       ctx.textAlign = "center";
-      ctx.font = "bold 92px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINOVERSE", w / 2, 400);
+      ctx.font = "bold 78px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse", w / 2, 400);
       ctx.font = "bold 42px ui-sans-serif, system-ui, sans-serif";
       ctx.fillStyle = "#e8d7a8";
       ctx.fillText("GLOBAL HEADQUARTERS", w / 2, 470);
@@ -360,19 +365,19 @@ export function useHudTextures() {
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#f2f4f6";
-      ctx.font = "bold 36px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DINO-SEC DIVISION RECEPTION", 36, 110);
+      ctx.font = "bold 32px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$Dinoverse SEC · RECEPTION", 36, 110);
     });
 
     const banner = canvasTex(384, 1024, (ctx, w, h) => {
       ctx.fillStyle = "#142038";
       ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = "#f2f4f6";
-      ctx.font = "bold 42px ui-sans-serif, system-ui, sans-serif";
+      ctx.font = "bold 36px ui-sans-serif, system-ui, sans-serif";
       ctx.save();
       ctx.translate(w / 2, 80);
       ctx.rotate(-Math.PI / 2);
-      ctx.fillText("DINOVERSE CORPORATE", 0, 0);
+      ctx.fillText("$Dinoverse CORPORATE", 0, 0);
       ctx.restore();
       ctx.beginPath();
       ctx.arc(w / 2, 820, 48, 0, Math.PI * 2);
@@ -380,8 +385,8 @@ export function useHudTextures() {
       ctx.lineWidth = 4;
       ctx.stroke();
       ctx.fillStyle = "#d4af6a";
-      ctx.font = "bold 28px ui-sans-serif, system-ui, sans-serif";
-      ctx.fillText("DV", w / 2 - 22, 830);
+      ctx.font = "bold 22px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillText("$D", w / 2 - 18, 828);
     });
 
     const grid = canvasTex(256, 256, (ctx, w, h) => {

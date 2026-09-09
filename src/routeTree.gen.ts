@@ -10,15 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CanyonRouteImport } from './routes/canyon'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as FossilTokenisationRouteImport } from './routes/fossil-tokenisation'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MemesRouteImport } from './routes/memes'
+import { Route as PlayRouteImport } from './routes/play'
+import { Route as TransparencyRouteImport } from './routes/transparency'
+import { Route as VisionsRouteImport } from './routes/visions'
 import { Route as WorldsRouteImport } from './routes/worlds'
+import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanyonRoute = CanyonRouteImport.update({
+  id: '/canyon',
+  path: '/canyon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewRoute = CrewRouteImport.update({
@@ -31,14 +44,49 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FossilTokenisationRoute = FossilTokenisationRouteImport.update({
+  id: '/fossil-tokenisation',
+  path: '/fossil-tokenisation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MemesRoute = MemesRouteImport.update({
+  id: '/memes',
+  path: '/memes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransparencyRoute = TransparencyRouteImport.update({
+  id: '/transparency',
+  path: '/transparency',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisionsRoute = VisionsRouteImport.update({
+  id: '/visions',
+  path: '/visions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorldsRoute = WorldsRouteImport.update({
   id: '/worlds',
   path: '/worlds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -49,50 +97,118 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
+  '/play': typeof PlayRoute
+  '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
+  '/play': typeof PlayRoute
+  '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/canyon': typeof CanyonRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
+  '/fossil-tokenisation': typeof FossilTokenisationRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/memes': typeof MemesRoute
+  '/play': typeof PlayRoute
+  '/transparency': typeof TransparencyRoute
+  '/visions': typeof VisionsRoute
   '/worlds': typeof WorldsRoute
+  '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/crew' | '/explore' | '/login' | '/worlds' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/canyon'
+    | '/crew'
+    | '/explore'
+    | '/fossil-tokenisation'
+    | '/leaderboard'
+    | '/login'
+    | '/memes'
+    | '/play'
+    | '/transparency'
+    | '/visions'
+    | '/worlds'
+    | '/admin/members'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/crew' | '/explore' | '/login' | '/worlds' | '/api/auth/$'
+  to:
+    | '/'
+    | '/canyon'
+    | '/crew'
+    | '/explore'
+    | '/fossil-tokenisation'
+    | '/leaderboard'
+    | '/login'
+    | '/memes'
+    | '/play'
+    | '/transparency'
+    | '/visions'
+    | '/worlds'
+    | '/admin/members'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
+    | '/canyon'
     | '/crew'
     | '/explore'
+    | '/fossil-tokenisation'
+    | '/leaderboard'
     | '/login'
+    | '/memes'
+    | '/play'
+    | '/transparency'
+    | '/visions'
     | '/worlds'
+    | '/admin/members'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CanyonRoute: typeof CanyonRoute
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
+  FossilTokenisationRoute: typeof FossilTokenisationRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  MemesRoute: typeof MemesRoute
+  PlayRoute: typeof PlayRoute
+  TransparencyRoute: typeof TransparencyRoute
+  VisionsRoute: typeof VisionsRoute
   WorldsRoute: typeof WorldsRoute
+  AdminMembersRoute: typeof AdminMembersRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -103,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canyon': {
+      id: '/canyon'
+      path: '/canyon'
+      fullPath: '/canyon'
+      preLoaderRoute: typeof CanyonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew': {
@@ -119,6 +242,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fossil-tokenisation': {
+      id: '/fossil-tokenisation'
+      path: '/fossil-tokenisation'
+      fullPath: '/fossil-tokenisation'
+      preLoaderRoute: typeof FossilTokenisationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -126,11 +263,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/memes': {
+      id: '/memes'
+      path: '/memes'
+      fullPath: '/memes'
+      preLoaderRoute: typeof MemesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transparency': {
+      id: '/transparency'
+      path: '/transparency'
+      fullPath: '/transparency'
+      preLoaderRoute: typeof TransparencyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visions': {
+      id: '/visions'
+      path: '/visions'
+      fullPath: '/visions'
+      preLoaderRoute: typeof VisionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/worlds': {
       id: '/worlds'
       path: '/worlds'
       fullPath: '/worlds'
       preLoaderRoute: typeof WorldsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -145,10 +317,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CanyonRoute: CanyonRoute,
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
+  FossilTokenisationRoute: FossilTokenisationRoute,
+  LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  MemesRoute: MemesRoute,
+  PlayRoute: PlayRoute,
+  TransparencyRoute: TransparencyRoute,
+  VisionsRoute: VisionsRoute,
   WorldsRoute: WorldsRoute,
+  AdminMembersRoute: AdminMembersRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

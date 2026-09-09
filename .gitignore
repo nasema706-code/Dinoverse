@@ -17,3 +17,4 @@ data
 
 # Local Netlify folder
 .netlify
+tmp

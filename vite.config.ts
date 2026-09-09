@@ -129,19 +129,19 @@ function authPopupPlugin(): Plugin {
 // opens a second dev-server port, which breaks the single-port preview.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
-process.env.VITE_AUTH_ENABLED = "false";
 
 export default defineConfig(({ command }) => ({
-  define: {
-    "import.meta.env.VITE_AUTH_ENABLED": JSON.stringify("false"),
-    "process.env.VITE_AUTH_ENABLED": JSON.stringify("false"),
-  },
   server: {
     host: "0.0.0.0",
     port: 8080,
     strictPort: true,
     watch: {
-      ignored: ["**/public/**/*.mov", "**/public/**/*.mp4"],
+      ignored: [
+        "**/public/**/*.mov",
+        "**/public/**/*.mp4",
+        "**/public/**/*.glb",
+        "**/tmp/**", // large models are static; ignore so watchers stay stable
+      ],
     },
   },
   resolve: { tsconfigPaths: true },
