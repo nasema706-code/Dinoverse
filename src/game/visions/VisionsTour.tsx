@@ -133,7 +133,7 @@ export function VisionsTour({ shotId }: { shotId: VisionId }) {
         <p className="mt-2 max-w-xl text-sm text-white/75">{shot.body}</p>
       </div>
 
-      <div className="absolute right-3 bottom-3 left-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="pointer-events-auto flex flex-wrap gap-1.5">
           {VISIONS.map((v, i) => (
             <button
@@ -161,7 +161,7 @@ export function VisionsTour({ shotId }: { shotId: VisionId }) {
           <button
             type="button"
             onClick={enterFly}
-            className="rounded-full border border-[#ff7a2a]/50 bg-black/60 px-3 py-1.5 text-xs font-medium tracking-wide text-[#ffb07a] uppercase hover:bg-black/75"
+            className="pointer-events-auto rounded-full border border-[#ff7a2a]/50 bg-black/60 px-3 py-1.5 text-xs font-medium tracking-wide text-[#ffb07a] uppercase hover:bg-black/75"
           >
             {flying ? "Flying" : "Fly"}
           </button>

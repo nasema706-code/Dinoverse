@@ -118,7 +118,7 @@ function DesktopNav() {
   const more = MORE_PATHS.has(pathname);
 
   return (
-    <nav className="hidden items-center lg:flex">
+    <nav className="hidden items-center xl:flex">
       <Link
         to="/"
         hash="about"
@@ -239,7 +239,7 @@ export function SiteNav() {
             <Link
               to="/explore"
               title="Walking as you"
-              className="hidden items-center gap-2 rounded-full border border-gold/30 bg-lore py-1 pr-3 pl-2 lg:flex"
+              className="hidden items-center gap-2 rounded-full border border-gold/30 bg-lore py-1 pr-3 pl-2 xl:flex"
             >
               <span className="grid size-7 place-items-center rounded-full bg-gold/20 text-[10px] font-medium tracking-wide text-gold uppercase">
                 You
@@ -250,7 +250,7 @@ export function SiteNav() {
             <Link
               to="/crew"
               title={`${character.name} · crew`}
-              className="hidden items-center gap-2 rounded-full border border-gold/30 bg-lore py-1 pr-3 pl-1 lg:flex"
+              className="hidden items-center gap-2 rounded-full border border-gold/30 bg-lore py-1 pr-3 pl-1 xl:flex"
             >
               <img
                 src={character.portrait}
@@ -266,7 +266,7 @@ export function SiteNav() {
           ) : null}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="xl:hidden" aria-label="Open menu">
                 <Menu />
               </Button>
             </SheetTrigger>

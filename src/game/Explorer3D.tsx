@@ -1479,12 +1479,12 @@ export function Explorer3D({
   };
 
   return (
-    <div className="relative isolate h-full min-h-0 bg-bg">
+    <div className="relative isolate h-full w-full min-h-0 bg-bg">
       <div
         ref={wrapRef}
         tabIndex={0}
         aria-label="The Floor. Walk with WASD or the left stick. Drag to look. E or Use to talk."
-        className="absolute inset-0 overflow-hidden touch-none outline-none"
+        className="absolute inset-0 h-full w-full overflow-hidden touch-none outline-none"
         onPointerDown={(e) => {
           if (e.button !== 0 || !started || dialog) return;
           lookDrag.current = { on: true, x: e.clientX, y: e.clientY, moved: 0 };
@@ -1538,6 +1538,7 @@ export function Explorer3D({
       >
         <Canvas
           shadows={settings.shadows}
+          style={{ width: "100%", height: "100%", display: "block" }}
           camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: settings.far }}
           frameloop="always"
           dpr={settings.dpr}
@@ -1699,7 +1700,7 @@ export function Explorer3D({
                     ?
                   </button>
                 </div>
-                <div className="flex rounded-lg border border-border bg-bg/80 p-0.5 backdrop-blur-sm">
+                <div className="hidden rounded-lg border border-border bg-bg/80 p-0.5 backdrop-blur-sm sm:flex">
                   {(["low", "mid", "high"] as const).map((q) => (
                     <button
                       key={q}
@@ -1715,7 +1716,7 @@ export function Explorer3D({
                 </div>
                 <button
                   type="button"
-                  className="min-h-9 rounded-lg border border-border bg-bg/80 px-2.5 text-[10px] font-medium tracking-wide text-muted uppercase backdrop-blur-sm hover:text-fg"
+                  className="hidden min-h-9 rounded-lg border border-border bg-bg/80 px-2.5 text-[10px] font-medium tracking-wide text-muted uppercase backdrop-blur-sm hover:text-fg sm:inline-flex"
                   onClick={() => {
                     const next = !lobbyQuiet;
                     setLobbyQuiet(next);
@@ -1747,7 +1748,7 @@ export function Explorer3D({
                     ))}
                   </div>
                 ) : null}
-                <div className="max-w-[15rem] rounded-lg border border-border bg-bg/80 px-3 py-2 text-xs text-muted">
+                <div className="hidden max-w-[15rem] rounded-lg border border-border bg-bg/80 px-3 py-2 text-xs text-muted sm:block">
                   {prompt?.kind === "heli" && prompt.id === "exit"
                     ? touchUi
                       ? "Sticks fly · Up / Down · Use exits"

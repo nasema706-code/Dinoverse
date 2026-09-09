@@ -31,6 +31,7 @@ export function WorldPreview({
       )}
     >
       <Canvas
+        style={{ width: "100%", height: "100%", display: "block" }}
         shadows={false}
         camera={{
           fov: forum ? 52 : 50,

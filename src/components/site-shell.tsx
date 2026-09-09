@@ -55,12 +55,12 @@ export function SiteShell({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-x-hidden bg-bg text-fg",
-        floor ? "h-dvh overflow-hidden" : "min-h-dvh",
+        "flex w-full min-w-0 flex-col overflow-x-clip bg-bg text-fg",
+        floor ? "h-dvh max-h-dvh overflow-hidden" : "min-h-dvh",
       )}
     >
       <SiteNav />
-      <div className={cn("flex-1", floor && "min-h-0 overflow-hidden")}>{children}</div>
+      <div className={cn("w-full min-w-0 flex-1", floor && "min-h-0 overflow-hidden")}>{children}</div>
       {floor ? null : (
       <footer className="border-t border-border px-4 py-10">
         <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">

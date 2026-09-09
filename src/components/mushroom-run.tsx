@@ -456,7 +456,7 @@ export function MushroomRun() {
       <div
         ref={wrapRef}
         className={cn(
-          "relative h-[min(82dvh,820px)] min-h-[32rem] overflow-hidden rounded-xl border border-white/12 shadow-[0_0_60px_rgba(62,207,142,0.14)] touch-none",
+          "relative h-[min(68dvh,820px)] min-h-[18rem] overflow-hidden rounded-xl border border-white/12 shadow-[0_0_60px_rgba(62,207,142,0.14)] touch-none sm:h-[min(82dvh,820px)] sm:min-h-[28rem]",
           theme.wrap,
         )}
       >

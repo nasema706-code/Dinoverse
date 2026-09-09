@@ -43,7 +43,7 @@ function Home() {
               Walk the Floor while we pour the rest of the city. Play and memes are live — no token
               purchase required.
             </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <ExperienceTile
                 to="/visions"
                 kicker="Visions · live 3D"
@@ -245,6 +245,7 @@ function HomeFloorPreview() {
   const { settings } = useQuality();
   useEffect(() => {
     if (!settings.preview3d) return;
+    if (window.matchMedia("(max-width: 900px)").matches) return;
     const el = wrapRef.current;
     if (!el) return;
     const io = new IntersectionObserver(

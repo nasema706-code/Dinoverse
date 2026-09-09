@@ -8,11 +8,11 @@ export function AccountChip({ className }: { className?: string }) {
   const { user, isPending } = useCurrentUserState();
   if (!authEnabled) return null;
   if (isPending) {
-    return <span className={cn("hidden text-xs text-subtle lg:inline", className)}>…</span>;
+    return <span className={cn("hidden text-xs text-subtle xl:inline", className)}>…</span>;
   }
   if (!user) {
     return (
-      <Button asChild size="sm" variant="secondary" className={cn("hidden lg:inline-flex", className)}>
+      <Button asChild size="sm" variant="secondary" className={cn("hidden xl:inline-flex", className)}>
         <Link to="/login" search={{ next: "/play" }}>
           Floor pass
         </Link>
@@ -21,7 +21,7 @@ export function AccountChip({ className }: { className?: string }) {
   }
   const label = user.displayName ?? user.primaryEmail ?? "Runner";
   return (
-    <div className={cn("hidden items-center gap-2 lg:flex", className)}>
+    <div className={cn("hidden items-center gap-2 xl:flex", className)}>
       <Link
         to="/leaderboard"
         className="flex max-w-[9rem] items-center gap-2 rounded-full border border-border bg-surface py-1 pr-3 pl-1"

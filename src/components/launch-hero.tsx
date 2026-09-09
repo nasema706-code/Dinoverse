@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Copy } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UsDisclosure } from "@/components/us-disclosure";
+import { useQuality } from "@/game/quality";
 import { TOKEN, TOKEN_STATS } from "@/lib/token";
 
 function HeroLoop() {
@@ -69,7 +70,7 @@ function HeroLoop() {
       muted
       loop
       playsInline
-      preload="auto"
+      preload="metadata"
       controls={false}
       disablePictureInPicture
       aria-hidden="true"
@@ -83,8 +84,17 @@ function HeroLoop() {
 }
 
 export function LaunchHero() {
+  const { settings } = useQuality();
+  const [playVideo, setPlayVideo] = useState(false);
+
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 1024px)").matches;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setPlayVideo(Boolean(settings.videoHero && wide && !reduce));
+  }, [settings.videoHero]);
+
   return (
-    <section className="relative overflow-x-hidden sm:min-h-[calc(100dvh-4rem)]">
+    <section className="relative w-full min-w-0 overflow-x-clip sm:min-h-[calc(100dvh-4rem)]">
       <img
         src="/hero.jpg?v=5"
         alt=""
@@ -92,7 +102,7 @@ export function LaunchHero() {
         decoding="async"
         className="pointer-events-none absolute inset-0 size-full object-cover object-center"
       />
-      <HeroLoop />
+      {playVideo ? <HeroLoop /> : null}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg via-bg/70 to-bg/30" />
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col justify-end gap-5 px-4 py-8 sm:min-h-[calc(100dvh-4rem)] sm:gap-8 sm:py-14">
         <div className="min-w-0 max-w-2xl">

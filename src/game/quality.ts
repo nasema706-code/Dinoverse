@@ -103,7 +103,8 @@ export function detectQuality(): Quality {
 
   if (saveData || crawlNet || reduced || mem <= 2) return "low";
   if (slowNet && mem <= 4) return "low";
-  if (phone || tablet || (touch && small) || mem <= 4 || cores <= 4) return "mid";
+  if (phone) return "low";
+  if (tablet || (touch && small) || mem <= 4 || cores <= 4) return "mid";
   return "high";
 }
 

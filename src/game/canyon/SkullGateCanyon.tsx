@@ -144,9 +144,10 @@ export function SkullGateCanyon() {
   }, [enterFly]);
 
   return (
-    <div ref={setWrap} className="relative h-dvh w-full bg-[#e2b86a]">
+    <div ref={setWrap} className="relative h-dvh w-full overflow-hidden bg-[#e2b86a]">
       <Canvas
         shadows={false}
+        style={{ width: "100%", height: "100%", display: "block" }}
         camera={{
           fov: canyon.camera.fov,
           position: canyon.camera.position,
@@ -184,7 +185,7 @@ export function SkullGateCanyon() {
         </p>
       </div>
 
-      <div className="absolute right-3 bottom-3 left-3 flex flex-wrap items-end justify-between gap-2">
+      <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex flex-wrap items-end justify-between gap-2">
         <p className="max-w-md text-xs leading-snug text-white/75">
           {flying
             ? "WASD fly · A left · Space up · Q down · Shift sprint · Esc orbit"
@@ -193,7 +194,7 @@ export function SkullGateCanyon() {
         <button
           type="button"
           onClick={enterFly}
-          className="rounded-full border border-[#ff7a2a]/50 bg-black/60 px-3 py-1.5 text-xs font-medium tracking-wide text-[#ffb07a] uppercase hover:bg-black/75"
+          className="pointer-events-auto rounded-full border border-[#ff7a2a]/50 bg-black/60 px-3 py-1.5 text-xs font-medium tracking-wide text-[#ffb07a] uppercase hover:bg-black/75"
         >
           {flying ? "Flying" : "Fly"}
         </button>
