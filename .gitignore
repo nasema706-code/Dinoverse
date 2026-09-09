@@ -12,7 +12,8 @@ dist
 artifacts
 screenshots
 .grok
-data
+# PGLite local DB only — do not ignore src/data (canyon layouts, etc.)
+/data
 *.db
 
 # Local Netlify folder

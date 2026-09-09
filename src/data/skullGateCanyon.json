@@ -1,0 +1,65 @@
+{
+  "name": "Skull Gate Canyon",
+  "camera": {
+    "position": [0, 8, 42],
+    "target": [0, 6, -18],
+    "fov": 50,
+    "far": 220
+  },
+  "fog": { "color": "#e0b15a", "near": 28, "far": 132 },
+  "items": [
+    {
+      "id": "gate",
+      "model": "/models/skull-gate.glb",
+      "position": [0, 0, -40],
+      "rotation": [0, 0, 0],
+      "scale": 6
+    },
+    {
+      "id": "spire",
+      "model": "/models/bone-spire.glb",
+      "position": [18, 0, -64],
+      "rotation": [0, 0.4, 0],
+      "scale": 1.55
+    },
+    {
+      "id": "bridge",
+      "model": "/models/bone-bridge.glb",
+      "position": [0, 0, -3],
+      "rotation": [0, 0, 0],
+      "scale": 2.2
+    },
+    {
+      "id": "cutout",
+      "model": "/models/sepia-cutout.glb",
+      "position": [-16.4, 3.2, 6],
+      "rotation": [0, 0.55, 0],
+      "scale": 70
+    },
+    {
+      "id": "tower-l",
+      "position": [-11.2, 0, -28],
+      "rotation": [0, 0.18, 0],
+      "scale": 1.15
+    },
+    {
+      "id": "tower-r",
+      "position": [11.2, 0, -28],
+      "rotation": [0, -0.22, 0],
+      "scale": 1.18
+    },
+    {
+      "id": "buggy",
+      "position": [-1.6, 0, 21],
+      "rotation": [0, 0.42, 0],
+      "scale": 2.2
+    }
+  ],
+  "notes": {
+    "gate": "Meshy Skullgate Canyon mesh. Native 5.71 x 4.00 x 5.93 m. scale 6 → ~34 x 24 x 36 m at [0,0,-40]. JSON spec scale 12 would be 48 m tall / 68 m wide.",
+    "cutout": "Meshy Sepia Silhouette. Native 0.225 x 0.12 x 0.177 m. scale 70 → ~16 x 8.4 x 12 m on the left cliff.",
+    "spire": "Offset right-rear of the skull mouth so the gate stays the hero. Do not sit on +Z=0 or it fills the arch.",
+    "bridgeScale": "Native long axis is X (~10.8 m). Yaw 0 keeps that span across the chasm at z=-3. Scale 2.2 → ~23.7 m.",
+    "towers": "Procedural log pagodas flanking the gate plateau."
+  }
+}
