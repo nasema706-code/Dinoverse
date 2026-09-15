@@ -30,6 +30,7 @@ function TelegramGlyph({ className }: { className?: string }) {
 }
 
 const EXPERIENCE = [
+  { to: "/competition", label: "Compete" },
   { to: "/play", label: "Play" },
   { to: "/visions", label: "Four Visions" },
   { to: "/canyon", label: "Skull Gate Canyon" },
@@ -87,7 +88,10 @@ export function SiteShell({
             <ul className="mt-3 space-y-2 text-sm">
               {EXPERIENCE.map((item) => (
                 <li key={item.label}>
-                  <Link to={item.to} className="text-muted hover:text-fg">
+                  <Link
+                    to={item.to}
+                    className={item.to === "/competition" ? "font-semibold text-accent hover:text-accent" : "text-muted hover:text-fg"}
+                  >
                     {item.label}
                   </Link>
                 </li>

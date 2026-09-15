@@ -45,6 +45,17 @@ function Home() {
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <ExperienceTile
+                to="/competition"
+                kicker="Open call · until 13 Oct"
+                title="Floor Cast"
+                body="Design a dinosaur character card — traits, bio, one image. The winner is built in 3D and walks The Floor."
+                image="/characters/rex/full.png?v=3"
+                imageAlt="Rex Volt, Floor Chief, in a charcoal suit"
+                cta="Enter the cast"
+                primary
+                highlight
+              />
+              <ExperienceTile
                 to="/visions"
                 kicker="Visions · live 3D"
                 title="Four worlds"
@@ -205,8 +216,9 @@ function ExperienceTile({
   cta,
   primary = false,
   preview = false,
+  highlight = false,
 }: {
-  to: "/explore" | "/play" | "/memes" | "/canyon" | "/visions";
+  to: "/explore" | "/play" | "/memes" | "/canyon" | "/visions" | "/competition";
   kicker: string;
   title: string;
   body: string;
@@ -215,9 +227,17 @@ function ExperienceTile({
   cta: string;
   primary?: boolean;
   preview?: boolean;
+  highlight?: boolean;
 }) {
   return (
-    <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-surface">
+    <article
+      className={cn(
+        "flex min-w-0 flex-col overflow-hidden rounded-xl border bg-surface",
+        highlight
+          ? "border-accent/70 shadow-[0_0_48px_rgba(62,207,142,0.16)]"
+          : "border-border",
+      )}
+    >
       {preview ? (
         <HomeFloorPreview />
       ) : (
@@ -225,10 +245,17 @@ function ExperienceTile({
       )}
       <div className="rex-seam" />
       <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <p className="text-[10px] tracking-[0.18em] text-gold uppercase">{kicker}</p>
+        <p className={cn("text-[10px] tracking-[0.18em] uppercase", highlight ? "text-accent" : "text-gold")}>
+          {kicker}
+        </p>
         <p className="mt-1 font-display text-xl font-medium">{title}</p>
         <p className="mt-2 flex-1 text-sm text-muted">{body}</p>
-        <Button asChild size="sm" variant={primary ? "default" : "outline"} className="mt-4 self-start">
+        <Button
+          asChild
+          size="sm"
+          variant={highlight ? "tape" : primary ? "default" : "outline"}
+          className="mt-4 self-start"
+        >
           <Link to={to}>
             {cta}
             <ArrowRight />

@@ -105,6 +105,25 @@ function NavDrop({
   );
 }
 
+function competeChip(active: boolean) {
+  return cn(
+    "inline-flex h-9 items-center rounded-full px-3.5 text-sm font-semibold tracking-wide",
+    active
+      ? "bg-accent text-accent-fg shadow-[0_0_22px_rgba(62,207,142,0.5)]"
+      : "bg-accent/15 text-accent ring-1 ring-accent/60 hover:bg-accent/25",
+  );
+}
+
+function CompactCompete() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const compete = pathname === "/competition";
+  return (
+    <Link to="/competition" className={cn(competeChip(compete), "xl:hidden")}>
+      Compete
+    </Link>
+  );
+}
+
 function DesktopNav() {
   const hydrated = useHydrated();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -113,6 +132,7 @@ function DesktopNav() {
   });
   const story = pathname === "/" && (!hash || hash === "about");
   const play = pathname === "/play";
+  const compete = pathname === "/competition";
   const city = CITY_PATHS.has(pathname);
   const token = pathname === "/transparency" || (pathname === "/" && FACT_HASHES.has(hash));
   const more = MORE_PATHS.has(pathname);
@@ -137,6 +157,9 @@ function DesktopNav() {
         )}
       >
         Play
+      </Link>
+      <Link to="/competition" className={cn("ml-1", competeChip(compete))}>
+        Compete
       </Link>
       <NavDrop label="City" active={city} items={CITY_ITEMS} />
       <NavDrop label="Token" active={token} items={TOKEN_ITEMS} />
@@ -164,17 +187,19 @@ function SheetLink({
   to,
   hash,
   children,
+  className,
 }: {
   to: string;
   hash?: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <SheetClose asChild>
       <Link
         to={to}
         hash={hash}
-        className="inline-flex h-11 items-center px-3 text-sm font-medium text-muted hover:text-fg"
+        className={cn("inline-flex h-11 items-center px-3 text-sm font-medium text-muted hover:text-fg", className)}
       >
         {children}
       </Link>
@@ -213,6 +238,7 @@ export function SiteNav() {
         <DesktopNav />
 
         <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-1">
+          <CompactCompete />
           <Button asChild variant="ghost" size="icon" className="hidden size-11 sm:inline-flex" aria-label="X">
             <a href={TOKEN.x} target="_blank" rel="noopener noreferrer">
               <XGlyph className="size-4" />
@@ -308,6 +334,12 @@ export function SiteNav() {
                     Story
                   </SheetLink>
                   <SheetLink to="/play">Play</SheetLink>
+                  <SheetLink to="/competition" className="font-semibold text-accent hover:text-accent">
+                    Compete
+                    <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold tracking-wide text-accent-fg uppercase">
+                      Live
+                    </span>
+                  </SheetLink>
                   <SheetLink to="/visions">Four Visions</SheetLink>
                   <SheetLink to="/canyon">Skull Gate Canyon</SheetLink>
                   <SheetLink to="/memes">Memes</SheetLink>

@@ -10,7 +10,7 @@ import { FLOOR_NAME_MAX, FLOOR_PASSWORD_MAX, floorPasswordError, normalizeFloorN
 import { TOKEN } from "@/lib/token";
 import { cn } from "@/lib/utils";
 
-const NEXT_PATHS = ["/", "/play", "/memes", "/leaderboard", "/crew", "/worlds", "/explore", "/transparency", "/fossil-tokenisation", "/admin/members"] as const;
+const NEXT_PATHS = ["/", "/play", "/memes", "/leaderboard", "/crew", "/worlds", "/explore", "/transparency", "/fossil-tokenisation", "/competition", "/admin/members"] as const;
 type NextPath = (typeof NEXT_PATHS)[number];
 const SAVED_KEY = "dv-floor-pass";
 

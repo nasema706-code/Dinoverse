@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CanyonRouteImport } from './routes/canyon'
+import { Route as CompetitionRouteImport } from './routes/competition'
 import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FossilTokenisationRouteImport } from './routes/fossil-tokenisation'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
 const CanyonRoute = CanyonRouteImport.update({
   id: '/canyon',
   path: '/canyon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionRoute = CompetitionRouteImport.update({
+  id: '/competition',
+  path: '/competition',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewRoute = CrewRouteImport.update({
@@ -98,6 +104,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/canyon': typeof CanyonRoute
+  '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/canyon': typeof CanyonRoute
+  '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/canyon': typeof CanyonRoute
+  '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/canyon'
+    | '/competition'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/canyon'
+    | '/competition'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/canyon'
+    | '/competition'
     | '/crew'
     | '/explore'
     | '/fossil-tokenisation'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CanyonRoute: typeof CanyonRoute
+  CompetitionRoute: typeof CompetitionRoute
   CrewRoute: typeof CrewRoute
   ExploreRoute: typeof ExploreRoute
   FossilTokenisationRoute: typeof FossilTokenisationRoute
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/canyon'
       fullPath: '/canyon'
       preLoaderRoute: typeof CanyonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competition': {
+      id: '/competition'
+      path: '/competition'
+      fullPath: '/competition'
+      preLoaderRoute: typeof CompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew': {
@@ -318,6 +338,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CanyonRoute: CanyonRoute,
+  CompetitionRoute: CompetitionRoute,
   CrewRoute: CrewRoute,
   ExploreRoute: ExploreRoute,
   FossilTokenisationRoute: FossilTokenisationRoute,
