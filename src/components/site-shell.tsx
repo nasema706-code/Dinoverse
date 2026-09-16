@@ -56,7 +56,7 @@ export function SiteShell({
   return (
     <div
       className={cn(
-        "flex w-full min-w-0 flex-col overflow-x-clip bg-bg text-fg",
+        "flex w-full min-w-0 flex-col bg-bg text-fg",
         floor ? "h-dvh max-h-dvh overflow-hidden" : "min-h-dvh",
       )}
     >

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Sparkles, Trophy, X } from "lucide-react";
+import { Sparkles, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CharacterCardStudio, type CardDraft } from "@/components/character-card-studio";
@@ -7,7 +7,7 @@ import { SiteShell } from "@/components/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UsDisclosure } from "@/components/us-disclosure";
-import { COMPETITION, MUST, MUST_NOT, STEPS } from "@/lib/competition";
+import { COMPETITION, NEED, STEPS } from "@/lib/competition";
 import { TOKEN } from "@/lib/token";
 import { useHydrated } from "@/lib/use-hydrated";
 
@@ -21,6 +21,13 @@ export const Route = createFileRoute("/competition")({
 const fieldClass =
   "mt-1.5 h-11 w-full rounded-md border border-accent/25 bg-bg px-3 text-sm text-fg outline-none placeholder:text-subtle focus:border-accent";
 
+const NEED_DOT = [
+  "bg-accent text-accent-fg",
+  "bg-gold text-gold-fg",
+  "bg-[#c084fc] text-[#0b0b0c]",
+  "bg-[#5b9dff] text-[#0b0b0c]",
+] as const;
+
 function CompetitionPage() {
   const hydrated = useHydrated();
   const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -30,57 +37,56 @@ function CompetitionPage() {
 
   return (
     <SiteShell>
-      <main className="relative mx-auto max-w-6xl min-w-0 overflow-x-clip px-4 py-6 sm:py-10">
+      <main className="relative mx-auto max-w-6xl min-w-0 px-4 py-6 sm:py-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(62,207,142,0.22),transparent_58%)]" />
         <Link to="/" className="text-sm text-muted hover:text-fg">
           ← Back to Story
         </Link>
 
-        <section className="relative mt-4 overflow-hidden rounded-2xl border-2 border-accent/45 bg-[#07140f] shadow-[0_0_80px_rgba(62,207,142,0.16)]">
-          <div className="pointer-events-none absolute -top-24 left-[-10%] size-80 rounded-full bg-accent/25 blur-3xl" />
-          <div className="pointer-events-none absolute -right-10 bottom-[-20%] size-72 rounded-full bg-gold/20 blur-3xl" />
-          <div className="relative z-10 grid md:grid-cols-[minmax(0,1.2fr)_minmax(14rem,0.9fr)] md:items-end">
-            <div className="px-5 py-8 sm:px-8 sm:py-12">
-              <Badge className="border-accent/0 bg-accent text-accent-fg">{COMPETITION.kicker}</Badge>
-              <h1 className="mt-4 font-display text-[clamp(1.85rem,6vw,3.25rem)] font-medium tracking-tight text-fg">
-                {COMPETITION.title}
-              </h1>
-              <p className="mt-2 font-display text-xl text-gold text-pretty sm:text-2xl">{COMPETITION.headline}</p>
-              <p className="mt-3 text-sm text-accent/90">
-                {COMPETITION.datesLabel}
-                <span className="mx-2 text-subtle">·</span>
-                Platforms: {COMPETITION.platform}
-                <span className="mx-2 text-subtle">·</span>
-                Type: {COMPETITION.type}
-              </p>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-fg/90 sm:text-base">{COMPETITION.blurb}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <Button asChild size="lg">
-                  <a href="#studio">Build your card</a>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-accent/60 text-accent hover:bg-accent/10"
-                >
-                  <a href={COMPETITION.xCompose("")} target="_blank" rel="noopener noreferrer">
-                    Open X
-                  </a>
-                </Button>
-              </div>
-            </div>
-            <div className="relative hidden min-h-[18rem] md:block md:min-h-[22rem]">
-              <img
-                src="/characters/rex/full.png?v=3"
-                alt="Rex Volt, Floor Chief — the house style for a character card"
-                className="pointer-events-none absolute inset-0 size-full object-contain object-bottom [mask-image:radial-gradient(ellipse_at_bottom,black_58%,transparent_82%)]"
-              />
-            </div>
+        <header className="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <Badge className="border-accent/0 bg-accent text-accent-fg">{COMPETITION.kicker}</Badge>
+            <h1 className="mt-3 font-display text-[clamp(1.85rem,6vw,3.25rem)] font-medium tracking-tight text-fg">
+              {COMPETITION.title}
+            </h1>
+            <p className="mt-1 font-display text-xl text-gold text-pretty sm:text-2xl">{COMPETITION.headline}</p>
+            <p className="mt-2 text-sm text-accent/90">
+              {COMPETITION.datesLabel}
+              <span className="mx-2 text-subtle">·</span>
+              {COMPETITION.platform}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="border-accent/60 text-accent hover:bg-accent/10">
+              <a href="#how">How it works</a>
+            </Button>
+            <Button asChild>
+              <a href={COMPETITION.xCompose("")} target="_blank" rel="noopener noreferrer">
+                Open X
+              </a>
+            </Button>
+          </div>
+        </header>
+
+        <section
+          id="studio"
+          className="mt-6 scroll-mt-24 overflow-visible rounded-2xl border-2 border-accent/45 bg-surface p-4 shadow-[0_0_80px_rgba(62,207,142,0.16)] sm:p-6"
+        >
+          <h2 className="font-display text-2xl font-medium">Card studio</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted">
+            Pick a card layout, upload a portrait, write who they are, download the card, then post it on X.
+          </p>
+          <div className="mt-6">
+            <CharacterCardStudio
+              onReady={(dataUrl, next) => {
+                setCardUrl(dataUrl);
+                setDraft(next);
+              }}
+            />
           </div>
         </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1.55fr)_minmax(16rem,0.85fr)]">
+        <div id="how" className="mt-6 grid scroll-mt-24 gap-4 md:grid-cols-[minmax(0,1.55fr)_minmax(16rem,0.85fr)]">
           <div className="space-y-4">
             <section className="rounded-2xl border border-accent/25 bg-surface p-5 sm:p-6">
               <h2 className="font-display text-2xl font-medium">How to participate</h2>
@@ -109,24 +115,20 @@ function CompetitionPage() {
 
             <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
               <h2 className="font-display text-2xl font-medium">Card requirements</h2>
-              <p className="mt-1 text-sm text-muted">
-                Missing any of these and the post is rejected in review. The card is the entry — not a thread, not a reel of
-                someone else&apos;s dinosaur.
-              </p>
-              <ul className="mt-5 space-y-2">
-                {MUST.map((item) => (
-                  <li key={item} className="flex gap-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-3 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-accent" />
-                    <span>{item}</span>
+              <p className="mt-1 text-sm text-muted">Four things. That&apos;s all.</p>
+              <ol className="mt-5 grid gap-3 sm:grid-cols-2">
+                {NEED.map((item, i) => (
+                  <li key={item.n} className="flex min-h-[9rem] flex-col rounded-2xl border border-accent/25 bg-bg/40 p-4">
+                    <span
+                      className={`grid size-8 place-items-center rounded-full font-display text-sm font-medium ${NEED_DOT[i]}`}
+                    >
+                      {item.n}
+                    </span>
+                    <p className="mt-3 font-display text-lg font-medium tracking-tight">{item.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">{item.detail}</p>
                   </li>
                 ))}
-                {MUST_NOT.map((item) => (
-                  <li key={item} className="flex gap-3 rounded-lg border border-danger/35 bg-bg/40 px-3 py-3 text-sm">
-                    <X className="mt-0.5 size-4 shrink-0 text-danger" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+              </ol>
             </section>
           </div>
 
@@ -162,25 +164,6 @@ function CompetitionPage() {
             </p>
           </aside>
         </div>
-
-        <section
-          id="studio"
-          className="mt-6 scroll-mt-24 rounded-2xl border border-accent/30 bg-surface p-5 shadow-[0_0_50px_rgba(62,207,142,0.08)] sm:p-6"
-        >
-          <h2 className="font-display text-2xl font-medium">Card studio</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted">
-            Upload a portrait, write the traits and bio, and download the card. Post that image on X. You can also design
-            the card in any tool — the studio is optional, the single-image rule is not.
-          </p>
-          <div className="mt-6">
-            <CharacterCardStudio
-              onReady={(dataUrl, next) => {
-                setCardUrl(dataUrl);
-                setDraft(next);
-              }}
-            />
-          </div>
-        </section>
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 sm:p-6">
           <h2 className="font-display text-2xl font-medium">Lock the post</h2>

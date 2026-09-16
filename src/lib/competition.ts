@@ -30,7 +30,7 @@ export const STEPS = [
   {
     n: "02",
     title: "Make one character card image",
-    body: "A single portrait card: the dinosaur, their name, traits and bio on the art. Use the studio below, or design your own and upload it.",
+    body: "A single portrait card: the dinosaur, their name, traits and bio on the art. Use the studio above, or design your own.",
   },
   {
     n: "03",
@@ -39,17 +39,9 @@ export const STEPS = [
   },
 ] as const;
 
-export const MUST = [
-  "One character card image — name, three personality traits, and bio visible on the card",
-  "Original dinosaur. Not Rex, Vex, Tria, Ptera, and not existing IP",
-  "Caption of at least 30 words covering personality and where they fit in the city",
-  `Add ${COMPETITION.hashtag} and tag ${COMPETITION.handle}`,
-  "Standalone public post from your own X account, published during the campaign window",
-] as const;
-
-export const MUST_NOT = [
-  "Submit cards published before the campaign start date",
-  "Trace, copy, or re-skin the current crew",
-  "Submit replies, reposts, or quote posts",
-  "Make the prize, token price, or a financial return the pitch",
+export const NEED = [
+  { n: "1", title: "One card", detail: "Name, 3 traits, and a bio on the picture." },
+  { n: "2", title: "Your dinosaur", detail: "Invent one. Not Rex, Vex, Tria, or Ptera." },
+  { n: "3", title: "Post it on X", detail: `Public post. ${COMPETITION.hashtag} and ${COMPETITION.handle}.` },
+  { n: "4", title: "30 words", detail: "Who they are, and where they work in the city." },
 ] as const;
