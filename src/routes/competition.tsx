@@ -37,13 +37,28 @@ function CompetitionPage() {
 
   return (
     <SiteShell>
-      <main className="relative mx-auto max-w-6xl min-w-0 px-4 py-6 sm:py-10">
+      <main className="relative mx-auto max-w-6xl min-w-0 px-3 pt-2 pb-6 sm:px-4 sm:py-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_at_top,_rgba(62,207,142,0.22),transparent_58%)]" />
-        <Link to="/" className="text-sm text-muted hover:text-fg">
-          ← Back to Story
-        </Link>
+        <div className="flex items-center justify-between gap-3 md:block">
+          <Link to="/" className="text-sm text-muted hover:text-fg">
+            ← Back to Story
+          </Link>
+          <div className="flex shrink-0 items-center gap-3 md:hidden">
+            <a href="#how" className="text-sm text-accent hover:text-fg">
+              How
+            </a>
+            <a
+              href={COMPETITION.xCompose("")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-gold hover:text-fg"
+            >
+              Open X
+            </a>
+          </div>
+        </div>
 
-        <header className="mt-4 flex flex-wrap items-end justify-between gap-4">
+        <header className="mt-4 hidden flex-wrap items-end justify-between gap-4 md:flex">
           <div className="min-w-0">
             <Badge className="border-accent/0 bg-accent text-accent-fg">{COMPETITION.kicker}</Badge>
             <h1 className="mt-3 font-display text-[clamp(1.85rem,6vw,3.25rem)] font-medium tracking-tight text-fg">
@@ -70,13 +85,15 @@ function CompetitionPage() {
 
         <section
           id="studio"
-          className="mt-6 scroll-mt-24 overflow-visible rounded-2xl border-2 border-accent/45 bg-surface p-4 shadow-[0_0_80px_rgba(62,207,142,0.16)] sm:p-6"
+          className="mt-2 flex min-h-0 flex-col scroll-mt-20 overflow-hidden rounded-2xl border-2 border-accent/45 bg-surface p-2.5 shadow-[0_0_80px_rgba(62,207,142,0.16)] max-md:h-[calc(100dvh-4rem-env(safe-area-inset-top,0px)-3.15rem)] sm:p-6 md:mt-6 md:h-auto md:overflow-visible"
         >
-          <h2 className="font-display text-2xl font-medium">Card studio</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted">
-            Pick a card layout, upload a portrait, write who they are, download the card, then post it on X.
-          </p>
-          <div className="mt-6">
+          <div className="hidden shrink-0 md:block">
+            <h2 className="font-display text-2xl font-medium">Card studio</h2>
+            <p className="mt-1 max-w-2xl text-sm text-muted">
+              Pick a card layout, upload a portrait, write who they are, download the card, then post it on X.
+            </p>
+          </div>
+          <div className="min-h-0 flex-1 md:mt-6">
             <CharacterCardStudio
               onReady={(dataUrl, next) => {
                 setCardUrl(dataUrl);

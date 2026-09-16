@@ -508,7 +508,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
         <canvas
           ref={previewRef}
           className={cn(
-            "aspect-[3/4] w-full object-cover touch-none",
+            "aspect-[3/4] h-auto w-full object-cover touch-none",
             grabbing ? "cursor-grabbing" : "cursor-grab",
           )}
           aria-label="Character card preview"
@@ -522,22 +522,39 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
   );
 
   return (
-    <div className="flex flex-row items-start gap-3 sm:gap-4 md:grid md:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] md:items-start md:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] lg:gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-2 md:grid md:h-auto md:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] md:items-start md:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,26rem)] lg:gap-6">
       <div
         className={cn(
-          "sticky z-20 order-2 w-[8.75rem] shrink-0 xs:w-[10.5rem] sm:w-[13.5rem] md:w-full",
-          "top-[calc(4rem+env(safe-area-inset-top,0px))]",
+          "z-20 shrink-0",
+          "md:sticky md:order-2 md:w-full md:top-[calc(4rem+env(safe-area-inset-top,0px))]",
         )}
       >
-        {preview}
-        <div className="mt-2 flex flex-col gap-2 md:hidden">{actions}</div>
+        <div className="mx-auto w-[min(100%,calc(min(38svh,18rem)*0.75))] md:w-full">
+          {preview}
+        </div>
+        <div className="mx-auto mt-1.5 grid w-[min(100%,calc(min(38svh,18rem)*0.75))] grid-cols-2 gap-2 md:hidden">
+          {actions}
+        </div>
         <p className="mt-2 hidden text-xs text-muted md:block">Click a stamp to add it. Drag it around the card.</p>
       </div>
-      <div className="order-1 min-w-0 flex-1 space-y-4">
+      <div
+        className="min-h-0 min-w-0 flex-1 space-y-2.5 overflow-y-auto overscroll-contain pr-0.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:order-1 md:space-y-4 md:overflow-visible md:pb-0"
+        onFocusCapture={(event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") return;
+          const pane = event.currentTarget;
+          window.setTimeout(() => {
+            const paneBox = pane.getBoundingClientRect();
+            const fieldBox = target.getBoundingClientRect();
+            pane.scrollTop += fieldBox.top - paneBox.top - paneBox.height / 2 + fieldBox.height / 2;
+          }, 80);
+        }}
+      >
         <div className="rounded-xl border border-gold/40 bg-gold/5 p-3">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">Template</p>
-          <p className="mt-1 text-xs text-muted">Pick a base. Colours, type, and stamps sit on top.</p>
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <p className="mt-1 hidden text-xs text-muted sm:block">Pick a base. Colours, type, and stamps sit on top.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
             {CARD_TEMPLATES.map((item) => {
               const on = template.id === item.id;
               return (
@@ -571,7 +588,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
             <input
               type="file"
               accept="image/*"
-              className="mt-1.5 block w-full min-w-0 text-xs text-muted file:mr-2 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-2 file:text-xs file:font-medium file:text-accent-fg sm:text-sm sm:file:mr-3 sm:file:text-sm"
+              className="mt-1.5 block w-full min-w-0 text-xs text-muted file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-2.5 file:text-xs file:font-medium file:text-accent-fg sm:text-sm sm:file:text-sm"
               onChange={(e) => onFile(e.target.files?.[0], "art")}
             />
           </label>
@@ -624,11 +641,11 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
             <input
               type="file"
               accept="image/*"
-              className="mt-1.5 block w-full min-w-0 text-xs text-muted file:mr-2 file:rounded-md file:border-0 file:bg-gold file:px-3 file:py-2 file:text-xs file:font-medium file:text-gold-fg sm:text-sm sm:file:mr-3 sm:file:text-sm"
+              className="mt-1.5 block w-full min-w-0 text-xs text-muted file:mr-3 file:rounded-md file:border-0 file:bg-gold file:px-3 file:py-2.5 file:text-xs file:font-medium file:text-gold-fg sm:text-sm sm:file:text-sm"
               onChange={(e) => onFile(e.target.files?.[0], "bg")}
             />
           </label>
-          <p className="mt-2 text-xs text-muted">A city photo, jungle, bedroom, club — whatever their world looks like.</p>
+          <p className="mt-2 hidden text-xs text-muted sm:block">A city photo, jungle, bedroom, club — whatever their world looks like.</p>
           {bgEl ? (
             <div className="mt-3 space-y-3">
               <div className="flex flex-wrap gap-2">
@@ -696,7 +713,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
         </div>
         <div className="rounded-xl border border-accent/30 bg-accent/5 p-3">
           <p className="text-xs tracking-[0.18em] text-accent uppercase">Colours</p>
-          <p className="mt-1 text-xs text-muted">Pick a wash, then a sheen. Background photos sit under this colour.</p>
+          <p className="mt-1 hidden text-xs text-muted sm:block">Pick a wash, then a sheen. Background photos sit under this colour.</p>
           <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
             {CARD_THEMES.map((item) => {
               const on = theme.id === item.id;
@@ -706,26 +723,26 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
                   type="button"
                   onClick={() => setTheme(item)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2 text-[10px] leading-tight",
+                    "flex min-w-0 flex-col items-center gap-1.5 rounded-lg border px-1 py-2 text-[10px] leading-tight",
                     on ? "border-fg text-fg" : "border-border text-muted hover:border-gold/50 hover:text-fg",
                   )}
                   aria-pressed={on}
                 >
                   <span
-                    className="size-9 rounded-full ring-2 ring-inset"
+                    className="size-8 rounded-full ring-2 ring-inset sm:size-9"
                     style={{
                       background: `radial-gradient(circle at 30% 25%, ${item.wash0}, ${item.wash2})`,
                       boxShadow: `inset 0 0 0 3px ${item.border}, 0 0 0 2px ${item.inner}`,
                     }}
                     aria-hidden
                   />
-                  {item.label}
+                  <span className="w-full truncate text-center">{item.label}</span>
                 </button>
               );
             })}
           </div>
           <p className="mt-4 text-[10px] tracking-[0.2em] text-gold uppercase">Sheen</p>
-          <p className="mt-0.5 text-xs text-muted">Overall finish. Foil, metal, or glow on top of the colour.</p>
+          <p className="mt-0.5 hidden text-xs text-muted sm:block">Overall finish. Foil, metal, or glow on top of the colour.</p>
           <div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-7">
             {CARD_SHEENS.map((item) => {
               const on = sheen.id === item.id;
@@ -736,20 +753,20 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
                   title={item.hint}
                   onClick={() => setSheen(item)}
                   className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2 text-[10px] leading-tight",
+                    "flex min-w-0 flex-col items-center gap-1.5 rounded-lg border px-1 py-2 text-[10px] leading-tight",
                     on ? "border-fg text-fg" : "border-border text-muted hover:border-gold/50 hover:text-fg",
                   )}
                   aria-pressed={on}
                 >
                   <span
-                    className="size-9 rounded-full ring-2 ring-inset ring-white/10"
+                    className="size-8 rounded-full ring-2 ring-inset ring-white/10 sm:size-9"
                     style={{
                       background: item.swatch,
                       boxShadow: on ? "0 0 0 2px rgba(255,248,238,0.35)" : undefined,
                     }}
                     aria-hidden
                   />
-                  {item.label}
+                  <span className="w-full truncate text-center">{item.label}</span>
                 </button>
               );
             })}
@@ -757,7 +774,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
         </div>
         <div className="rounded-xl border border-border bg-bg/40 p-3">
           <p className="text-xs tracking-[0.18em] text-muted uppercase">Type</p>
-          <p className="mt-1 text-xs text-muted">Names on the card. A face, then an ink that sits on the wash.</p>
+          <p className="mt-1 hidden text-xs text-muted sm:block">Names on the card. A face, then an ink that sits on the wash.</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {CARD_TYPES.map((item) => {
               const on = type.id === item.id;
@@ -788,7 +805,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
                           aria-pressed={picked}
                           onClick={() => setType(withInk(item, ink.id))}
                           className={cn(
-                            "size-5 rounded-full border border-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]",
+                            "size-6 rounded-full border border-black/40 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)] sm:size-5",
                             picked ? "ring-2 ring-fg ring-offset-1 ring-offset-bg" : "hover:scale-110",
                           )}
                           style={{ background: ink.color }}
@@ -803,7 +820,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
         </div>
         <div className="rounded-xl border border-gold/35 bg-gold/5 p-3">
           <p className="text-xs tracking-[0.18em] text-gold uppercase">Decorate</p>
-          <p className="mt-1 text-xs text-muted">Pick a pack, tap a stamp, then drag it on the card.</p>
+          <p className="mt-1 hidden text-xs text-muted sm:block">Pick a pack, tap a stamp, then drag it on the card.</p>
           <Tabs value={decorPack} onValueChange={(value) => setDecorPack(value as StampPackId)} className="mt-3">
             <TabsList className="grid grid-cols-2 gap-2 border-0 bg-transparent p-0 sm:flex-nowrap">
               {STAMP_PACKS.map((pack) => {
@@ -870,7 +887,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
                       Open
                     </p>
                   </div>
-                  <div className="grid grid-cols-4 gap-2 md:grid-cols-5 xl:grid-cols-6">
+                  <div className="grid grid-cols-3 gap-2 xs:grid-cols-4 md:grid-cols-5 xl:grid-cols-6">
                     {pack.items.map((item) => (
                       <button
                         key={item.id}
@@ -953,7 +970,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
           <span className="text-xs tracking-[0.18em] text-accent uppercase">Name</span>
           <input className={fieldClass} maxLength={28} placeholder="e.g. Knox Ledger" value={draft.name} onChange={set("name")} />
         </label>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <label className="block min-w-0">
             <span className="text-xs tracking-[0.18em] text-gold uppercase">Title</span>
             <input className={fieldClass} maxLength={32} placeholder="Night Broker" value={draft.title} onChange={set("title")} />
@@ -963,7 +980,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
             <input className={fieldClass} maxLength={32} placeholder="Ankylosaurus" value={draft.species} onChange={set("species")} />
           </label>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className={cn("grid gap-2 sm:gap-4", template.id === "spotlight" ? "grid-cols-2" : "grid-cols-1")}>
           {template.id === "spotlight" ? (
             <label className="block min-w-0">
               <span className="text-xs tracking-[0.18em] text-accent uppercase">Motto</span>
@@ -1003,7 +1020,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
         <label className="block">
           <span className="text-xs tracking-[0.18em] text-accent uppercase">Bio</span>
           <textarea
-            className={`${fieldClass} h-28 resize-y py-2`}
+            className={`${fieldClass} h-24 resize-y py-2 md:h-28`}
             maxLength={280}
             placeholder="Who they are. What they do in the city. One tell — coffee order, limp, lucky coin."
             value={draft.bio}
@@ -1019,7 +1036,7 @@ export function CharacterCardStudio({ onReady }: { onReady: (dataUrl: string, dr
 function TemplateThumb({ id }: { id: CardTemplate["id"] }) {
   if (id === "dossier") {
     return (
-      <span className="relative block h-[4.75rem] w-full overflow-hidden bg-[#071611]" aria-hidden>
+      <span className="relative block h-14 w-full overflow-hidden bg-[#071611] md:h-[4.75rem]" aria-hidden>
         <span className="absolute inset-[8%] rounded-md border border-[#e8c36a]/80" />
         <span className="absolute bottom-[18%] left-[14%] top-[16%] w-[22%] rounded-sm bg-[#0d241c]" />
         <span className="absolute left-[18%] top-[42%] text-[10px] leading-none text-[#3ecf8e]">+</span>
@@ -1031,7 +1048,7 @@ function TemplateThumb({ id }: { id: CardTemplate["id"] }) {
     );
   }
   return (
-    <span className="relative block h-[4.75rem] w-full overflow-hidden bg-[#071611]" aria-hidden>
+    <span className="relative block h-14 w-full overflow-hidden bg-[#071611] md:h-[4.75rem]" aria-hidden>
       <span className="absolute inset-[8%] rounded-md border border-[#e8c36a]/80" />
       <span className="absolute left-[18%] top-[14%] h-2 w-8 rounded-full bg-[#3ecf8e]" />
       <span className="absolute left-1/2 top-[42%] size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#3ecf8e]" />
