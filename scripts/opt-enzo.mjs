@@ -1,14 +1,19 @@
-import { NodeIO } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
+import { mkdirSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { dedup } from "@gltf-transform/functions";
 import sharp from "sharp";
-import { mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { createGltfIO, writeCompressed } from "./lib/gltf-opt-shared.mjs";
 
-const src = resolve("tmp/enzo.source.glb");
-const dest = resolve("public/models/enzo.glb");
+const src = resolve(process.argv[2] ?? "tmp/enzo.source.glb");
+const dest = resolve(process.argv[3] ?? "public/models/enzo.glb");
+const method = process.argv.includes("meshopt") ? "meshopt" : "draco";
 
-const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+if (!existsSync(src)) {
+  console.error("missing source", src);
+  process.exit(1);
+}
+
+const io = await createGltfIO();
 const doc = await io.read(src);
 for (const texture of doc.getRoot().listTextures()) {
   const bytes = texture.getImage();
@@ -25,5 +30,5 @@ for (const texture of doc.getRoot().listTextures()) {
 
 await doc.transform(dedup());
 mkdirSync(dirname(dest), { recursive: true });
-await io.write(dest, doc);
+await writeCompressed(io, doc, dest, { method });
 console.log("wrote", dest);

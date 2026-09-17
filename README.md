@@ -26,6 +26,22 @@ Needs **Node 22+**.
 | `npm run typecheck` | TypeScript |
 | `npm run preview` | Serve the production build |
 
+### Regenerating optimized GLBs
+
+Heavy scene props go through the existing `scripts/opt-*.mjs` pipeline (`@gltf-transform` simplify + WebP + quantize), now ending in **Draco** compression by default (pass `meshopt` for Meshopt instead). Shared helpers: `scripts/lib/gltf-opt-shared.mjs`. Runtime decode: `src/game/use-game-gltf.ts` (Draco + Meshopt both on).
+
+```bash
+# Canyon props (skull-gate / sepia-cutout) — needs source GLB:
+node scripts/opt-canyon-glb.mjs tmp/skull-gate.source.glb public/models/skull-gate.glb 0.06 draco --lod
+
+node scripts/opt-bone-bridge.mjs tmp/bone-bridge.source.glb
+node scripts/opt-bone-spire.mjs tmp/bone-spire.source.glb
+node scripts/opt-hintze-hall.mjs   # needs tmp/hintze-tex.webp from tex-hintze.mjs
+node scripts/opt-heli.mjs
+```
+
+LOD1 siblings (`*-lod1.glb`) are written when further simplification cuts ≥15% triangles. Bump `?v=` on model URLs after replacing binaries. Restart `npm run dev` after adding brand-new filenames under `public/models/`.
+
 ## Where things live
 
 ```

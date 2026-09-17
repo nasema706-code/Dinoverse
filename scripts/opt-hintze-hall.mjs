@@ -1,9 +1,12 @@
 import { mkdirSync, existsSync, statSync, unlinkSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { NodeIO } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
-import { dedup, prune, simplify, weld, getGLPrimitiveCount, quantize } from "@gltf-transform/functions";
+import { dedup, prune, simplify, weld, quantize } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer/simplifier";
+import {
+  createGltfIO,
+  triangleCount,
+  writeCompressed,
+} from "./lib/gltf-opt-shared.mjs";
 
 const src = resolve(process.argv[2] ?? "tmp/hintze-hall.source.glb");
 const dest = resolve(process.argv[3] ?? "public/models/hintze-hall.glb");
@@ -11,24 +14,17 @@ const ratio = Number(process.argv[4] ?? "0.18");
 const texSize = Number(process.argv[5] ?? "1024");
 const error = Number(process.argv[6] ?? "0.012");
 const mid = resolve("tmp", "hintze-hall-unquant.glb");
+const method = process.argv.includes("meshopt") ? "meshopt" : "draco";
 
 if (!existsSync(src)) {
   console.error("missing source", src);
   process.exit(1);
 }
 
-function triangleCount(document) {
-  let n = 0;
-  for (const mesh of document.getRoot().listMeshes()) {
-    for (const prim of mesh.listPrimitives()) n += getGLPrimitiveCount(prim);
-  }
-  return n;
-}
-
-const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+const io = await createGltfIO();
 console.log("reading", src, (statSync(src).size / 1e6).toFixed(2), "MB");
 const doc = await io.read(src);
-console.log("triangles in", triangleCount(doc), "ratio", ratio, "error", error, "tex", texSize);
+console.log("triangles in", triangleCount(doc), "ratio", ratio, "error", error, "tex", texSize, "compress", method);
 
 const webpPath = resolve("tmp/hintze-tex.webp");
 if (!existsSync(webpPath)) {
@@ -68,7 +64,7 @@ await io.write(mid, doc);
 console.log("triangles after simplify", after);
 console.log("mid", mid, (statSync(mid).size / 1e6).toFixed(2), "MB");
 
-console.log("quantize pass");
+console.log("quantize + compress pass");
 const qdoc = await io.read(mid);
 await qdoc.transform(
   quantize({
@@ -77,7 +73,7 @@ await qdoc.transform(
     quantizeTexcoord: 12,
   }),
 );
-await io.write(dest, qdoc);
+await writeCompressed(io, qdoc, dest, { method });
 try {
   unlinkSync(mid);
 } catch {

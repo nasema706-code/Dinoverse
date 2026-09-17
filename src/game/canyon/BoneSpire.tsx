@@ -1,14 +1,14 @@
-import { useGLTF } from "@react-three/drei";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useGameGLTF } from "../use-game-gltf";
 import { fitAndSit } from "./fit";
 import type { Vec3 } from "./types";
 
-const SRC = "/models/bone-spire.glb?v=3";
+const SRC = "/models/bone-spire.glb?v=5";
 /** Native Meshy height is ~12 m. JSON scale 2.2 → ~26 m far-gate read. */
 const NATIVE_H = 12;
 
-if (typeof window !== "undefined") useGLTF.preload(SRC);
+if (typeof window !== "undefined") useGameGLTF.preload(SRC);
 
 /** Meshy bone spire — fitted to JSON scale so quantization cannot explode the canyon. */
 export function BoneSpire({
@@ -21,7 +21,7 @@ export function BoneSpire({
   scale?: number;
 }) {
   const rig = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(SRC);
+  const { scene } = useGameGLTF(SRC);
 
   useLayoutEffect(() => {
     scene.traverse((obj) => {
@@ -29,7 +29,7 @@ export function BoneSpire({
       obj.receiveShadow = true;
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh) return;
-      mesh.frustumCulled = false;
+      mesh.frustumCulled = true;
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const raw of mats) {
         if (!raw) continue;

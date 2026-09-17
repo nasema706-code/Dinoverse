@@ -1,0 +1,29 @@
+Low-tier fetch check (dinoverse-quality=low)
+============================================================
+
+CANYON fetches (quality=low):
+  200  1762944 /models/bone-spire.glb
+  200  1050548 /models/bone-bridge-lod1.glb
+  200  1903996 /models/skull-gate-lod1.glb
+  200   400576 /models/sepia-cutout-lod1.glb
+
+Full-res twins fetched on low: NONE (pass)
+LOD1 fetched on low: /models/bone-bridge-lod1.glb, /models/skull-gate-lod1.glb, /models/sepia-cutout-lod1.glb
+
+FLOOR fetches (quality=low) — single Draco/Meshopt files (no full-res twin):
+  200   868704 /models/helicopter.glb
+  200   633692 /models/ptera-pilot.glb
+  200   394864 /models/enzo.glb
+  200  1578836 /models/hintze-hall.glb
+  200  1296272 /models/meshy-character.glb
+
+--- mid reference (expects full + lod for Detailed) ---
+  200  1050548 /models/bone-bridge-lod1.glb
+  200  1663652 /models/bone-bridge.glb
+  200  1762944 /models/bone-spire.glb
+  200  1903996 /models/skull-gate-lod1.glb
+  200   400576 /models/sepia-cutout-lod1.glb
+  200  2240708 /models/skull-gate.glb
+  200   823332 /models/sepia-cutout.glb
+
+RESULT: PASS — low did not fetch full-res twins

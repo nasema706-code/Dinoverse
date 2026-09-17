@@ -1,34 +1,30 @@
 import { mkdirSync, existsSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { NodeIO } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
-import { dedup, prune, simplify, weld, getGLPrimitiveCount } from "@gltf-transform/functions";
+import { dedup, prune, simplify, weld } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer/simplifier";
 import sharp from "sharp";
+import {
+  createGltfIO,
+  triangleCount,
+  writeCompressed,
+} from "./lib/gltf-opt-shared.mjs";
 
 const src = resolve(process.argv[2] ?? "tmp/helicopter.source.glb");
 const dest = resolve(process.argv[3] ?? "public/models/helicopter.glb");
 const ratio = Number(process.argv[4] ?? "0.09");
+const method = process.argv.includes("meshopt") ? "meshopt" : "draco";
 
 if (!existsSync(src)) {
   console.error("missing source", src);
   process.exit(1);
 }
 
-function triangleCount(document) {
-  let n = 0;
-  for (const mesh of document.getRoot().listMeshes()) {
-    for (const prim of mesh.listPrimitives()) n += getGLPrimitiveCount(prim);
-  }
-  return n;
-}
-
 await MeshoptSimplifier.ready;
+const io = await createGltfIO();
 
-const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 console.log("reading", src, (statSync(src).size / 1e6).toFixed(2), "MB");
 const doc = await io.read(src);
-console.log("triangles in", triangleCount(doc), "ratio", ratio);
+console.log("triangles in", triangleCount(doc), "ratio", ratio, "compress", method);
 
 for (const texture of doc.getRoot().listTextures()) {
   const bytes = texture.getImage();
@@ -62,6 +58,6 @@ await doc.transform(
 
 const after = triangleCount(doc);
 mkdirSync(dirname(dest), { recursive: true });
-await io.write(dest, doc);
+await writeCompressed(io, doc, dest, { method });
 console.log("triangles out", after);
 console.log("wrote", dest, (statSync(dest).size / 1e6).toFixed(2), "MB");
