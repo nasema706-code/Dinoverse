@@ -70,7 +70,7 @@ export function FittedCanyonModel({
   onReady,
 }: {
   url: string;
-  /** Optional Meshopt LOD1 sibling (scripts/compress-models.mjs --lod). */
+  /** Optional far LOD1 sibling from scripts/opt-*.mjs (via gltf-opt-shared). */
   lodUrl?: string;
   position: Vec3;
   rotation?: Vec3;
