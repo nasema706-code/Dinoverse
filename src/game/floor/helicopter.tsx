@@ -5,7 +5,7 @@ import { useGameGLTF } from "../use-game-gltf";
 import { HELI_PAD } from "./layout";
 import { heliLive } from "./heli-live";
 
-const SRC = "/models/helicopter.glb?v=4";
+const SRC = "/models/helicopter.glb?v=5";
 /** Span the pad like the old block heli (~6.4 m rotor-to-tail). Native XZ is ~15.6 m. */
 const LENGTH = 6.4;
 /** Model nose +Z vs explorer look −Z. */

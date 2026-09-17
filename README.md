@@ -25,22 +25,22 @@ Needs **Node 22+**.
 | `npm run build` | Production build (Vercel / Nitro) |
 | `npm run typecheck` | TypeScript |
 | `npm run preview` | Serve the production build |
-| `npm run compress:models` | Meshopt-compress heavy GLBs + write `-lod1.glb` siblings |
 
-### Regenerating compressed GLBs
+### Regenerating optimized GLBs
 
-Scene props are Meshopt-compressed (`EXT_meshopt_compression`) for smaller downloads. Runtime decode is wired through `src/game/use-game-gltf.ts` (Draco + Meshopt on for every `useGLTF`).
-
-1. If you re-export a source GLB, run the matching `scripts/opt-*.mjs` simplify/WebP pass first (needs original in `tmp/`).
-2. Then compress (and refresh LOD1s):
+Heavy scene props go through the existing `scripts/opt-*.mjs` pipeline (`@gltf-transform` simplify + WebP + quantize), now ending in **Draco** compression by default (pass `meshopt` for Meshopt instead). Shared helpers: `scripts/lib/gltf-opt-shared.mjs`. Runtime decode: `src/game/use-game-gltf.ts` (Draco + Meshopt both on).
 
 ```bash
-npm run compress:models
-# or one file:
-node scripts/compress-models.mjs --lod public/models/skull-gate.glb
+# Canyon props (skull-gate / sepia-cutout) — needs source GLB:
+node scripts/opt-canyon-glb.mjs tmp/skull-gate.source.glb public/models/skull-gate.glb 0.06 draco --lod
+
+node scripts/opt-bone-bridge.mjs tmp/bone-bridge.source.glb
+node scripts/opt-bone-spire.mjs tmp/bone-spire.source.glb
+node scripts/opt-hintze-hall.mjs   # needs tmp/hintze-tex.webp from tex-hintze.mjs
+node scripts/opt-heli.mjs
 ```
 
-Bump the `?v=` query on model URLs after replacing binaries so browsers refetch.
+LOD1 siblings (`*-lod1.glb`) are written when further simplification cuts ≥15% triangles. Bump `?v=` on model URLs after replacing binaries. Restart `npm run dev` after adding brand-new filenames under `public/models/`.
 
 ## Where things live
 

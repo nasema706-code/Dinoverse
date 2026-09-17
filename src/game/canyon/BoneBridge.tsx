@@ -6,8 +6,8 @@ import { useGameGLTF } from "../use-game-gltf";
 import { fitAndSit } from "./fit";
 import type { Vec3 } from "./types";
 
-const SRC = "/models/bone-bridge.glb?v=4";
-const LOD = "/models/bone-bridge-lod1.glb?v=4";
+const SRC = "/models/bone-bridge.glb?v=5";
+const LOD = "/models/bone-bridge-lod1.glb?v=5";
 /** Native Meshy long axis is ~10.77 m. JSON scale 2.55 → ~27 m chasm span. */
 const NATIVE_SPAN = 10.77;
 const LOD_DIST = 48;

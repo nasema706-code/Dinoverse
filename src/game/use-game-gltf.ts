@@ -1,11 +1,10 @@
 /**
  * Shared GLTF loader for Dinoverse 3D assets.
  *
- * drei's useGLTF already defaults useDraco/useMeshopt to true, but we pin them
- * explicitly so Meshopt-compressed (EXT_meshopt_compression) and Draco GLBs
- * always decode correctly — including assets already shipping that way
- * (meshy-character, ptera-pilot) and the canyon props compressed by
- * scripts/compress-models.mjs.
+ * Pins Draco + Meshopt decode on every load so assets from scripts/opt-*.mjs
+ * (KHR_draco_mesh_compression and/or EXT_meshopt_compression) and already-shipping
+ * Meshopt characters (meshy-character, ptera-pilot) decode correctly.
+ * See scripts/lib/gltf-opt-shared.mjs.
  */
 import { useGLTF as useDreiGLTF } from "@react-three/drei";
 import type { ObjectMap } from "@react-three/fiber";

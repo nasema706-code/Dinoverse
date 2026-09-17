@@ -4,7 +4,7 @@ import { useGameGLTF } from "../use-game-gltf";
 import { fitAndSit } from "./fit";
 import type { Vec3 } from "./types";
 
-const SRC = "/models/bone-spire.glb?v=4";
+const SRC = "/models/bone-spire.glb?v=5";
 /** Native Meshy height is ~12 m. JSON scale 2.2 → ~26 m far-gate read. */
 const NATIVE_H = 12;
 

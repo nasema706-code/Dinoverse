@@ -14,7 +14,6 @@
     "preview": "vite preview --host 0.0.0.0 --port 8080",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'scripts/**/*.test.mjs'",
-    "compress:models": "node scripts/compress-models.mjs --lod",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -87,6 +86,7 @@
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^5.2.0",
+    "draco3d": "^1.5.7",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",

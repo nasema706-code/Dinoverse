@@ -5,7 +5,7 @@ import { useGameGLTF } from "../use-game-gltf";
 import { HINTZE_HALL, HINTZE_LENGTH, L2_HEIGHT } from "./levels";
 import { Box, CheapGlass } from "./kit";
 
-const SRC = "/models/hintze-hall.glb?v=4";
+const SRC = "/models/hintze-hall.glb?v=5";
 
 useGameGLTF.preload(SRC);
 

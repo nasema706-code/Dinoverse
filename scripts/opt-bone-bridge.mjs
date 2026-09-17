@@ -1,37 +1,39 @@
 import { mkdirSync, existsSync, statSync, unlinkSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { NodeIO } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
-import { dedup, prune, simplify, weld, getGLPrimitiveCount, quantize } from "@gltf-transform/functions";
+import {
+  dedup,
+  prune,
+  simplify,
+  weld,
+  quantize,
+} from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer/simplifier";
 import sharp from "sharp";
+import {
+  createGltfIO,
+  triangleCount,
+  writeCompressed,
+  writeLod1,
+} from "./lib/gltf-opt-shared.mjs";
 
 const srcArg = process.argv[2];
-const src = resolve(
-  srcArg ?? "tmp/bone-bridge.source.glb",
-);
+const src = resolve(srcArg ?? "tmp/bone-bridge.source.glb");
 const dest = resolve("public/models/bone-bridge.glb");
 const mid = resolve("tmp/bone-bridge.unquant.glb");
+const method = process.argv.includes("meshopt") ? "meshopt" : "draco";
+const withLod = !process.argv.includes("--no-lod");
 
 if (!existsSync(src)) {
   console.error("missing source", src);
   process.exit(1);
 }
 
-function triangleCount(document) {
-  let n = 0;
-  for (const mesh of document.getRoot().listMeshes()) {
-    for (const prim of mesh.listPrimitives()) n += getGLPrimitiveCount(prim);
-  }
-  return n;
-}
-
 await MeshoptSimplifier.ready;
+const io = await createGltfIO();
 
-const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 console.log("reading", src);
 const doc = await io.read(src);
-console.log("triangles in", triangleCount(doc));
+console.log("triangles in", triangleCount(doc), "compress", method);
 
 for (const texture of doc.getRoot().listTextures()) {
   const bytes = texture.getImage();
@@ -67,7 +69,7 @@ await io.write(mid, doc);
 console.log("triangles after simplify", after);
 console.log("mid", mid, (statSync(mid).size / 1e6).toFixed(2), "MB");
 
-console.log("quantize pass");
+console.log("quantize + compress pass");
 const qdoc = await io.read(mid);
 await qdoc.transform(
   quantize({
@@ -76,7 +78,11 @@ await qdoc.transform(
     quantizeTexcoord: 12,
   }),
 );
-await io.write(dest, qdoc);
+
+if (withLod) {
+  await writeLod1(io, qdoc, dest, { method, ratio: 0.35, error: 1 });
+}
+await writeCompressed(io, qdoc, dest, { method });
 unlinkSync(mid);
 console.log("triangles out", triangleCount(qdoc));
 console.log("wrote", dest, (statSync(dest).size / 1e6).toFixed(2), "MB");
