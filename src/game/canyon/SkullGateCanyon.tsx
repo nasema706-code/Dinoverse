@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import * as THREE from "three";
 import canyonJson from "@/data/skullGateCanyon.json";
-import { useQuality } from "../quality";
+import { detectQuality, readQualityOverride, useQuality } from "../quality";
 import { BoneBridge } from "./BoneBridge";
 import { BoneSpire } from "./BoneSpire";
 import { CanyonBuggy } from "./CanyonBuggy";
@@ -30,10 +30,22 @@ const buggy = canyonItem(canyon, "buggy");
 const GATE_NATIVE_H = 4;
 const CUTOUT_NATIVE_H = 0.12;
 
-preloadCanyonModel("/models/skull-gate.glb?v=5");
-preloadCanyonModel("/models/skull-gate-lod1.glb?v=5");
-preloadCanyonModel("/models/sepia-cutout.glb?v=5");
-preloadCanyonModel("/models/sepia-cutout-lod1.glb?v=5");
+const SKULL = "/models/skull-gate.glb?v=5";
+const SKULL_LOD = "/models/skull-gate-lod1.glb?v=5";
+const CUTOUT = "/models/sepia-cutout.glb?v=5";
+const CUTOUT_LOD = "/models/sepia-cutout-lod1.glb?v=5";
+
+/** Low tier must not prefetch full-res twins — only LOD1. */
+const bootQuality =
+  typeof window !== "undefined" ? (readQualityOverride() ?? detectQuality()) : "mid";
+if (typeof window !== "undefined") {
+  preloadCanyonModel(SKULL_LOD);
+  preloadCanyonModel(CUTOUT_LOD);
+  if (bootQuality !== "low") {
+    preloadCanyonModel(SKULL);
+    preloadCanyonModel(CUTOUT);
+  }
+}
 
 function AimCamera({ target }: { target: Vec3 }) {
   const { camera } = useThree();
@@ -60,8 +72,8 @@ function CanyonWorld({ flying }: { flying: boolean }) {
       <SkullGate position={gate.position} rotation={gate.rotation} scale={1.15} />
       <Suspense fallback={null}>
         <FittedCanyonModel
-          url="/models/skull-gate.glb?v=5"
-          lodUrl="/models/skull-gate-lod1.glb?v=5"
+          url={SKULL}
+          lodUrl={SKULL_LOD}
           position={[14, 0, -56]}
           rotation={gate.rotation}
           nativeSize={GATE_NATIVE_H}
@@ -71,8 +83,8 @@ function CanyonWorld({ flying }: { flying: boolean }) {
       </Suspense>
       <Suspense fallback={null}>
         <FittedCanyonModel
-          url="/models/sepia-cutout.glb?v=5"
-          lodUrl="/models/sepia-cutout-lod1.glb?v=5"
+          url={CUTOUT}
+          lodUrl={CUTOUT_LOD}
           position={cutout.position}
           rotation={cutout.rotation}
           nativeSize={CUTOUT_NATIVE_H}

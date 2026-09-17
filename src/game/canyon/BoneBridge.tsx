@@ -1,7 +1,7 @@
 import { Detailed } from "@react-three/drei";
 import { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useQuality } from "../quality";
+import { detectQuality, readQualityOverride, useQuality } from "../quality";
 import { useGameGLTF } from "../use-game-gltf";
 import { fitAndSit } from "./fit";
 import type { Vec3 } from "./types";
@@ -12,9 +12,11 @@ const LOD = "/models/bone-bridge-lod1.glb?v=5";
 const NATIVE_SPAN = 10.77;
 const LOD_DIST = 48;
 
+const bootQuality =
+  typeof window !== "undefined" ? (readQualityOverride() ?? detectQuality()) : "mid";
 if (typeof window !== "undefined") {
-  useGameGLTF.preload(SRC);
   useGameGLTF.preload(LOD);
+  if (bootQuality !== "low") useGameGLTF.preload(SRC);
 }
 
 function TuskRailStandin() {
