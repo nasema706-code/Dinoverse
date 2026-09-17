@@ -30,8 +30,9 @@ const buggy = canyonItem(canyon, "buggy");
 const GATE_NATIVE_H = 4;
 const CUTOUT_NATIVE_H = 0.12;
 
-preloadCanyonModel("/models/skull-gate.glb?v=1");
-preloadCanyonModel("/models/sepia-cutout.glb?v=1");
+preloadCanyonModel("/models/skull-gate.glb?v=4");
+preloadCanyonModel("/models/sepia-cutout.glb?v=4");
+preloadCanyonModel("/models/sepia-cutout.lod1.glb?v=4");
 
 function AimCamera({ target }: { target: Vec3 }) {
   const { camera } = useThree();
@@ -58,7 +59,7 @@ function CanyonWorld({ flying }: { flying: boolean }) {
       <SkullGate position={gate.position} rotation={gate.rotation} scale={1.15} />
       <Suspense fallback={null}>
         <FittedCanyonModel
-          url="/models/skull-gate.glb?v=1"
+          url="/models/skull-gate.glb?v=4"
           position={[14, 0, -56]}
           rotation={gate.rotation}
           nativeSize={GATE_NATIVE_H}
@@ -67,11 +68,13 @@ function CanyonWorld({ flying }: { flying: boolean }) {
       </Suspense>
       <Suspense fallback={null}>
         <FittedCanyonModel
-          url="/models/sepia-cutout.glb?v=1"
+          url="/models/sepia-cutout.glb?v=4"
+          lodUrl="/models/sepia-cutout.lod1.glb?v=4"
           position={cutout.position}
           rotation={cutout.rotation}
           nativeSize={CUTOUT_NATIVE_H}
           scale={cutout.scale ?? 70}
+          lodDistance={70}
         />
       </Suspense>
       <Suspense fallback={null}>

@@ -1,11 +1,11 @@
-import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useGameGLTF } from "../use-game-gltf";
 import { HELI_PAD } from "./layout";
 import { heliLive } from "./heli-live";
 
-const SRC = "/models/helicopter.glb?v=3";
+const SRC = "/models/helicopter.glb?v=4";
 /** Span the pad like the old block heli (~6.4 m rotor-to-tail). Native XZ is ~15.6 m. */
 const LENGTH = 6.4;
 /** Model nose +Z vs explorer look −Z. */
@@ -20,7 +20,7 @@ const INNER_HUBS = new Set(["empty001_83", "empty002_40"]);
 /** Sketchfab animation targets (fallback if inner empties are missing). */
 const OUTER_HUBS = new Set(["empty_84", "empty003_41"]);
 
-useGLTF.preload(SRC);
+useGameGLTF.preload(SRC);
 
 function localBox(obj: THREE.Object3D) {
   obj.updateMatrixWorld(true);
@@ -70,7 +70,7 @@ export function Helicopter({ position: _position }: { position: [number, number,
   const root = useRef<THREE.Group>(null);
   const rig = useRef<THREE.Group>(null);
   const rotors = useRef<THREE.Object3D[]>([]);
-  const { scene } = useGLTF(SRC);
+  const { scene } = useGameGLTF(SRC);
 
   useLayoutEffect(() => {
     scene.traverse((obj) => {

@@ -25,6 +25,22 @@ Needs **Node 22+**.
 | `npm run build` | Production build (Vercel / Nitro) |
 | `npm run typecheck` | TypeScript |
 | `npm run preview` | Serve the production build |
+| `npm run compress:models` | Meshopt-compress heavy GLBs + write `.lod1.glb` siblings |
+
+### Regenerating compressed GLBs
+
+Scene props are Meshopt-compressed (`EXT_meshopt_compression`) for smaller downloads. Runtime decode is wired through `src/game/use-game-gltf.ts` (Draco + Meshopt on for every `useGLTF`).
+
+1. If you re-export a source GLB, run the matching `scripts/opt-*.mjs` simplify/WebP pass first (needs original in `tmp/`).
+2. Then compress (and refresh LOD1s):
+
+```bash
+npm run compress:models
+# or one file:
+node scripts/compress-models.mjs --lod public/models/skull-gate.glb
+```
+
+Bump the `?v=` query on model URLs after replacing binaries so browsers refetch.
 
 ## Where things live
 

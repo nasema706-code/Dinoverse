@@ -1,7 +1,8 @@
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useAnimations } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useGameGLTF } from "../use-game-gltf";
 import { PTERA_PAD } from "./layout";
 import { floorInteract } from "./floor-interact";
 import { pteraLive } from "./ptera-live";
@@ -19,7 +20,7 @@ const PATROL: [number, number][] = [
   [9.0, 27.2],
 ];
 
-useGLTF.preload(SRC);
+useGameGLTF.preload(SRC);
 
 function fitStanding(root: THREE.Object3D, height: number) {
   root.scale.set(1, 1, 1);
@@ -76,7 +77,7 @@ export function PteraPilot({
   const mode = useRef<"walk" | "wave">("walk");
   const waypoint = useRef(1);
   const yaw = useRef(PTERA_PAD.rotY);
-  const { scene, animations } = useGLTF(SRC);
+  const { scene, animations } = useGameGLTF(SRC);
   const { actions, names } = useAnimations(animations, group);
   const camera = useThree((s) => s.camera);
 

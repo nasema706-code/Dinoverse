@@ -1,13 +1,13 @@
-import { useGLTF } from "@react-three/drei";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useQuality } from "../quality";
+import { useGameGLTF } from "../use-game-gltf";
 import { HINTZE_HALL, HINTZE_LENGTH, L2_HEIGHT } from "./levels";
 import { Box, CheapGlass } from "./kit";
-import { useQuality } from "../quality";
 
-const SRC = "/models/hintze-hall.glb?v=1";
+const SRC = "/models/hintze-hall.glb?v=4";
 
-useGLTF.preload(SRC);
+useGameGLTF.preload(SRC);
 
 function localBox(obj: THREE.Object3D) {
   obj.updateMatrixWorld(true);
@@ -47,7 +47,7 @@ function RoofRail({ x, z, w, d }: { x: number; z: number; w: number; d: number }
 /** NHM Hintze Hall wing on the east roof terrace. */
 export function HintzeHall() {
   const rig = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(SRC);
+  const { scene } = useGameGLTF(SRC);
   const { settings } = useQuality();
   const { x, z, y, rotY } = HINTZE_HALL;
 

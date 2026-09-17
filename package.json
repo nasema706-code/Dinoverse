@@ -14,6 +14,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 8080",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'scripts/**/*.test.mjs'",
+    "compress:models": "node scripts/compress-models.mjs --lod",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -57,6 +58,7 @@
     "date-fns": "^4.0.0",
     "kysely": "^0.28.5",
     "lucide-react": "^0.510.0",
+    "meshoptimizer": "^1.2.0",
     "pg": "^8.16.3",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",

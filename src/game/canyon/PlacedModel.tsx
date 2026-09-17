@@ -1,5 +1,6 @@
-import { Clone, useGLTF } from "@react-three/drei";
+import { Clone } from "@react-three/drei";
 import { Component, Suspense, useEffect, useState, type ReactNode } from "react";
+import { useGameGLTF } from "../use-game-gltf";
 import type { Placement } from "./types";
 
 const existsCache = new Map<string, boolean>();
@@ -63,7 +64,7 @@ class SilentBoundary extends Component<{ children: ReactNode }, { failed: boolea
 }
 
 function GltfMesh({ url, position, rotation, scale }: Placement) {
-  const { scene } = useGLTF(url);
+  const { scene } = useGameGLTF(url);
   return <Clone object={scene} position={position} rotation={rotation} scale={scale ?? 1} />;
 }
 

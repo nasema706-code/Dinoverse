@@ -1,46 +1,49 @@
-import { useGLTF } from "@react-three/drei";
+import { Detailed } from "@react-three/drei";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useQuality } from "../quality";
+import { useGameGLTF } from "../use-game-gltf";
 import { fitAndSit } from "./fit";
 import type { Vec3 } from "./types";
 
-/** Sit a canyon GLB on the dirt and fit one axis to nativeSize * scale. */
-export function FittedCanyonModel({
+function prepScene(scene: THREE.Object3D, envMapIntensity = 0.5) {
+  scene.traverse((obj) => {
+    obj.castShadow = false;
+    obj.receiveShadow = true;
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    mesh.frustumCulled = true;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const raw of mats) {
+      if (!raw) continue;
+      const mat = raw as THREE.MeshStandardMaterial;
+      mat.side = THREE.FrontSide;
+      mat.envMapIntensity = envMapIntensity;
+      mat.needsUpdate = true;
+    }
+  });
+}
+
+function FittedMesh({
   url,
-  position,
-  rotation = [0, 0, 0],
+  rotation,
   nativeSize,
-  scale = 1,
-  fitAxis = "y",
+  scale,
+  fitAxis,
   onReady,
 }: {
   url: string;
-  position: Vec3;
-  rotation?: Vec3;
+  rotation: Vec3;
   nativeSize: number;
-  scale?: number;
-  fitAxis?: "x" | "y" | "z";
+  scale: number;
+  fitAxis: "x" | "y" | "z";
   onReady?: () => void;
 }) {
   const rig = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(url);
+  const { scene } = useGameGLTF(url);
 
   useLayoutEffect(() => {
-    scene.traverse((obj) => {
-      obj.castShadow = false;
-      obj.receiveShadow = true;
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      mesh.frustumCulled = false;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const raw of mats) {
-        if (!raw) continue;
-        const mat = raw as THREE.MeshStandardMaterial;
-        mat.side = THREE.FrontSide;
-        mat.envMapIntensity = 0.5;
-        mat.needsUpdate = true;
-      }
-    });
+    prepScene(scene);
     if (rig.current) {
       fitAndSit(rig.current, fitAxis, nativeSize * scale);
       onReady?.();
@@ -48,14 +51,81 @@ export function FittedCanyonModel({
   }, [scene, nativeSize, scale, fitAxis, rotation, onReady]);
 
   return (
+    <group ref={rig} rotation={rotation}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+/** Sit a canyon GLB on the dirt and fit one axis to nativeSize * scale. */
+export function FittedCanyonModel({
+  url,
+  lodUrl,
+  position,
+  rotation = [0, 0, 0],
+  nativeSize,
+  scale = 1,
+  fitAxis = "y",
+  lodDistance = 52,
+  onReady,
+}: {
+  url: string;
+  /** Optional Meshopt LOD1 sibling (scripts/compress-models.mjs --lod). */
+  lodUrl?: string;
+  position: Vec3;
+  rotation?: Vec3;
+  nativeSize: number;
+  scale?: number;
+  fitAxis?: "x" | "y" | "z";
+  lodDistance?: number;
+  onReady?: () => void;
+}) {
+  const { level } = useQuality();
+  const preferLod = level === "low" && lodUrl;
+
+  return (
     <group position={position}>
-      <group ref={rig} rotation={rotation}>
-        <primitive object={scene} />
-      </group>
+      {preferLod ? (
+        <FittedMesh
+          url={lodUrl}
+          rotation={rotation}
+          nativeSize={nativeSize}
+          scale={scale}
+          fitAxis={fitAxis}
+          onReady={onReady}
+        />
+      ) : lodUrl ? (
+        <Detailed distances={[0, lodDistance]}>
+          <FittedMesh
+            url={url}
+            rotation={rotation}
+            nativeSize={nativeSize}
+            scale={scale}
+            fitAxis={fitAxis}
+            onReady={onReady}
+          />
+          <FittedMesh
+            url={lodUrl}
+            rotation={rotation}
+            nativeSize={nativeSize}
+            scale={scale}
+            fitAxis={fitAxis}
+          />
+        </Detailed>
+      ) : (
+        <FittedMesh
+          url={url}
+          rotation={rotation}
+          nativeSize={nativeSize}
+          scale={scale}
+          fitAxis={fitAxis}
+          onReady={onReady}
+        />
+      )}
     </group>
   );
 }
 
 export function preloadCanyonModel(url: string) {
-  if (typeof window !== "undefined") useGLTF.preload(url);
+  if (typeof window !== "undefined") useGameGLTF.preload(url);
 }

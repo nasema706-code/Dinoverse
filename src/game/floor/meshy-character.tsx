@@ -1,8 +1,9 @@
-import { useAnimations, useGLTF } from "@react-three/drei";
+import { useAnimations } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 import { useDinoverse } from "@/lib/store";
+import { useGameGLTF } from "../use-game-gltf";
 import { FLOOR_SPAWN } from "./layout";
 import { applyCrewLook, CREW_LOOK } from "./crew-look";
 import { meshyLive, requestMeshyEmote, type MeshyEmote } from "./meshy-live";
@@ -12,7 +13,7 @@ const SRC = "/models/meshy-character.glb?v=opt2";
 /** Mixamo-style meshes face +Z; player yaw 0 looks −Z. */
 const FACE_YAW = Math.PI;
 
-useGLTF.preload(SRC);
+useGameGLTF.preload(SRC);
 
 const CLIPS = {
   idle: "Alert",
@@ -77,7 +78,7 @@ export function MeshyAvatar({ preview = false }: { preview?: boolean }) {
   const rig = useRef<THREE.Group>(null);
   const loco = useRef<"idle" | "walk" | "run">("idle");
   const emoting = useRef<MeshyEmote | null>(null);
-  const { scene, animations } = useGLTF(SRC);
+  const { scene, animations } = useGameGLTF(SRC);
   const { actions, names } = useAnimations(animations, rig);
   const cloned = useRef<THREE.Object3D | null>(null);
 

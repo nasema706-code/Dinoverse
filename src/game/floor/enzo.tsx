@@ -1,6 +1,6 @@
-import { useGLTF } from "@react-three/drei";
 import { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
+import { useGameGLTF } from "../use-game-gltf";
 import { ENZO_COLLIDER, ENZO_PLAZA } from "./layout";
 import { resetEnzoLive } from "./enzo-live";
 
@@ -8,7 +8,7 @@ const SRC = "/models/enzo.glb?v=1";
 const HEIGHT = 1.56;
 const FACE_YAW = Math.PI;
 
-useGLTF.preload(SRC);
+useGameGLTF.preload(SRC);
 
 function fitToGround(root: THREE.Object3D, height: number) {
   root.scale.set(1, 1, 1);
@@ -26,7 +26,7 @@ function fitToGround(root: THREE.Object3D, height: number) {
 /** Enzo on the north plaza — bind pose only, no locomotion. */
 export function EnzoPlaza({ preview = false }: { preview?: boolean }) {
   const rigGroup = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(SRC);
+  const { scene } = useGameGLTF(SRC);
 
   useLayoutEffect(() => {
     scene.traverse((obj) => {
