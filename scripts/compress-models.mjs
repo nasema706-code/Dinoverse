@@ -9,11 +9,12 @@
  *
  * Usage:
  *   node scripts/compress-models.mjs
- *   node scripts/compress-models.mjs --lod
+ *   node scripts/compress-models.mjs --lod            # also write -lod1.glb siblings
  *   node scripts/compress-models.mjs public/models/skull-gate.glb
  *   node scripts/compress-models.mjs --lod public/models/bone-spire.glb
  *
- * Requires: meshoptimizer (direct dep), @gltf-transform/* (devDeps).
+ * Note: Vite ignores public/*.glb for HMR watch — restart `npm run dev` after
+ * adding brand-new model filenames so they are served.
  */
 import { copyFileSync, existsSync, mkdirSync, renameSync, statSync, unlinkSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
@@ -109,7 +110,7 @@ for (const src of targets) {
 
   if (!withLod) continue;
 
-  const lodPath = src.replace(/\.glb$/i, ".lod1.glb");
+  const lodPath = src.replace(/\.glb$/i, "-lod1.glb");
   const lodDoc = await io.read(src);
   // Decode meshopt first by reading through registered decoder, then simplify.
   await lodDoc.transform(

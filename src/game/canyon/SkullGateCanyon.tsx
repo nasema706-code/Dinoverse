@@ -32,7 +32,7 @@ const CUTOUT_NATIVE_H = 0.12;
 
 preloadCanyonModel("/models/skull-gate.glb?v=4");
 preloadCanyonModel("/models/sepia-cutout.glb?v=4");
-preloadCanyonModel("/models/sepia-cutout.lod1.glb?v=4");
+preloadCanyonModel("/models/sepia-cutout-lod1.glb?v=4");
 
 function AimCamera({ target }: { target: Vec3 }) {
   const { camera } = useThree();
@@ -69,7 +69,7 @@ function CanyonWorld({ flying }: { flying: boolean }) {
       <Suspense fallback={null}>
         <FittedCanyonModel
           url="/models/sepia-cutout.glb?v=4"
-          lodUrl="/models/sepia-cutout.lod1.glb?v=4"
+          lodUrl="/models/sepia-cutout-lod1.glb?v=4"
           position={cutout.position}
           rotation={cutout.rotation}
           nativeSize={CUTOUT_NATIVE_H}

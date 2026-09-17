@@ -25,7 +25,7 @@ Needs **Node 22+**.
 | `npm run build` | Production build (Vercel / Nitro) |
 | `npm run typecheck` | TypeScript |
 | `npm run preview` | Serve the production build |
-| `npm run compress:models` | Meshopt-compress heavy GLBs + write `.lod1.glb` siblings |
+| `npm run compress:models` | Meshopt-compress heavy GLBs + write `-lod1.glb` siblings |
 
 ### Regenerating compressed GLBs
 
