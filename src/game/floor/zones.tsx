@@ -57,8 +57,7 @@ export function RoofHelipad() {
         </group>
       ))}
       <RoofRail x={5.75} z={23.2} w={0.08} d={17.8} />
-      <RoofRail x={15.05} z={15.5} w={0.08} d={2.4} />
-      <RoofRail x={15.05} z={31.35} w={0.08} d={1.6} />
+      <RoofRail x={15.05} z={23.2} w={0.08} d={17.8} />
       <RoofRail x={x} z={32.25} w={9.6} d={0.08} />
       <LandingPad position={[x, y, z]} />
       <Helicopter position={[x, y, z]} />
