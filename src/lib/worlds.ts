@@ -519,7 +519,7 @@ export const NPC_LINES: Record<
       rex: "Check-in is green. The interesting names are already upstairs.",
       vex: "I see the packet before the badge. Do not make me reprint it.",
       tria: "The visitor board still has a lunch slot. I left it. Someone should use it.",
-      ptera: "If you are here for the pad, take the lift or the spiral — roof deck, east. The museum wing is past the bird. Coffee is still left.",
+      ptera: "If you are here for the pad, take the lift or the spiral — roof deck, east. Coffee is still left.",
     },
   },
   ptera: {
@@ -861,7 +861,7 @@ export const INSPECT_COPY: Record<
     action: "Look down",
     image: "/life/corporate.jpg",
     body: {
-      rex: "The Floor from above. East walkway hits the roof pad — and the Hintze Hall wing past it. If the tape is loud down there, it is already too late.",
+      rex: "The Floor from above. East walkway hits the roof pad. If the tape is loud down there, it is already too late.",
       vex: "Good sightline on the east board. Bad sightline on whoever is stealing lunch.",
       tria: "I put plants up here so people remember to breathe. They still do not.",
       ptera: "Glass, sky, and a pad that is finally at altitude. This is the floor I wanted.",
@@ -894,21 +894,10 @@ export const INSPECT_COPY: Record<
     action: "Inspect the pad",
     image: "/life/hq.jpg",
     body: {
-      rex: "If the rim is lit, someone important is already upstairs. Or Ptera is about to be. Hintze Hall is the stone wing east of the bird.",
+      rex: "If the rim is lit, someone important is already upstairs. Or Ptera is about to be.",
       vex: "Transponder honest. The gold ring is louder than the radio. Height does not fix lag.",
-      tria: "A lot of roof and not enough benches. The pad does not feed anyone. The hall might.",
-      ptera: "Crosswind after ten. Lift or stairs, then left seat. Or walk east into the whale hall. I would still take it over a taxi.",
-    },
-  },
-  "forum-hintze": {
-    title: "Hintze Hall",
-    action: "Enter the museum",
-    image: "/life/hq.jpg",
-    body: {
-      rex: "Natural History Museum wing on the roof. Hintze Hall, scaled to a listing we can walk. Columns, vault, whale — go in.",
-      vex: "Photogrammetry of a civic nave. Someone put a cathedral next to a helipad. I respect the nerve.",
-      tria: "Finally a room that admits it is for looking. If you skip the whale I will know.",
-      ptera: "A hall that already has a sky inside it. I will allow a ceiling that is trying.",
+      tria: "A lot of roof and not enough benches. The pad does not feed anyone.",
+      ptera: "Crosswind after ten. Lift or stairs, then left seat. I would still take it over a taxi.",
     },
   },
   "forum-hq-sign": {

@@ -24,7 +24,6 @@ import { FloorCrew } from "./dinos";
 import { PalmPlanter } from "./furniture";
 import { PteraPilot } from "./ptera-pilot";
 import { EnzoPlaza } from "./enzo";
-import { HintzeHall } from "./hintze-hall";
 import { MeshyAvatar } from "./meshy-character";
 import { InspectSpots } from "./inspect-spots";
 import { DinoLoveLounge } from "./dino-lounge";
@@ -180,9 +179,6 @@ export function FloorScene({ collected, preview = false }: { collected: string[]
       <CeilingLeds />
 
       <RoofHelipad />
-      <Suspense fallback={null}>
-        <HintzeHall />
-      </Suspense>
       <PteraPilot preview={preview} />
       <EnzoPlaza preview={preview} />
       {/* Heavy Meshy rig — load only in the walkable explorer, not the orbit preview. */}

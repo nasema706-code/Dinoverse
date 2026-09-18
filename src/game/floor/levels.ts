@@ -147,22 +147,10 @@ export function onMezzanine(x: number, z: number) {
   return true;
 }
 
-/** Hintze Hall wing — east roof terrace off the helipad (L2). */
-export const HINTZE_HALL = { x: 18.35, z: 23.5, y: L2_HEIGHT, rotY: Math.PI / 2 };
-/** Native hall length (local X). After yaw this runs north–south. */
-export const HINTZE_LENGTH = 12.6;
-const HINTZE_HALF_W = 3.25;
-const HINTZE_HALF_L = 6.05;
-
 /** North roof bridge + helipad deck (east of the atrium, above the plaza). */
 export function onRoofDeck(x: number, z: number) {
   if (x >= 5.8 && x <= 15.4 && z >= 13.9 && z <= 32.4) return true;
-  if (x >= 14.2 && x <= 22.4 && z >= 16.8 && z <= 30.4) return true;
   return false;
-}
-
-export function onHintzeHall(x: number, z: number) {
-  return Math.abs(x - HINTZE_HALL.x) < HINTZE_HALF_W && Math.abs(z - HINTZE_HALL.z) < HINTZE_HALF_L;
 }
 
 export function floorHeightAt(x: number, z: number, prevY = 0) {
@@ -178,7 +166,7 @@ export function floorHeightAt(x: number, z: number, prevY = 0) {
     }
     return spiralY;
   }
-  if (prevY > 2.7 && (onMezzanine(x, z) || onRoofDeck(x, z) || onHintzeHall(x, z))) return L2_HEIGHT;
+  if (prevY > 2.7 && (onMezzanine(x, z) || onRoofDeck(x, z))) return L2_HEIGHT;
   return 0;
 }
 
@@ -196,24 +184,11 @@ function wellRails(): Collider[] {
   return out;
 }
 
-const HINTZE_WALLS: Collider[] = [
-  { x: HINTZE_HALL.x + 3.56, z: HINTZE_HALL.z, w: 0.3, d: 12.0, minY: 5.15, maxY: 11.4 },
-  { x: HINTZE_HALL.x, z: HINTZE_HALL.z + 6.3, w: 6.8, d: 0.3, minY: 5.15, maxY: 11.4 },
-  { x: HINTZE_HALL.x, z: HINTZE_HALL.z - 6.3, w: 6.8, d: 0.3, minY: 5.15, maxY: 11.4 },
-  { x: HINTZE_HALL.x - 3.56, z: 18.6, w: 0.3, d: 2.8, minY: 5.15, maxY: 11.4 },
-  { x: HINTZE_HALL.x - 3.56, z: 26.55, w: 0.3, d: 6.1, minY: 5.15, maxY: 11.4 },
-];
-
 export const ROOF_COLLIDERS: Collider[] = [
   { x: 5.75, z: 23.2, w: 0.22, d: 17.8, minY: 5.15, maxY: 8.6 },
-  { x: 15.05, z: 15.5, w: 0.22, d: 2.4, minY: 5.15, maxY: 8.6 },
-  { x: 15.05, z: 31.35, w: 0.22, d: 1.6, minY: 5.15, maxY: 8.6 },
+  { x: 15.05, z: 23.2, w: 0.22, d: 17.8, minY: 5.15, maxY: 8.6 },
   { x: 10.4, z: 32.25, w: 9.6, d: 0.22, minY: 5.15, maxY: 8.6 },
   { x: 10.4, z: 27.7, w: 3.4, d: 5.4, minY: 5.2, maxY: 9.6 },
-  { x: 22.15, z: 23.5, w: 0.22, d: 13.4, minY: 5.15, maxY: 8.6 },
-  { x: 18.35, z: 16.85, w: 7.8, d: 0.22, minY: 5.15, maxY: 8.6 },
-  { x: 18.35, z: 30.25, w: 7.8, d: 0.22, minY: 5.15, maxY: 8.6 },
-  ...HINTZE_WALLS,
 ];
 
 export const MEZZ_COLLIDERS: Collider[] = [

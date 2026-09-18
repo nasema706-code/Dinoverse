@@ -36,7 +36,6 @@ node scripts/opt-canyon-glb.mjs tmp/skull-gate.source.glb public/models/skull-ga
 
 node scripts/opt-bone-bridge.mjs tmp/bone-bridge.source.glb
 node scripts/opt-bone-spire.mjs tmp/bone-spire.source.glb
-node scripts/opt-hintze-hall.mjs   # needs tmp/hintze-tex.webp from tex-hintze.mjs
 node scripts/opt-heli.mjs
 ```
 

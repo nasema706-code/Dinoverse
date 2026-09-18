@@ -1107,7 +1107,7 @@ function Player({
       if (!next) {
         for (const i of district.inspect) {
           if (i.id === "forum-stairs" && (stairGuide || onStairPath(px, pz))) continue;
-          const roofPad = i.id === "forum-heli" || i.id === "forum-pad" || i.id === "forum-hintze";
+          const roofPad = i.id === "forum-heli" || i.id === "forum-pad";
           if (roofPad && ground < 4) continue;
           if (
             ground > 3.5 &&
