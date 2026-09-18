@@ -40,6 +40,15 @@ import { HELI_PAD } from "./floor/layout";
 import { floorInteract, requestFloorLook, requestFloorTalk } from "./floor/floor-interact";
 import { clampInCab, getLiftFloorY, inLiftCabin, liftBusy, liftPrompt, requestLift, tickLift } from "./floor/lift";
 import { useQuality } from "./quality";
+import { ExplorerCanvas } from "./ExplorerCanvas";
+import {
+  FloorBootBoundary,
+  FloorGlGuard,
+  FloorSoftFailPanel,
+  useFloorRejectionGuard,
+  type FloorBootFailure,
+  type FloorBootMode,
+} from "./floor-soft-fail";
 import { ShardOrb } from "./shard-orb";
 import { usePhoto } from "./textures";
 import { startLobbyBed, stopLobbyBed, isLobbyMuted, setLobbyMuted } from "./floor/lobby-audio";
@@ -1217,6 +1226,9 @@ export function Explorer3D({
   const district = DISTRICTS_3D[districtId];
   const world = WORLD_BY_ID[districtId];
   const [started, setStarted] = useState(false);
+  const [bootMode, setBootMode] = useState<FloorBootMode>("3d");
+  const [bootKey, setBootKey] = useState(0);
+  const [bootFailure, setBootFailure] = useState<FloorBootFailure | null>(null);
   const [session, setSession] = useState(0);
   const [locked, setLocked] = useState(false);
   const [dialog, setDialog] = useState<{
@@ -1265,10 +1277,49 @@ export function Explorer3D({
     setLine(world.enterLine[id]);
   };
 
+  const failFloorBoot = (failure: FloorBootFailure) => {
+    setBootFailure(failure);
+    setBootMode("failed");
+    setLocked(false);
+    if (typeof document !== "undefined" && document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+    stopLobbyBed();
+  };
+
+  const retryFloorBoot = (forceLow: boolean) => {
+    if (forceLow) setLevel("low");
+    setBootFailure(null);
+    setBootMode("3d");
+    setBootKey((k) => k + 1);
+    setSession((s) => s + 1);
+    setStarted(true);
+    void startLobbyBed();
+    window.setTimeout(() => {
+      wrapRef.current?.focus();
+    }, 0);
+  };
+
+  const openFlatFloor = () => {
+    setBootFailure(null);
+    setBootMode("2d");
+    setStarted(true);
+    setLocked(false);
+    if (typeof document !== "undefined" && document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+    stopLobbyBed();
+  };
+
+  useFloorRejectionGuard(started && bootMode === "3d", failFloorBoot);
+
   const startExplore = () => {
     meshyLive.thirdPerson = !walkAsSelf;
     setThirdPerson(!walkAsSelf);
     setLine(walkAsSelf ? VISITOR_ENTER[world.id] : world.enterLine[characterId]);
+    setBootFailure(null);
+    setBootMode("3d");
+    setBootKey((k) => k + 1);
     setStarted(true);
     void startLobbyBed();
     window.setTimeout(() => {
@@ -1478,6 +1529,38 @@ export function Explorer3D({
     }
   };
 
+  if (bootMode === "2d") {
+    return (
+      <div className="relative isolate h-full w-full min-h-0 bg-bg">
+        <ExplorerCanvas characterId={characterId} startDistrict={districtId} />
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-3">
+          <div className="pointer-events-auto flex flex-wrap gap-2 rounded-xl border border-border bg-bg/90 p-2 shadow-lg backdrop-blur-md">
+            <Button type="button" variant="secondary" className="min-h-10" onClick={() => retryFloorBoot(true)}>
+              Retry 3D on Low
+            </Button>
+            <Button asChild type="button" variant="ghost" className="min-h-10">
+              <Link to="/">Back to city</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (bootMode === "failed") {
+    return (
+      <div className="relative isolate h-full w-full min-h-0 bg-bg">
+        <FloorSoftFailPanel
+          failure={bootFailure}
+          level={level}
+          onRetry={() => retryFloorBoot(false)}
+          onRetryLow={() => retryFloorBoot(true)}
+          onFlat={openFlatFloor}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative isolate h-full w-full min-h-0 bg-bg">
       <div
@@ -1536,43 +1619,49 @@ export function Explorer3D({
           lookDrag.current.on = false;
         }}
       >
-        <Canvas
-          shadows={settings.shadows}
-          style={{ width: "100%", height: "100%", display: "block" }}
-          camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: settings.far }}
-          frameloop="always"
-          dpr={settings.dpr}
-          performance={{ min: 0.85 }}
-          gl={{
-            antialias: settings.antialias,
-            powerPreference: "high-performance",
-            stencil: false,
-            alpha: false,
-            toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.12,
-          }}
-        >
-          <Suspense fallback={null}>
-            <DistrictScene district={district} collected={collected} />
-          </Suspense>
-          <AdaptiveDpr pixelated={false} />
-          <Player
-            district={district}
-            blocked={!!dialog}
-            look={look}
-            stick={stick}
-            lookStick={lookStick}
-            zoom={zoom}
-            keysRef={keysRef}
-            session={session}
-            onHud={onHud}
-            onStairGuide={setStairGuide}
-            onPortal={goPortal}
-            onDialog={(title, body, image, href, hrefLabel) =>
-              setDialog({ title, body, image, href, hrefLabel })
-            }
-          />
-        </Canvas>
+        {started ? (
+          <FloorBootBoundary resetKey={bootKey} onFail={failFloorBoot}>
+            <Canvas
+                        key={bootKey}
+                      shadows={settings.shadows}
+                      style={{ width: "100%", height: "100%", display: "block" }}
+                      camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: settings.far }}
+                      frameloop="always"
+                      dpr={settings.dpr}
+                      performance={{ min: 0.85 }}
+                      gl={{
+                        antialias: settings.antialias,
+                        powerPreference: "high-performance",
+                        stencil: false,
+                        alpha: false,
+                        toneMapping: THREE.ACESFilmicToneMapping,
+                        toneMappingExposure: 1.12,
+                      }}
+                    >
+                        <FloorGlGuard onFail={failFloorBoot} />
+                      <Suspense fallback={null}>
+                        <DistrictScene district={district} collected={collected} />
+                      </Suspense>
+                      <AdaptiveDpr pixelated={false} />
+                      <Player
+                        district={district}
+                        blocked={!!dialog}
+                        look={look}
+                        stick={stick}
+                        lookStick={lookStick}
+                        zoom={zoom}
+                        keysRef={keysRef}
+                        session={session}
+                        onHud={onHud}
+                        onStairGuide={setStairGuide}
+                        onPortal={goPortal}
+                        onDialog={(title, body, image, href, hrefLabel) =>
+                          setDialog({ title, body, image, href, hrefLabel })
+                        }
+                      />
+                    </Canvas>
+          </FloorBootBoundary>
+        ) : null}
         <div
           className="pointer-events-none absolute inset-0 bg-bg transition-opacity duration-500"
           style={{ opacity: fade }}
@@ -1859,6 +1948,7 @@ export function Explorer3D({
         </div>
       </div>
       ) : null}
+
 
       {!started ? (
         <div className="absolute inset-0 z-10 overflow-y-auto bg-bg/85 p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
