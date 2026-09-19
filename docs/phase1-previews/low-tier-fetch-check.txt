@@ -14,7 +14,6 @@ FLOOR fetches (quality=low) — single Draco/Meshopt files (no full-res twin):
   200   868704 /models/helicopter.glb
   200   633692 /models/ptera-pilot.glb
   200   394864 /models/enzo.glb
-  200  1578836 /models/hintze-hall.glb
   200  1296272 /models/meshy-character.glb
 
 --- mid reference (expects full + lod for Detailed) ---
