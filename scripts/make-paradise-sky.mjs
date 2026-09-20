@@ -1,15 +1,12 @@
 #!/usr/bin/env node
 /**
- * Paradise Floor sky plate (equirect JPEG) from the official Earth-Like Worlds still.
+ * Paradise Floor sky — equirectangular bake from the official still.
  *
- * Source: `public/worlds/forum/paradise-plate-ref.jpg`
- * Output: `public/worlds/forum/paradise-sky.jpg` (loaded by VisionSkyDome on mid/high)
+ * Projects the still into a *horizon + sky* band on the sphere (not a tall
+ * vertical wall). Foreground foliage of the painting is cropped so looking
+ * around immerses without a billboard-beside-HQ read.
  *
- * Rebuild after replacing the ref:
  *   node scripts/make-paradise-sky.mjs
- *
- * Mapping: cylindrical wrap of the still across the horizon band, with soft
- * zenith fill and nadir mist so the inward sky sphere does not seam hard.
  */
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -36,16 +33,20 @@ function pix(ix, iy) {
 }
 
 function sample(u, v) {
-  const x = u * (sw - 1);
-  const y = v * (sh - 1);
+  let uu = u % 1;
+  if (uu < 0) uu += 1;
+  const vv = Math.min(1, Math.max(0, v));
+  const x = uu * (sw - 1);
+  const y = vv * (sh - 1);
   const x0 = Math.floor(x);
   const y0 = Math.floor(y);
   const fx = x - x0;
   const fy = y - y0;
+  const x1 = (x0 + 1) % sw;
   const a = pix(x0, y0);
-  const b = pix(x0 + 1, y0);
+  const b = pix(x1, y0);
   const c = pix(x0, y0 + 1);
-  const d = pix(x0 + 1, y0 + 1);
+  const d = pix(x1, y0 + 1);
   return [0, 1, 2].map((k) => {
     const top = a[k] + (b[k] - a[k]) * fx;
     const bot = c[k] + (d[k] - c[k]) * fx;
@@ -71,44 +72,55 @@ const W = 2048;
 const H = 1024;
 const buf = Buffer.alloc(W * H * 3);
 
-/** Soft fills where the still does not cover (zenith / nadir). */
-const ZENITH = [168, 188, 210];
-const GOLD_HAZE = [242, 210, 150];
-const TEAL_MIST = [110, 168, 162];
-const FOREST = [36, 78, 52];
+const ZENITH = [160, 185, 215];
+const GOLD = [255, 214, 155];
+const TEAL = [110, 175, 168];
+const TEAL_DEEP = [68, 132, 128];
+const FOREST = [30, 68, 46];
+
+// Still crop: keep moon / floating islands / distant valleys; drop foreground trunks/flowers
+const STILL_V0 = 0.0;
+const STILL_V1 = 0.58;
+// Where that crop lands on the equirect (horizon-centric, not full wall)
+const DOME_V0 = 0.18; // sky content starts
+const DOME_V1 = 0.52; // mist takes over below — avoids tall wall beside HQ
+
+const skySample = sample(0.55, 0.08);
+const mistSample = sample(0.5, 0.55);
 
 for (let y = 0; y < H; y++) {
   for (let x = 0; x < W; x++) {
     const u = x / W;
     const v = y / H;
-    const elev = 1 - v;
 
-    // Cylindrical wrap: still spans full yaw; v maps into the painting's sky→valley.
-    // Bias so the giant moon + floating islands sit in the upper hemisphere.
-    const photoU = (u + 0.08) % 1;
-    const photoV = clamp01(0.02 + v * 0.92);
-    const photo = sample(photoU, photoV);
+    let col;
 
-    let col = photo;
+    if (v < DOME_V0) {
+      col = lerp3(skySample, ZENITH, smoothstep(DOME_V0, 0, v));
+      col = lerp3(col, GOLD, smoothstep(0.18, 0, v) * 0.3);
+    } else if (v <= DOME_V1) {
+      const t = (v - DOME_V0) / (DOME_V1 - DOME_V0);
+      const sv = STILL_V0 + t * (STILL_V1 - STILL_V0);
+      const photo = sample(u, sv);
+      // Crossfade edges of band into atmosphere so it never reads as a hard plate
+      const edge = smoothstep(DOME_V0, DOME_V0 + 0.08, v) * (1 - smoothstep(DOME_V1 - 0.1, DOME_V1, v));
+      const atmos = lerp3(skySample, mistSample, t);
+      col = lerp3(atmos, photo, 0.4 + 0.6 * edge);
+      // Extra teal toward bottom of band (depth)
+      col = lerp3(col, TEAL, smoothstep(0.45, 0.95, t) * 0.35);
+    } else {
+      // Lower hemisphere: misty teal ring → forest nadir (no tall painting wall)
+      const t = (v - DOME_V1) / (1 - DOME_V1);
+      col = lerp3(mistSample, TEAL, smoothstep(0, 0.45, t));
+      col = lerp3(col, TEAL_DEEP, smoothstep(0.35, 0.85, t));
+      col = lerp3(col, FOREST, smoothstep(0.7, 1, t) * 0.55);
+    }
 
-    // Zenith: blend toward soft blue so the dome top is not a stretched crop.
-    const zenithW = smoothstep(0.72, 0.98, elev);
-    col = lerp3(col, ZENITH, zenithW * 0.55);
-
-    // Warm rim near sun side of painting (right half of still).
-    const towardGold = smoothstep(0.45, 0.85, photoU) * smoothstep(0.35, 0.7, v);
-    col = lerp3(col, GOLD_HAZE, towardGold * 0.18);
-
-    // Valley mist / nadir teal so ground-looking angles stay paradise, not black.
-    const nadir = smoothstep(0.72, 0.98, v);
-    col = lerp3(col, TEAL_MIST, nadir * 0.55);
-    col = lerp3(col, FOREST, nadir * 0.25);
-
-    // Soft seam hide — slight horizontal blur via neighbor sample.
+    // Soft U wrap seam
     const seam = Math.min(u, 1 - u);
-    if (seam < 0.04) {
-      const other = sample((photoU + 0.5) % 1, photoV);
-      col = lerp3(col, other, (0.04 - seam) * 4 * 0.2);
+    if (seam < 0.05) {
+      const other = sample(u + 0.5, clamp01(STILL_V0 + ((v - DOME_V0) / (DOME_V1 - DOME_V0)) * (STILL_V1 - STILL_V0)));
+      col = lerp3(col, other, ((0.05 - seam) / 0.05) * 0.25);
     }
 
     const i = (y * W + x) * 3;
@@ -123,4 +135,4 @@ await sharp(buf, { raw: { width: W, height: H, channels: 3 } })
   .jpeg({ quality: 92 })
   .toFile(dest);
 
-console.log("wrote", dest, "from", stillPath);
+console.log("wrote horizon-band equirect", dest);

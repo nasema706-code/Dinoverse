@@ -3,7 +3,6 @@ import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { DoubleSide } from "three";
 import { Box } from "./kit";
-import { usePhoto } from "../textures";
 import { useQuality } from "../quality";
 
 /** Emerald / mist palette — Earth-Like Worlds paradise plate. */
@@ -29,12 +28,12 @@ type Mass = {
 
 function ringMasses(count: number): Mass[] {
   const out: Mass[] = [];
-  // Fewer, farther masses — photo sky + horizon plates carry the paradise read.
-  const n = Math.max(8, Math.floor(count * 0.45));
+  // Sparse far silhouettes only — immersion comes from the sky dome + fog, not props.
+  const n = Math.max(6, Math.floor(count * 0.35));
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + 0.11;
-    const r = 58 + (i % 5) * 4.2;
-    const h = 8 + ((i * 13) % 16);
+    const r = 62 + (i % 5) * 4.8;
+    const h = 7 + ((i * 13) % 14);
     const w = 6.5 + (i % 4) * 1.2;
     out.push({
       x: Math.cos(a) * r,
@@ -42,8 +41,8 @@ function ringMasses(count: number): Mass[] {
       h,
       w,
       d: w * (0.7 + (i % 3) * 0.2),
-      floatY: i % 3 === 0 ? 6 + (i % 4) * 2.2 : i % 2 === 0 ? 2.5 : 0,
-      spires: i % 3 === 0 ? 3 + (i % 2) : i % 4 === 0 ? 1 : 0,
+      floatY: i % 3 === 0 ? 5 + (i % 4) * 1.8 : 0,
+      spires: i % 4 === 0 ? 2 : 0,
       terrace: i % 2 === 0,
     });
   }
@@ -95,32 +94,22 @@ function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
         <sphereGeometry args={[crownR * 0.55, 8, 6]} />
         <meshStandardMaterial color={GREEN_LIT} roughness={0.82} metalness={0.02} />
       </mesh>
-      <mesh position={[crownR * 0.4, m.h * 0.22, -crownR * 0.25]}>
-        <sphereGeometry args={[crownR * 0.48, 8, 6]} />
-        <meshStandardMaterial color={GREEN_DEEP} roughness={0.9} metalness={0.02} />
-      </mesh>
       {m.terrace ? (
-        <>
-          <mesh position={[-m.w * 0.4, m.h * 0.02, m.d * 0.15]}>
-            <boxGeometry args={[m.w * 0.55, 0.7, m.d * 0.7]} />
-            <meshStandardMaterial color={TERRACE} roughness={0.88} metalness={0.02} />
-          </mesh>
-          <mesh position={[m.w * 0.25, -m.h * 0.08, -m.d * 0.2]}>
-            <boxGeometry args={[m.w * 0.5, 0.55, m.d * 0.6]} />
-            <meshStandardMaterial color={GREEN_DEEP} roughness={0.9} metalness={0.02} />
-          </mesh>
-        </>
+        <mesh position={[-m.w * 0.35, m.h * 0.02, m.d * 0.15]}>
+          <boxGeometry args={[m.w * 0.5, 0.6, m.d * 0.6]} />
+          <meshStandardMaterial color={TERRACE} roughness={0.88} metalness={0.02} />
+        </mesh>
       ) : null}
       {Array.from({ length: m.spires }, (_, i) => (
-        <mesh key={i} position={[(i - (m.spires - 1) / 2) * 0.9, m.h * 0.42 + 1.4 + i * 0.55, 0]}>
-          <cylinderGeometry args={[0.12, 0.28, 2.6 + i * 0.9, 6]} />
+        <mesh key={i} position={[(i - (m.spires - 1) / 2) * 0.9, m.h * 0.42 + 1.2 + i * 0.5, 0]}>
+          <cylinderGeometry args={[0.12, 0.28, 2.2 + i * 0.8, 6]} />
           <meshStandardMaterial color={SPIRE} roughness={0.55} metalness={0.25} />
         </mesh>
       ))}
       {m.spires > 0 ? (
-        <mesh position={[crownR * 0.35, m.h * 0.38, crownR * 0.3]}>
-          <sphereGeometry args={[0.4, 6, 4]} />
-          <meshStandardMaterial color={FLOWER} emissive={FLOWER} emissiveIntensity={0.3} roughness={0.7} />
+        <mesh position={[crownR * 0.3, m.h * 0.36, crownR * 0.25]}>
+          <sphereGeometry args={[0.35, 6, 4]} />
+          <meshStandardMaterial color={FLOWER} emissive={FLOWER} emissiveIntensity={0.28} roughness={0.7} />
         </mesh>
       ) : null}
     </group>
@@ -162,9 +151,9 @@ function DriftCraft({ seed }: { seed: number }) {
     const t = clock.elapsedTime * (0.06 + seed * 0.015) + seed * 4;
     const g = ref.current;
     if (!g) return;
-    g.position.x = Math.cos(t) * (38 + seed * 3);
-    g.position.y = 16 + seed * 2.2 + Math.sin(t * 1.2) * 1.1;
-    g.position.z = Math.sin(t * 0.85) * (32 + seed * 2);
+    g.position.x = Math.cos(t) * (42 + seed * 3);
+    g.position.y = 18 + seed * 2.2 + Math.sin(t * 1.2) * 1.1;
+    g.position.z = Math.sin(t * 0.85) * (36 + seed * 2);
     g.rotation.y = -t + Math.PI / 2;
   });
   return (
@@ -182,47 +171,8 @@ function DriftCraft({ seed }: { seed: number }) {
 }
 
 /**
- * Official still as mid-distance surround — sells valleys / floating islands
- * when looking out from HQ without rebuilding the city.
- */
-function ParadiseHorizonPlates() {
-  const map = usePhoto("/worlds/forum/paradise-plate-ref.jpg");
-  const panels = useMemo(
-    () =>
-      [0, 1, 2, 3, 4, 5].map((i) => {
-        const a = (i / 6) * Math.PI * 2 + 0.2;
-        const r = 78;
-        return {
-          key: i,
-          position: [Math.cos(a) * r, 14, Math.sin(a) * r] as [number, number, number],
-          rotY: -a + Math.PI,
-        };
-      }),
-    [],
-  );
-  if (!map) return null;
-  return (
-    <group>
-      {panels.map((p) => (
-        <mesh key={p.key} position={p.position} rotation={[0, p.rotY, 0]} frustumCulled={false}>
-          <planeGeometry args={[52, 30]} />
-          <meshBasicMaterial
-            map={map}
-            toneMapped={false}
-            fog
-            transparent
-            opacity={0.92}
-            depthWrite={false}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-/**
- * Horizon / surround plate — verdant terraces, floating forest masses,
- * misty teal valleys + official still plates. Walkable HQ / plaza untouched.
+ * Horizon surround — verdant ground, distant silhouettes, teal mist bands.
+ * Sky immersion is the VisionSkyDome (not vertical still billboards).
  */
 export function Cityscape() {
   const { settings, level } = useQuality();
@@ -240,25 +190,24 @@ export function Cityscape() {
         <meshStandardMaterial color="#3a6e48" roughness={0.9} metalness={0.02} />
       </mesh>
 
-      {level === "low" ? null : <ParadiseHorizonPlates />}
-
       {masses.map((m) => (
         <FloatingMass key={`${m.x.toFixed(1)}-${m.z.toFixed(1)}`} m={m} shadows={settings.shadows} />
       ))}
 
-      <TerraceRidge position={[-36, 0, 8]} rotY={0.4} steps={level === "low" ? 4 : 6} />
-      <TerraceRidge position={[40, 0, -6]} rotY={-0.55} steps={level === "low" ? 4 : 7} />
-      <TerraceRidge position={[8, 0, -42]} rotY={0.1} steps={level === "low" ? 3 : 5} />
+      <TerraceRidge position={[-42, 0, 10]} rotY={0.4} steps={level === "low" ? 3 : 5} />
+      <TerraceRidge position={[44, 0, -8]} rotY={-0.55} steps={level === "low" ? 3 : 5} />
+      <TerraceRidge position={[6, 0, -48]} rotY={0.1} steps={level === "low" ? 3 : 4} />
 
       {misty ? (
         <>
-          <MistBand position={[0, 1.2, -8]} size={[120, 80]} opacity={0.14} />
-          <MistBand position={[-18, 2.4, 12]} size={[70, 50]} opacity={0.11} />
-          <MistBand position={[22, 1.8, -20]} size={[90, 60]} opacity={0.12} />
-          <MistBand position={[0, 3.6, 40]} size={[100, 70]} opacity={0.09} />
+          <MistBand position={[0, 0.6, 0]} size={[160, 160]} opacity={0.28} />
+          <MistBand position={[0, 1.8, 0]} size={[150, 150]} opacity={0.22} />
+          <MistBand position={[0, 3.2, -8]} size={[130, 110]} opacity={0.18} />
+          <MistBand position={[-20, 4.0, 14]} size={[90, 70]} opacity={0.14} />
+          <MistBand position={[22, 3.6, -20]} size={[90, 70]} opacity={0.14} />
         </>
       ) : (
-        <MistBand position={[0, 1.6, 0]} size={[100, 100]} opacity={0.08} />
+        <MistBand position={[0, 1.2, 0]} size={[140, 140]} opacity={0.2} />
       )}
 
       {Array.from({ length: settings.crafts }, (_, n) => (

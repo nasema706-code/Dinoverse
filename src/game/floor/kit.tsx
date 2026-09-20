@@ -359,14 +359,14 @@ export function BoardScreen({
 
 export function Lights(): ReactNode {
   const { settings, level } = useQuality();
-  /** Misty teal — mid band so valleys read without wiping the sky dome. */
-  const fogNear = level === "low" ? 34 : level === "mid" ? 48 : 55;
-  const fogFar = Math.min(settings.far - 2, level === "low" ? 110 : settings.fogFar + 20);
+  /** Stronger misty teal — depth from fog/dome ring, never a side plate. */
+  const fogNear = level === "low" ? 14 : level === "mid" ? 18 : 22;
+  const fogFar = Math.min(settings.far - 12, level === "low" ? 68 : level === "mid" ? 92 : 112);
   return (
     <>
       <HqEnvironment />
-      <color attach="background" args={["#c5b48a"]} />
-      <fog attach="fog" args={["#7eb8b0", fogNear, fogFar]} />
+      <color attach="background" args={["#6eaea6"]} />
+      <fog attach="fog" args={["#5fa39c", fogNear, fogFar]} />
       <hemisphereLight args={["#ffe7b8", "#3d6a52", level === "low" ? 0.95 : 1.05]} />
       <ambientLight intensity={settings.extraLights ? 0.72 : 0.88} color="#fff0d4" />
       <directionalLight
@@ -384,8 +384,7 @@ export function Lights(): ReactNode {
         shadow-camera-top={32}
         shadow-camera-bottom={-32}
       />
-      {/* Cool fill from valley mist — keeps teal readable in shadow */}
-      <directionalLight position={[-32, 14, -18]} intensity={0.38} color="#8ec4b8" />
+      <directionalLight position={[-32, 14, -18]} intensity={0.42} color="#8ec4b8" />
       <ParadiseGodRays enabled={level !== "low"} />
       {settings.contactShadows ? (
         <AccumulativeShadows

@@ -63,9 +63,10 @@ export function ParadiseGodRays({ enabled }: { enabled: boolean }) {
 }
 
 /**
- * Golden-hour plate + soft moon + park HDRI for glass.
- * Mid/high: equirect sky dome baked from the official still
- * (`scripts/make-paradise-sky.mjs`) — moon/islands come from the art.
+ * Golden-hour plate + park HDRI for glass.
+ * Mid/high: true equirect VisionSkyDome baked from the official still
+ * (`scripts/make-paradise-sky.mjs`) — looking around immerses via dome + fog,
+ * not a vertical side billboard.
  * Low: cheap drei Sky + moon mesh (no texture fetch).
  */
 export function HqEnvironment() {
@@ -79,7 +80,8 @@ export function HqEnvironment() {
             <Sky sunPosition={SUN_POS} turbidity={6} rayleigh={0.8} mieCoefficient={0.005} mieDirectionalG={0.85} />
           }
         >
-          <VisionSkyDome src="/worlds/forum/paradise-sky.jpg" radius={170} />
+          {/* Radius stays inside quality `far` so first-person never clips the dome. */}
+          <VisionSkyDome src="/worlds/forum/paradise-sky.jpg?v=immersion3" radius={148} />
         </Suspense>
       ) : (
         <>

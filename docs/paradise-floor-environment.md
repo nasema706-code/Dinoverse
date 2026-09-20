@@ -1,12 +1,12 @@
 # Paradise Floor environment (Earth-Like Worlds)
 
-Art-direction pass for **The Floor** exterior plate — sky, horizon surround, mist, and warm lighting. Walkable HQ / atrium / soft-fail / shards / characters are unchanged.
+Art-direction pass for **The Floor** exterior — immersive sky dome, mist, warm lighting. Walkable HQ / atrium / soft-fail / shards / characters unchanged.
 
 ## Visual target
 
 - Category: temperate / paradise terrestrial
-- Palette: emerald green, warm gold sunlight (`#ffdfad`), misty teal (`#7eb8b0`), cream moon (`#f3ead4`)
-- Mood: lush valleys, terraced / floating forest masses, golden-hour god-rays, giant pale moon
+- Palette: emerald green, warm gold sunlight (`#ffdfad`), misty teal (`#6eaea6`), cream moon
+- Mood: lush valleys in the **sky dome**, golden-hour god-rays, giant pale moon — **not** a vertical painting beside HQ
 
 Official still: `public/worlds/forum/paradise-plate-ref.jpg`
 
@@ -14,41 +14,30 @@ Official still: `public/worlds/forum/paradise-plate-ref.jpg`
 
 | Surface | File | Notes |
 | --- | --- | --- |
-| Sky + HDRI | `src/game/floor/env.tsx` | Mid/high: `VisionSkyDome` on baked `/worlds/forum/paradise-sky.jpg` (from official still); low: drei `<Sky>` + `PaleMoon`. Environment preset `park` (mid/high) |
-| Horizon plates | `src/game/floor/cityscape.tsx` | Mid/high: ring of official-still billboards; fewer/farther procedural floating masses + terraces |
-| God-rays | `ParadiseGodRays` in `env.tsx` | Soft planes; **skipped on `low`** quality |
-| Lights + fog | `src/game/floor/kit.tsx` `Lights` | Teal fog `#7eb8b0`; warm sun + cool mist fill; fog near/far still derived from `quality.ts` |
-| District tint | `src/game/districts3d.ts` `forum` | fog / ambient / ground / sky aligned (Floor still owns its own `Lights`) |
+| Sky | `src/game/floor/env.tsx` | Mid/high: `VisionSkyDome` on equirect bake; low: drei `<Sky>` + `PaleMoon`. **No vertical still billboards.** |
+| Bake | `scripts/make-paradise-sky.mjs` | Projects the still into a forward frustum; fills 360° with zenith / teal horizon ring / soft ridge |
+| Surround | `src/game/floor/cityscape.tsx` | Verdant ground, sparse far silhouettes, mist bands only |
+| Fog / lights | `src/game/floor/kit.tsx` `Lights` | Stronger misty teal fog; warm sun; quality-gated god-rays |
 
-Quality tiers (`src/game/quality.ts`) are respected: fewer masses via `towers` / `crafts`, no HDRI / still plates / god-rays on low, shadows only on high.
+## Critic fix (MAJOR)
 
-## Tuning knobs
+Vertical `ParadiseHorizonPlates` (six planes at r≈78 with the still) made the painting read as a side billboard. Removed. Immersion is the equirect dome + fog.
 
-Live scene (fastest):
-
-1. **Sun aim** — `SUN_POS` in `env.tsx` (shared by Sky, key light, shadows).
-2. **Sky warmth** — low-tier `<Sky turbidity / rayleigh / mie*>` in `HqEnvironment`.
-3. **Moon** — low-tier only (`PaleMoon`); mid/high moon comes from the still.
-4. **Fog** — fog color / near / far math in `Lights` (`kit.tsx`).
-5. **Plate density** — `settings.towers` / `settings.crafts`; mass layout in `ringMasses()`.
-6. **God-rays** — opacity / plane count in `ParadiseGodRays`; gated with `level !== "low"`.
-7. **Horizon billboards** — radius / count in `ParadiseHorizonPlates`.
-
-Offline sky bake:
+## Tuning
 
 ```bash
-# Replace paradise-plate-ref.jpg first, then:
+# Replace paradise-plate-ref.jpg, then:
 node scripts/make-paradise-sky.mjs
 ```
 
-Samples the official still into an equirect wrap at `public/worlds/forum/paradise-sky.jpg`. Mid/high Floor loads that JPEG as the sky dome.
+Live knobs: `SUN_POS`, fog near/far in `Lights`, dome radius in `HqEnvironment` (keep under quality `far`).
 
-## Out of scope (this PR)
+## Out of scope
 
-- Full floating-island city rebuild / new districts
+- Full floating-island / hanging-gardens prop rebuild
 - Rapier / museum (#6 HOLD)
-- Engine rewrite
+- Merge / deploy
 
-## Smoke
+## Evidence
 
-Orbit The Floor on `/worlds?district=forum` (high quality) and confirm golden sky, pale moon, teal mist, paradise still on the horizon — HQ glass box and plaza still readable. Then guest-walk `/explore` to confirm atrium / enter soft-fail / shards still boot.
+First-person look-around shots: `docs/paradise-floor/`
