@@ -14,7 +14,7 @@ Official still (agent / art ref): `public/worlds/forum/paradise-plate-ref.png`
 
 | Surface | File | Notes |
 | --- | --- | --- |
-| Sky + moon + HDRI | `src/game/floor/env.tsx` | drei `<Sky>` turbidity/rayleigh for golden hour; `PaleMoon`; Environment preset `park` (mid/high only) |
+| Sky + HDRI | `src/game/floor/env.tsx` | Mid/high: `VisionSkyDome` on `/worlds/forum/paradise-sky.jpg`; low: drei `<Sky>` + `PaleMoon`. Environment preset `park` (mid/high) |
 | God-rays | `ParadiseGodRays` in `env.tsx` | Soft planes; **skipped on `low`** quality |
 | Lights + fog | `src/game/floor/kit.tsx` `Lights` | Teal fog `#7eb8b0`; warm sun + cool mist fill; fog near/far still derived from `quality.ts` |
 | Horizon plate | `src/game/floor/cityscape.tsx` | Grey tower ring → verdant floating masses, terraces, mist bands, emerald ground |
@@ -39,7 +39,7 @@ Offline sky bake:
 node scripts/make-paradise-sky.mjs
 ```
 
-Writes `public/worlds/forum/paradise-sky.jpg`. Edit palette constants at the top of that script (gold / teal / moon / forest). The live Floor does **not** require this JPEG today (drei Sky + meshes); keep the bake for share cards, optional future `VisionSkyDome`, or art reviews.
+Writes `public/worlds/forum/paradise-sky.jpg`. Edit palette constants at the top of that script (gold / teal / moon / forest). Mid/high Floor loads this JPEG as the sky dome; regenerate after palette edits.
 
 ## Out of scope (this PR)
 

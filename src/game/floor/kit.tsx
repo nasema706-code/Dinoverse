@@ -359,12 +359,13 @@ export function BoardScreen({
 
 export function Lights(): ReactNode {
   const { settings, level } = useQuality();
-  /** Misty teal valleys — denser on low so the plate still reads without masses. */
-  const fogNear = level === "low" ? Math.max(36, settings.fogNear) : Math.max(52, settings.fogNear + 12);
-  const fogFar = Math.min(settings.far - 4, settings.fogFar + (level === "high" ? 36 : 24));
+  /** Misty teal — mid band so valleys read without wiping the sky dome. */
+  const fogNear = level === "low" ? 34 : level === "mid" ? 48 : 55;
+  const fogFar = Math.min(settings.far - 2, level === "low" ? 110 : settings.fogFar + 20);
   return (
     <>
       <HqEnvironment />
+      <color attach="background" args={["#c5b48a"]} />
       <fog attach="fog" args={["#7eb8b0", fogNear, fogFar]} />
       <hemisphereLight args={["#ffe7b8", "#3d6a52", level === "low" ? 0.95 : 1.05]} />
       <ambientLight intensity={settings.extraLights ? 0.72 : 0.88} color="#fff0d4" />

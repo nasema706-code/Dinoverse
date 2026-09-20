@@ -25,12 +25,12 @@ const W = 2048;
 const H = 1024;
 const buf = Buffer.alloc(W * H * 3);
 
-const ZENITH = [140, 175, 210];
-const HAZE = [190, 210, 220];
-const GOLD = [255, 214, 150];
-const HORIZON_GOLD = [240, 188, 120];
-const TEAL_MIST = [126, 184, 176];
-const MOON = [243, 234, 212];
+const ZENITH = [90, 140, 190];
+const HAZE = [210, 195, 160];
+const GOLD = [255, 200, 110];
+const HORIZON_GOLD = [255, 170, 80];
+const TEAL_MIST = [70, 150, 145];
+const MOON = [255, 248, 230];
 const FOREST = [40, 90, 58];
 const RIDGE = [55, 70, 48];
 
@@ -49,7 +49,7 @@ function smoothstep(e0, e1, x) {
 }
 
 const moonU = 0.42;
-const moonV = 0.28;
+const moonV = 0.24;
 const sunU = 0.78;
 const sunV = 0.52;
 
@@ -65,9 +65,9 @@ for (let y = 0; y < H; y++) {
     col = lerp3(col, HORIZON_GOLD, smoothstep(0.52, 0.7, v) * (0.3 + 0.7 * towardSun));
 
     const wrapM = Math.min(Math.abs(u - moonU), 1 - Math.abs(u - moonU));
-    const dMoon = Math.sqrt(wrapM * wrapM * 2.2 + (v - moonV) * (v - moonV));
-    const moonDisc = Math.exp(-dMoon * dMoon * 90);
-    const moonHalo = Math.exp(-dMoon * dMoon * 18);
+    const dMoon = Math.sqrt(wrapM * wrapM * 1.4 + (v - moonV) * (v - moonV));
+    const moonDisc = Math.exp(-dMoon * dMoon * 55);
+    const moonHalo = Math.exp(-dMoon * dMoon * 10);
     col = lerp3(col, MOON, clamp01(moonDisc * 1.4));
     col = [
       col[0] + 40 * moonHalo,

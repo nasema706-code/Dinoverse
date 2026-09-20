@@ -73,50 +73,54 @@ function MistBand({
 
 function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
   const y = m.floatY + m.h / 2;
+  const crownR = Math.min(m.w, m.d) * 0.55;
   return (
     <group position={[m.x, y, m.z]}>
-      {/* Jagged rock underside */}
-      <mesh position={[0, -m.h * 0.08, 0]} castShadow={shadows}>
-        <boxGeometry args={[m.w * 0.92, m.h * 0.55, m.d * 0.92]} />
+      {/* Jagged rock underside — floating island read */}
+      <mesh position={[0, -m.h * 0.12, 0]} castShadow={shadows} rotation={[0, 0.3, 0]}>
+        <coneGeometry args={[crownR * 0.95, m.h * 0.7, 6]} />
         <meshStandardMaterial color={ROCK} roughness={0.92} metalness={0.04} />
       </mesh>
-      <mesh position={[0, -m.h * 0.38, 0]} castShadow={shadows}>
-        <coneGeometry args={[Math.min(m.w, m.d) * 0.42, m.h * 0.55, 5]} />
+      <mesh position={[0.4, -m.h * 0.28, -0.3]} castShadow={shadows} rotation={[0.1, 0.8, 0]}>
+        <coneGeometry args={[crownR * 0.55, m.h * 0.45, 5]} />
         <meshStandardMaterial color={ROCK_LIT} roughness={0.9} metalness={0.03} />
       </mesh>
-      {/* Forest crown */}
-      <mesh position={[0, m.h * 0.22, 0]} castShadow={shadows}>
-        <boxGeometry args={[m.w, m.h * 0.42, m.d]} />
-        <meshStandardMaterial color={GREEN_MID} roughness={0.86} metalness={0.02} />
+      {/* Forest crown — rounded, not a green skyscraper */}
+      <mesh position={[0, m.h * 0.18, 0]} castShadow={shadows}>
+        <sphereGeometry args={[crownR * 1.05, 10, 8]} />
+        <meshStandardMaterial color={GREEN_MID} roughness={0.88} metalness={0.02} />
       </mesh>
-      <mesh position={[0, m.h * 0.42, 0]}>
-        <boxGeometry args={[m.w * 1.05, m.h * 0.18, m.d * 1.05]} />
-        <meshStandardMaterial color={GREEN_LIT} roughness={0.8} metalness={0.02} />
+      <mesh position={[-crownR * 0.35, m.h * 0.28, crownR * 0.2]}>
+        <sphereGeometry args={[crownR * 0.55, 8, 6]} />
+        <meshStandardMaterial color={GREEN_LIT} roughness={0.82} metalness={0.02} />
+      </mesh>
+      <mesh position={[crownR * 0.4, m.h * 0.22, -crownR * 0.25]}>
+        <sphereGeometry args={[crownR * 0.48, 8, 6]} />
+        <meshStandardMaterial color={GREEN_DEEP} roughness={0.9} metalness={0.02} />
       </mesh>
       {m.terrace ? (
         <>
-          <mesh position={[-m.w * 0.35, m.h * 0.05, m.d * 0.2]}>
-            <boxGeometry args={[m.w * 0.45, 0.55, m.d * 0.55]} />
+          <mesh position={[-m.w * 0.4, m.h * 0.02, m.d * 0.15]}>
+            <boxGeometry args={[m.w * 0.55, 0.7, m.d * 0.7]} />
             <meshStandardMaterial color={TERRACE} roughness={0.88} metalness={0.02} />
           </mesh>
-          <mesh position={[m.w * 0.28, -m.h * 0.05, -m.d * 0.15]}>
-            <boxGeometry args={[m.w * 0.4, 0.45, m.d * 0.5]} />
+          <mesh position={[m.w * 0.25, -m.h * 0.08, -m.d * 0.2]}>
+            <boxGeometry args={[m.w * 0.5, 0.55, m.d * 0.6]} />
             <meshStandardMaterial color={GREEN_DEEP} roughness={0.9} metalness={0.02} />
           </mesh>
         </>
       ) : null}
-      {/* Distant fantasy spires — silhouette only, not a full city rebuild */}
+      {/* Distant fantasy spires — silhouette only */}
       {Array.from({ length: m.spires }, (_, i) => (
-        <mesh key={i} position={[(i - (m.spires - 1) / 2) * 1.1, m.h * 0.55 + 1.2 + i * 0.4, 0]}>
-          <boxGeometry args={[0.45, 2.4 + i * 0.8, 0.45]} />
+        <mesh key={i} position={[(i - (m.spires - 1) / 2) * 0.9, m.h * 0.42 + 1.4 + i * 0.55, 0]}>
+          <cylinderGeometry args={[0.12, 0.28, 2.6 + i * 0.9, 6]} />
           <meshStandardMaterial color={SPIRE} roughness={0.55} metalness={0.25} />
         </mesh>
       ))}
-      {/* Flower accent pops */}
       {m.spires > 0 ? (
-        <mesh position={[m.w * 0.2, m.h * 0.48, m.d * 0.25]}>
-          <sphereGeometry args={[0.35, 6, 4]} />
-          <meshStandardMaterial color={FLOWER} emissive={FLOWER} emissiveIntensity={0.25} roughness={0.7} />
+        <mesh position={[crownR * 0.35, m.h * 0.38, crownR * 0.3]}>
+          <sphereGeometry args={[0.4, 6, 4]} />
+          <meshStandardMaterial color={FLOWER} emissive={FLOWER} emissiveIntensity={0.3} roughness={0.7} />
         </mesh>
       ) : null}
     </group>
