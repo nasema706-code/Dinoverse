@@ -64,8 +64,8 @@ export function ParadiseGodRays({ enabled }: { enabled: boolean }) {
 
 /**
  * Golden-hour plate + soft moon + park HDRI for glass.
- * Mid/high: baked equirect sky dome (regenerate via `scripts/make-paradise-sky.mjs`)
- * plus a mesh moon so the giant pale disc always reads in orbit view.
+ * Mid/high: equirect sky dome baked from the official still
+ * (`scripts/make-paradise-sky.mjs`) — moon/islands come from the art.
  * Low: cheap drei Sky + moon mesh (no texture fetch).
  */
 export function HqEnvironment() {
@@ -82,15 +82,17 @@ export function HqEnvironment() {
           <VisionSkyDome src="/worlds/forum/paradise-sky.jpg" radius={170} />
         </Suspense>
       ) : (
-        <Sky
-          sunPosition={SUN_POS}
-          turbidity={7}
-          rayleigh={0.7}
-          mieCoefficient={0.006}
-          mieDirectionalG={0.88}
-        />
+        <>
+          <Sky
+            sunPosition={SUN_POS}
+            turbidity={7}
+            rayleigh={0.7}
+            mieCoefficient={0.006}
+            mieDirectionalG={0.88}
+          />
+          <PaleMoon detailed={false} />
+        </>
       )}
-      <PaleMoon detailed={detailed} />
       {level === "low" ? null : (
         <Suspense fallback={null}>
           <Environment

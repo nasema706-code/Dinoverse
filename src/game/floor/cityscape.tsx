@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { DoubleSide } from "three";
 import { Box } from "./kit";
+import { usePhoto } from "../textures";
 import { useQuality } from "../quality";
 
 /** Emerald / mist palette — Earth-Like Worlds paradise plate. */
@@ -28,19 +29,21 @@ type Mass = {
 
 function ringMasses(count: number): Mass[] {
   const out: Mass[] = [];
-  for (let i = 0; i < count; i++) {
-    const a = (i / count) * Math.PI * 2 + 0.11;
-    const r = 46 + (i % 7) * 3.6;
-    const h = 10 + ((i * 13) % 22);
-    const w = 5.5 + (i % 5) * 1.1;
+  // Fewer, farther masses — photo sky + horizon plates carry the paradise read.
+  const n = Math.max(8, Math.floor(count * 0.45));
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + 0.11;
+    const r = 58 + (i % 5) * 4.2;
+    const h = 8 + ((i * 13) % 16);
+    const w = 6.5 + (i % 4) * 1.2;
     out.push({
       x: Math.cos(a) * r,
       z: Math.sin(a) * r,
       h,
       w,
       d: w * (0.7 + (i % 3) * 0.2),
-      floatY: i % 4 === 0 ? 4 + (i % 5) * 1.4 : 0,
-      spires: i % 3 === 0 ? 2 + (i % 3) : i % 5 === 0 ? 1 : 0,
+      floatY: i % 3 === 0 ? 6 + (i % 4) * 2.2 : i % 2 === 0 ? 2.5 : 0,
+      spires: i % 3 === 0 ? 3 + (i % 2) : i % 4 === 0 ? 1 : 0,
       terrace: i % 2 === 0,
     });
   }
@@ -76,7 +79,6 @@ function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
   const crownR = Math.min(m.w, m.d) * 0.55;
   return (
     <group position={[m.x, y, m.z]}>
-      {/* Jagged rock underside — floating island read */}
       <mesh position={[0, -m.h * 0.12, 0]} castShadow={shadows} rotation={[0, 0.3, 0]}>
         <coneGeometry args={[crownR * 0.95, m.h * 0.7, 6]} />
         <meshStandardMaterial color={ROCK} roughness={0.92} metalness={0.04} />
@@ -85,7 +87,6 @@ function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
         <coneGeometry args={[crownR * 0.55, m.h * 0.45, 5]} />
         <meshStandardMaterial color={ROCK_LIT} roughness={0.9} metalness={0.03} />
       </mesh>
-      {/* Forest crown — rounded, not a green skyscraper */}
       <mesh position={[0, m.h * 0.18, 0]} castShadow={shadows}>
         <sphereGeometry args={[crownR * 1.05, 10, 8]} />
         <meshStandardMaterial color={GREEN_MID} roughness={0.88} metalness={0.02} />
@@ -110,7 +111,6 @@ function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
           </mesh>
         </>
       ) : null}
-      {/* Distant fantasy spires — silhouette only */}
       {Array.from({ length: m.spires }, (_, i) => (
         <mesh key={i} position={[(i - (m.spires - 1) / 2) * 0.9, m.h * 0.42 + 1.4 + i * 0.55, 0]}>
           <cylinderGeometry args={[0.12, 0.28, 2.6 + i * 0.9, 6]} />
@@ -148,7 +148,6 @@ function TerraceRidge({
           />
         </mesh>
       ))}
-      {/* Soft waterfall planes */}
       <mesh position={[0, 3.2, -4]} rotation={[0.15, 0, 0]}>
         <planeGeometry args={[2.4, 8]} />
         <meshBasicMaterial color="#cfeef0" transparent opacity={0.35} depthWrite={false} side={DoubleSide} />
@@ -183,9 +182,47 @@ function DriftCraft({ seed }: { seed: number }) {
 }
 
 /**
+ * Official still as mid-distance surround — sells valleys / floating islands
+ * when looking out from HQ without rebuilding the city.
+ */
+function ParadiseHorizonPlates() {
+  const map = usePhoto("/worlds/forum/paradise-plate-ref.jpg");
+  const panels = useMemo(
+    () =>
+      [0, 1, 2, 3, 4, 5].map((i) => {
+        const a = (i / 6) * Math.PI * 2 + 0.2;
+        const r = 78;
+        return {
+          key: i,
+          position: [Math.cos(a) * r, 14, Math.sin(a) * r] as [number, number, number],
+          rotY: -a + Math.PI,
+        };
+      }),
+    [],
+  );
+  if (!map) return null;
+  return (
+    <group>
+      {panels.map((p) => (
+        <mesh key={p.key} position={p.position} rotation={[0, p.rotY, 0]} frustumCulled={false}>
+          <planeGeometry args={[52, 30]} />
+          <meshBasicMaterial
+            map={map}
+            toneMapped={false}
+            fog
+            transparent
+            opacity={0.92}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/**
  * Horizon / surround plate — verdant terraces, floating forest masses,
- * misty teal valleys. Replaces the old grey tower ring while leaving
- * the walkable HQ / plaza untouched.
+ * misty teal valleys + official still plates. Walkable HQ / plaza untouched.
  */
 export function Cityscape() {
   const { settings, level } = useQuality();
@@ -194,7 +231,6 @@ export function Cityscape() {
 
   return (
     <group>
-      {/* Verdant far ground — emerald plate, not asphalt city */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 4]} receiveShadow>
         <planeGeometry args={[220, 220]} />
         <meshStandardMaterial color="#2a5a3a" roughness={0.94} metalness={0.02} />
@@ -203,6 +239,8 @@ export function Cityscape() {
         <circleGeometry args={[38, 48]} />
         <meshStandardMaterial color="#3a6e48" roughness={0.9} metalness={0.02} />
       </mesh>
+
+      {level === "low" ? null : <ParadiseHorizonPlates />}
 
       {masses.map((m) => (
         <FloatingMass key={`${m.x.toFixed(1)}-${m.z.toFixed(1)}`} m={m} shadows={settings.shadows} />

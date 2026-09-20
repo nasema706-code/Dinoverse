@@ -1,38 +1,57 @@
 #!/usr/bin/env node
 /**
- * Procedural Paradise Floor sky plate (equirect JPEG).
+ * Paradise Floor sky plate (equirect JPEG) from the official Earth-Like Worlds still.
  *
- * Regenerates `public/worlds/forum/paradise-sky.jpg` — a golden-hour + giant
- * pale moon panorama used as an art-direction reference / optional sky-dome
- * source. The live Floor currently drives the sky via drei `<Sky>` + moon mesh
- * in `src/game/floor/env.tsx`; this script is the offline bake path when you
- * want a photo-sphere plate or to retune palette without touching React.
+ * Source: `public/worlds/forum/paradise-plate-ref.jpg`
+ * Output: `public/worlds/forum/paradise-sky.jpg` (loaded by VisionSkyDome on mid/high)
  *
- * Tune constants below (moon size/pos, gold/teal mix, turbidity stand-ins),
- * then: `node scripts/make-paradise-sky.mjs`
+ * Rebuild after replacing the ref:
+ *   node scripts/make-paradise-sky.mjs
  *
- * Optional: drop an official still at
- * `public/worlds/forum/paradise-plate-ref.png` — the script copies it beside
- * the bake for PR evidence; it does not sample it (unlike canyon).
+ * Mapping: cylindrical wrap of the still across the horizon band, with soft
+ * zenith fill and nadir mist so the inward sky sphere does not seam hard.
  */
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import sharp from "sharp";
 
+const stillPath = resolve("public/worlds/forum/paradise-plate-ref.jpg");
 const dest = resolve("public/worlds/forum/paradise-sky.jpg");
 
-const W = 2048;
-const H = 1024;
-const buf = Buffer.alloc(W * H * 3);
+if (!existsSync(stillPath)) {
+  console.error("Missing official still:", stillPath);
+  process.exit(1);
+}
 
-const ZENITH = [90, 140, 190];
-const HAZE = [210, 195, 160];
-const GOLD = [255, 200, 110];
-const HORIZON_GOLD = [255, 170, 80];
-const TEAL_MIST = [70, 150, 145];
-const MOON = [255, 248, 230];
-const FOREST = [40, 90, 58];
-const RIDGE = [55, 70, 48];
+const { data, info } = await sharp(stillPath).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+const sw = info.width;
+const sh = info.height;
+const ch = info.channels;
+
+function pix(ix, iy) {
+  const x = Math.min(sw - 1, Math.max(0, ix | 0));
+  const y = Math.min(sh - 1, Math.max(0, iy | 0));
+  const i = (y * sw + x) * ch;
+  return [data[i], data[i + 1], data[i + 2]];
+}
+
+function sample(u, v) {
+  const x = u * (sw - 1);
+  const y = v * (sh - 1);
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const fx = x - x0;
+  const fy = y - y0;
+  const a = pix(x0, y0);
+  const b = pix(x0 + 1, y0);
+  const c = pix(x0, y0 + 1);
+  const d = pix(x0 + 1, y0 + 1);
+  return [0, 1, 2].map((k) => {
+    const top = a[k] + (b[k] - a[k]) * fx;
+    const bot = c[k] + (d[k] - c[k]) * fx;
+    return top + (bot - top) * fy;
+  });
+}
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
@@ -48,10 +67,15 @@ function smoothstep(e0, e1, x) {
   return t * t * (3 - 2 * t);
 }
 
-const moonU = 0.42;
-const moonV = 0.24;
-const sunU = 0.78;
-const sunV = 0.52;
+const W = 2048;
+const H = 1024;
+const buf = Buffer.alloc(W * H * 3);
+
+/** Soft fills where the still does not cover (zenith / nadir). */
+const ZENITH = [168, 188, 210];
+const GOLD_HAZE = [242, 210, 150];
+const TEAL_MIST = [110, 168, 162];
+const FOREST = [36, 78, 52];
 
 for (let y = 0; y < H; y++) {
   for (let x = 0; x < W; x++) {
@@ -59,43 +83,33 @@ for (let y = 0; y < H; y++) {
     const v = y / H;
     const elev = 1 - v;
 
-    let col = lerp3(HAZE, ZENITH, smoothstep(0.18, 0.85, elev));
-    const towardSun = 1 - Math.min(1, Math.min(Math.abs(u - sunU), 1 - Math.abs(u - sunU)) * 3.2);
-    col = lerp3(col, GOLD, smoothstep(0.4, 0.62, v) * towardSun * 0.85);
-    col = lerp3(col, HORIZON_GOLD, smoothstep(0.52, 0.7, v) * (0.3 + 0.7 * towardSun));
+    // Cylindrical wrap: still spans full yaw; v maps into the painting's sky→valley.
+    // Bias so the giant moon + floating islands sit in the upper hemisphere.
+    const photoU = (u + 0.08) % 1;
+    const photoV = clamp01(0.02 + v * 0.92);
+    const photo = sample(photoU, photoV);
 
-    const wrapM = Math.min(Math.abs(u - moonU), 1 - Math.abs(u - moonU));
-    const dMoon = Math.sqrt(wrapM * wrapM * 1.4 + (v - moonV) * (v - moonV));
-    const moonDisc = Math.exp(-dMoon * dMoon * 55);
-    const moonHalo = Math.exp(-dMoon * dMoon * 10);
-    col = lerp3(col, MOON, clamp01(moonDisc * 1.4));
-    col = [
-      col[0] + 40 * moonHalo,
-      col[1] + 30 * moonHalo,
-      col[2] + 18 * moonHalo,
-    ];
+    let col = photo;
 
-    const wrapS = Math.min(Math.abs(u - sunU), 1 - Math.abs(u - sunU));
-    const dSun = Math.sqrt(wrapS * wrapS + (v - sunV) * (v - sunV) * 1.6);
-    const bloom = Math.exp(-dSun * dSun * 28);
-    const core = Math.exp(-dSun * dSun * 180);
-    col = [
-      col[0] + 150 * bloom + 60 * core,
-      col[1] + 110 * bloom + 45 * core,
-      col[2] + 40 * bloom + 15 * core,
-    ];
+    // Zenith: blend toward soft blue so the dome top is not a stretched crop.
+    const zenithW = smoothstep(0.72, 0.98, elev);
+    col = lerp3(col, ZENITH, zenithW * 0.55);
 
-    const mist = smoothstep(0.58, 0.92, v);
-    col = lerp3(col, TEAL_MIST, mist * 0.72);
+    // Warm rim near sun side of painting (right half of still).
+    const towardGold = smoothstep(0.45, 0.85, photoU) * smoothstep(0.35, 0.7, v);
+    col = lerp3(col, GOLD_HAZE, towardGold * 0.18);
 
-    const ridge =
-      smoothstep(0.62, 0.78, v) *
-      (1 - smoothstep(0.82, 0.95, v)) *
-      (0.35 + 0.65 * Math.max(0, Math.sin(u * Math.PI * 6 + 0.4)));
-    col = lerp3(col, RIDGE, clamp01(ridge * 0.55));
-    const forestBand =
-      smoothstep(0.7, 0.84, v) * (1 - smoothstep(0.88, 0.98, v)) * (0.4 + 0.6 * Math.abs(Math.sin(u * 14)));
-    col = lerp3(col, FOREST, clamp01(forestBand * 0.65));
+    // Valley mist / nadir teal so ground-looking angles stay paradise, not black.
+    const nadir = smoothstep(0.72, 0.98, v);
+    col = lerp3(col, TEAL_MIST, nadir * 0.55);
+    col = lerp3(col, FOREST, nadir * 0.25);
+
+    // Soft seam hide — slight horizontal blur via neighbor sample.
+    const seam = Math.min(u, 1 - u);
+    if (seam < 0.04) {
+      const other = sample((photoU + 0.5) % 1, photoV);
+      col = lerp3(col, other, (0.04 - seam) * 4 * 0.2);
+    }
 
     const i = (y * W + x) * 3;
     buf[i] = Math.min(255, Math.max(0, col[0]));
@@ -106,7 +120,7 @@ for (let y = 0; y < H; y++) {
 
 mkdirSync(dirname(dest), { recursive: true });
 await sharp(buf, { raw: { width: W, height: H, channels: 3 } })
-  .jpeg({ quality: 90 })
+  .jpeg({ quality: 92 })
   .toFile(dest);
 
-console.log("wrote", dest);
+console.log("wrote", dest, "from", stillPath);
