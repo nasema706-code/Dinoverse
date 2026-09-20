@@ -1,101 +1,227 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
+import { DoubleSide } from "three";
 import { Box } from "./kit";
-import { useHudTextures } from "./hud-tex";
 import { useQuality } from "../quality";
 
-function ringTowers(count: number) {
-  const out: { x: number; z: number; h: number; w: number; d: number }[] = [];
+/** Emerald / mist palette — Earth-Like Worlds paradise plate. */
+const GREEN_DEEP = "#1f4a32";
+const GREEN_MID = "#2f6a44";
+const GREEN_LIT = "#4a8f58";
+const ROCK = "#3a342e";
+const ROCK_LIT = "#5a5046";
+const TERRACE = "#3d7a4e";
+const SPIRE = "#6a726c";
+const FLOWER = "#c45a9a";
+
+type Mass = {
+  x: number;
+  z: number;
+  h: number;
+  w: number;
+  d: number;
+  floatY: number;
+  spires: number;
+  terrace: boolean;
+};
+
+function ringMasses(count: number): Mass[] {
+  const out: Mass[] = [];
   for (let i = 0; i < count; i++) {
-    const a = (i / count) * Math.PI * 2 + 0.08;
-    const r = 40 + (i % 7) * 3.2;
-    const h = 22 + ((i * 17) % 38);
-    const w = 2.6 + (i % 4) * 0.7;
+    const a = (i / count) * Math.PI * 2 + 0.11;
+    const r = 46 + (i % 7) * 3.6;
+    const h = 10 + ((i * 13) % 22);
+    const w = 5.5 + (i % 5) * 1.1;
     out.push({
       x: Math.cos(a) * r,
       z: Math.sin(a) * r,
       h,
       w,
-      d: w * (0.75 + (i % 3) * 0.18),
+      d: w * (0.7 + (i % 3) * 0.2),
+      floatY: i % 4 === 0 ? 4 + (i % 5) * 1.4 : 0,
+      spires: i % 3 === 0 ? 2 + (i % 3) : i % 5 === 0 ? 1 : 0,
+      terrace: i % 2 === 0,
     });
   }
   return out;
 }
 
-function Craft({ seed }: { seed: number }) {
-  const ref = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime * (0.08 + seed * 0.02) + seed * 4;
-    const g = ref.current;
-    if (!g) return;
-    g.position.x = Math.cos(t) * (34 + seed * 3);
-    g.position.y = 14 + seed * 2.4 + Math.sin(t * 1.4) * 1.2;
-    g.position.z = Math.sin(t * 0.85) * (28 + seed * 2);
-    g.rotation.y = -t + Math.PI / 2;
-  });
+function MistBand({
+  position,
+  size,
+  opacity,
+}: {
+  position: [number, number, number];
+  size: [number, number];
+  opacity: number;
+}) {
   return (
-    <group ref={ref}>
-      <mesh>
-        <boxGeometry args={[1.8, 0.22, 0.55]} />
-        <meshStandardMaterial color="#1c222a" metalness={0.7} roughness={0.25} />
+    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]} frustumCulled={false}>
+      <planeGeometry args={size} />
+      <meshBasicMaterial
+        color="#7eb8b0"
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        side={DoubleSide}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function FloatingMass({ m, shadows }: { m: Mass; shadows: boolean }) {
+  const y = m.floatY + m.h / 2;
+  return (
+    <group position={[m.x, y, m.z]}>
+      {/* Jagged rock underside */}
+      <mesh position={[0, -m.h * 0.08, 0]} castShadow={shadows}>
+        <boxGeometry args={[m.w * 0.92, m.h * 0.55, m.d * 0.92]} />
+        <meshStandardMaterial color={ROCK} roughness={0.92} metalness={0.04} />
       </mesh>
-      <mesh position={[0.7, 0.12, 0]}>
-        <sphereGeometry args={[0.16, 8, 6]} />
-        <meshStandardMaterial color="#3ecf8e" emissive="#3ecf8e" emissiveIntensity={1.4} />
+      <mesh position={[0, -m.h * 0.38, 0]} castShadow={shadows}>
+        <coneGeometry args={[Math.min(m.w, m.d) * 0.42, m.h * 0.55, 5]} />
+        <meshStandardMaterial color={ROCK_LIT} roughness={0.9} metalness={0.03} />
+      </mesh>
+      {/* Forest crown */}
+      <mesh position={[0, m.h * 0.22, 0]} castShadow={shadows}>
+        <boxGeometry args={[m.w, m.h * 0.42, m.d]} />
+        <meshStandardMaterial color={GREEN_MID} roughness={0.86} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, m.h * 0.42, 0]}>
+        <boxGeometry args={[m.w * 1.05, m.h * 0.18, m.d * 1.05]} />
+        <meshStandardMaterial color={GREEN_LIT} roughness={0.8} metalness={0.02} />
+      </mesh>
+      {m.terrace ? (
+        <>
+          <mesh position={[-m.w * 0.35, m.h * 0.05, m.d * 0.2]}>
+            <boxGeometry args={[m.w * 0.45, 0.55, m.d * 0.55]} />
+            <meshStandardMaterial color={TERRACE} roughness={0.88} metalness={0.02} />
+          </mesh>
+          <mesh position={[m.w * 0.28, -m.h * 0.05, -m.d * 0.15]}>
+            <boxGeometry args={[m.w * 0.4, 0.45, m.d * 0.5]} />
+            <meshStandardMaterial color={GREEN_DEEP} roughness={0.9} metalness={0.02} />
+          </mesh>
+        </>
+      ) : null}
+      {/* Distant fantasy spires — silhouette only, not a full city rebuild */}
+      {Array.from({ length: m.spires }, (_, i) => (
+        <mesh key={i} position={[(i - (m.spires - 1) / 2) * 1.1, m.h * 0.55 + 1.2 + i * 0.4, 0]}>
+          <boxGeometry args={[0.45, 2.4 + i * 0.8, 0.45]} />
+          <meshStandardMaterial color={SPIRE} roughness={0.55} metalness={0.25} />
+        </mesh>
+      ))}
+      {/* Flower accent pops */}
+      {m.spires > 0 ? (
+        <mesh position={[m.w * 0.2, m.h * 0.48, m.d * 0.25]}>
+          <sphereGeometry args={[0.35, 6, 4]} />
+          <meshStandardMaterial color={FLOWER} emissive={FLOWER} emissiveIntensity={0.25} roughness={0.7} />
+        </mesh>
+      ) : null}
+    </group>
+  );
+}
+
+function TerraceRidge({
+  position,
+  rotY,
+  steps,
+}: {
+  position: [number, number, number];
+  rotY: number;
+  steps: number;
+}) {
+  return (
+    <group position={position} rotation={[0, rotY, 0]}>
+      {Array.from({ length: steps }, (_, i) => (
+        <mesh key={i} position={[0, 0.4 + i * 1.15, -i * 2.4]} castShadow={false}>
+          <boxGeometry args={[18 - i * 1.2, 1.1, 3.2]} />
+          <meshStandardMaterial
+            color={i % 2 ? GREEN_MID : TERRACE}
+            roughness={0.88}
+            metalness={0.02}
+          />
+        </mesh>
+      ))}
+      {/* Soft waterfall planes */}
+      <mesh position={[0, 3.2, -4]} rotation={[0.15, 0, 0]}>
+        <planeGeometry args={[2.4, 8]} />
+        <meshBasicMaterial color="#cfeef0" transparent opacity={0.35} depthWrite={false} side={DoubleSide} />
       </mesh>
     </group>
   );
 }
 
+function DriftCraft({ seed }: { seed: number }) {
+  const ref = useRef<Group>(null);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime * (0.06 + seed * 0.015) + seed * 4;
+    const g = ref.current;
+    if (!g) return;
+    g.position.x = Math.cos(t) * (38 + seed * 3);
+    g.position.y = 16 + seed * 2.2 + Math.sin(t * 1.2) * 1.1;
+    g.position.z = Math.sin(t * 0.85) * (32 + seed * 2);
+    g.rotation.y = -t + Math.PI / 2;
+  });
+  return (
+    <group ref={ref}>
+      <mesh>
+        <boxGeometry args={[1.6, 0.2, 0.5]} />
+        <meshStandardMaterial color="#2a322c" metalness={0.55} roughness={0.35} />
+      </mesh>
+      <mesh position={[0.55, 0.1, 0]}>
+        <sphereGeometry args={[0.14, 8, 6]} />
+        <meshStandardMaterial color="#7ecf9a" emissive="#7ecf9a" emissiveIntensity={1.1} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Horizon / surround plate — verdant terraces, floating forest masses,
+ * misty teal valleys. Replaces the old grey tower ring while leaving
+ * the walkable HQ / plaza untouched.
+ */
 export function Cityscape() {
-  const hud = useHudTextures();
-  const { settings } = useQuality();
-  const towers = useMemo(() => ringTowers(settings.towers), [settings.towers]);
+  const { settings, level } = useQuality();
+  const masses = useMemo(() => ringMasses(settings.towers), [settings.towers]);
+  const misty = level !== "low";
 
   return (
     <group>
-      {towers.map((t) => (
-        <group key={`${t.x.toFixed(1)}-${t.z.toFixed(1)}`} position={[t.x, t.h / 2, t.z]}>
-          <mesh castShadow={settings.shadows}>
-            <boxGeometry args={[t.w, t.h, t.d]} />
-            <meshStandardMaterial
-              color="#6d7d8c"
-              metalness={0.48}
-              roughness={0.32}
-              map={hud?.windows ?? undefined}
-              emissive="#243044"
-              emissiveIntensity={0.16}
-            />
-          </mesh>
-          <mesh position={[0, t.h / 2 + 0.55, 0]}>
-            <boxGeometry args={[t.w * 0.28, 1.1, t.d * 0.28]} />
-            <meshStandardMaterial color="#0e141c" metalness={0.75} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, t.h / 2 + 1.4, 0]}>
-            <sphereGeometry args={[0.12, 8, 6]} />
-            <meshStandardMaterial
-              color={t.h % 2 ? "#3ecf8e" : "#d4af6a"}
-              emissive={t.h % 2 ? "#3ecf8e" : "#d4af6a"}
-              emissiveIntensity={1.6}
-            />
-          </mesh>
-        </group>
+      {/* Verdant far ground — emerald plate, not asphalt city */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 4]} receiveShadow>
+        <planeGeometry args={[220, 220]} />
+        <meshStandardMaterial color="#2a5a3a" roughness={0.94} metalness={0.02} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 18]} receiveShadow>
+        <circleGeometry args={[38, 48]} />
+        <meshStandardMaterial color="#3a6e48" roughness={0.9} metalness={0.02} />
+      </mesh>
+
+      {masses.map((m) => (
+        <FloatingMass key={`${m.x.toFixed(1)}-${m.z.toFixed(1)}`} m={m} shadows={settings.shadows} />
       ))}
+
+      <TerraceRidge position={[-36, 0, 8]} rotY={0.4} steps={level === "low" ? 4 : 6} />
+      <TerraceRidge position={[40, 0, -6]} rotY={-0.55} steps={level === "low" ? 4 : 7} />
+      <TerraceRidge position={[8, 0, -42]} rotY={0.1} steps={level === "low" ? 3 : 5} />
+
+      {misty ? (
+        <>
+          <MistBand position={[0, 1.2, -8]} size={[120, 80]} opacity={0.14} />
+          <MistBand position={[-18, 2.4, 12]} size={[70, 50]} opacity={0.11} />
+          <MistBand position={[22, 1.8, -20]} size={[90, 60]} opacity={0.12} />
+          <MistBand position={[0, 3.6, 40]} size={[100, 70]} opacity={0.09} />
+        </>
+      ) : (
+        <MistBand position={[0, 1.6, 0]} size={[100, 100]} opacity={0.08} />
+      )}
 
       {Array.from({ length: settings.crafts }, (_, n) => (
-        <Craft key={n} seed={n} />
+        <DriftCraft key={n} seed={n} />
       ))}
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.06, 4]} receiveShadow>
-        <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial
-          color="#5a6570"
-          roughness={0.88}
-          metalness={0.06}
-          map={hud?.asphalt ?? undefined}
-        />
-      </mesh>
     </group>
   );
 }

@@ -89,7 +89,7 @@ export function WorldPreview({
               stencil: false,
               alpha: false,
               toneMapping: THREE.ACESFilmicToneMapping,
-              toneMappingExposure: 1.12,
+              toneMappingExposure: forum ? 1.05 : 1.12,
             }}
             onCreated={({ gl }) => {
               const el = gl.domElement;
