@@ -15,7 +15,7 @@
  * `public/worlds/forum/paradise-plate-ref.png` — the script copies it beside
  * the bake for PR evidence; it does not sample it (unlike canyon).
  */
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import sharp from "sharp";
 
