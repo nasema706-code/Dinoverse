@@ -1,23 +1,13 @@
-import { Detailed } from "@react-three/drei";
-import { useLayoutEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { detectQuality, readQualityOverride, useQuality } from "../quality";
-import { useGameGLTF } from "../use-game-gltf";
-import { fitAndSit } from "./fit";
+import { useCallback, useState } from "react";
+import { FittedCanyonModel } from "./FittedCanyonModel";
 import type { Vec3 } from "./types";
 
-const SRC = "/models/bone-bridge.glb?v=5";
-const LOD = "/models/bone-bridge-lod1.glb?v=5";
+export const BONE_BRIDGE = "/models/bone-bridge.glb?v=6";
+export const BONE_BRIDGE_LOD = "/models/bone-bridge-lod1.glb?v=6";
 /** Native Meshy long axis is ~10.77 m. JSON scale 2.55 → ~27 m chasm span. */
 const NATIVE_SPAN = 10.77;
-const LOD_DIST = 48;
-
-const bootQuality =
-  typeof window !== "undefined" ? (readQualityOverride() ?? detectQuality()) : "mid";
-if (typeof window !== "undefined") {
-  useGameGLTF.preload(LOD);
-  if (bootQuality !== "low") useGameGLTF.preload(SRC);
-}
+export const BONE_BRIDGE_LOD_DIST = 48;
+const DEFAULT_ROT: Vec3 = [0, 1.57, 0];
 
 function TuskRailStandin() {
   return (
@@ -40,77 +30,37 @@ function TuskRailStandin() {
   );
 }
 
-function BridgeMesh({
-  url,
-  rotation,
-  scale,
-  onReady,
-}: {
-  url: string;
-  rotation: Vec3;
-  scale: number;
-  onReady?: () => void;
-}) {
-  const rig = useRef<THREE.Group>(null);
-  const { scene } = useGameGLTF(url);
-
-  useLayoutEffect(() => {
-    scene.traverse((obj) => {
-      obj.castShadow = false;
-      obj.receiveShadow = true;
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      mesh.frustumCulled = true;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const raw of mats) {
-        if (!raw) continue;
-        const mat = raw as THREE.MeshStandardMaterial;
-        mat.side = THREE.FrontSide;
-        mat.envMapIntensity = 0.5;
-        mat.needsUpdate = true;
-      }
-    });
-    if (rig.current) {
-      fitAndSit(rig.current, "z", NATIVE_SPAN * scale);
-      onReady?.();
-    }
-  }, [scene, scale, rotation, onReady]);
-
-  return (
-    <group ref={rig} rotation={rotation}>
-      <primitive object={scene} />
-    </group>
-  );
-}
-
 /** Meshy bone bridge — yaw 1.57 so tusks run down-canyon; fitted so quantized meshes cannot explode. */
 export function BoneBridge({
   position,
-  rotation = [0, 1.57, 0],
+  rotation = DEFAULT_ROT,
   scale = 2.55,
 }: {
   position: Vec3;
   rotation?: Vec3;
   scale?: number;
 }) {
-  const { level } = useQuality();
   const [ready, setReady] = useState(false);
-  const lowOnly = level === "low";
-  const markReady = () => setReady(true);
+  const markReady = useCallback(() => setReady(true), []);
 
   return (
-    <group position={position}>
-      {ready ? null : <TuskRailStandin />}
-      <group visible={ready}>
-        {lowOnly ? (
-          <BridgeMesh url={LOD} rotation={rotation} scale={scale} onReady={markReady} />
-        ) : (
-          <Detailed distances={[0, LOD_DIST]}>
-            <BridgeMesh url={SRC} rotation={rotation} scale={scale} onReady={markReady} />
-            <BridgeMesh url={LOD} rotation={rotation} scale={scale} />
-          </Detailed>
-        )}
-      </group>
+    <group>
+      {ready ? null : (
+        <group position={position}>
+          <TuskRailStandin />
+        </group>
+      )}
+      <FittedCanyonModel
+        url={BONE_BRIDGE}
+        lodUrl={BONE_BRIDGE_LOD}
+        position={position}
+        rotation={rotation}
+        nativeSize={NATIVE_SPAN}
+        scale={scale}
+        fitAxis="z"
+        lodDistance={BONE_BRIDGE_LOD_DIST}
+        onReady={markReady}
+      />
     </group>
   );
 }

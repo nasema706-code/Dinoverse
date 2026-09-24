@@ -1,52 +1,33 @@
-import { useLayoutEffect, useRef } from "react";
-import * as THREE from "three";
-import { useGameGLTF } from "../use-game-gltf";
-import { fitAndSit } from "./fit";
+import { FittedCanyonModel } from "./FittedCanyonModel";
 import type { Vec3 } from "./types";
 
-const SRC = "/models/bone-spire.glb?v=5";
+export const BONE_SPIRE = "/models/bone-spire.glb?v=6";
+export const BONE_SPIRE_LOD = "/models/bone-spire-lod1.glb?v=6";
 /** Native Meshy height is ~12 m. JSON scale 2.2 → ~26 m far-gate read. */
 const NATIVE_H = 12;
-
-if (typeof window !== "undefined") useGameGLTF.preload(SRC);
+export const BONE_SPIRE_LOD_DIST = 60;
+const ZERO: Vec3 = [0, 0, 0];
 
 /** Meshy bone spire — fitted to JSON scale so quantization cannot explode the canyon. */
 export function BoneSpire({
   position,
-  rotation = [0, 0, 0],
+  rotation = ZERO,
   scale = 2.2,
 }: {
   position: Vec3;
   rotation?: Vec3;
   scale?: number;
 }) {
-  const rig = useRef<THREE.Group>(null);
-  const { scene } = useGameGLTF(SRC);
-
-  useLayoutEffect(() => {
-    scene.traverse((obj) => {
-      obj.castShadow = false;
-      obj.receiveShadow = true;
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      mesh.frustumCulled = true;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const raw of mats) {
-        if (!raw) continue;
-        const mat = raw as THREE.MeshStandardMaterial;
-        mat.side = THREE.FrontSide;
-        mat.envMapIntensity = 0.55;
-        mat.needsUpdate = true;
-      }
-    });
-    if (rig.current) fitAndSit(rig.current, "y", NATIVE_H * scale);
-  }, [scene, scale, rotation]);
-
   return (
-    <group position={position}>
-      <group ref={rig} rotation={rotation}>
-        <primitive object={scene} />
-      </group>
-    </group>
+    <FittedCanyonModel
+      url={BONE_SPIRE}
+      lodUrl={BONE_SPIRE_LOD}
+      position={position}
+      rotation={rotation}
+      nativeSize={NATIVE_H}
+      scale={scale}
+      lodDistance={BONE_SPIRE_LOD_DIST}
+      envMapIntensity={0.55}
+    />
   );
 }
