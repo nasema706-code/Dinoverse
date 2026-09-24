@@ -1,12 +1,21 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Mesh, MeshBasicMaterial, Texture } from "three";
+import { Batched, type BatchLook } from "../batch";
 import { CanvasTexture, DoubleSide, SRGBColorSpace } from "three";
 import { Box, CheapGlass } from "./kit";
 import { useQuality } from "../quality";
 import { useLoopingVideo } from "../textures";
 
 const CHROME = "#c5ccd4";
+const TIP_X: [number, number, number] = [Math.PI / 2, 0, 0];
+const CHROME_BASE: BatchLook = { color: CHROME, metal: 0.82, rough: 0.22, env: 1 };
+const CHROME_POLE: BatchLook = { color: CHROME, metal: 0.8, rough: 0.22, env: 1 };
+const CHROME_LEG: BatchLook = { color: CHROME, metal: 0.78, rough: 0.22, env: 1 };
+const MESH_CHAIR_BASE: BatchLook = { color: "#3a3d44", metal: 0.55, rough: 0.35, env: 1 };
+const PALM_A: BatchLook = { color: "#2f6a3e", rough: 0.78, env: 1 };
+const PALM_B: BatchLook = { color: "#3a7a48", rough: 0.78, env: 1 };
+const PALM_C: BatchLook = { color: "#2a6238", rough: 0.8, env: 1 };
 const DARK = "#1c1e22";
 const WOOD = "#c4a574";
 const WOOD_LEG = "#1a1c1e";
@@ -46,14 +55,8 @@ export function LEDStrip({
 export function ExecChair({ position, rotY = 0 }: { position: [number, number, number]; rotY?: number }) {
   return (
     <group position={position} rotation={[0, rotY, 0]}>
-      <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 0.04, 12]} />
-        <meshStandardMaterial color={CHROME} metalness={0.82} roughness={0.22} />
-      </mesh>
-      <mesh position={[0, 0.28, 0]}>
-        <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-        <meshStandardMaterial color={CHROME} metalness={0.8} roughness={0.22} />
-      </mesh>
+      <Batched shape="cyl12" position={[0, 0.08, 0]} rotation={TIP_X} scale={[0.2, 0.04, 0.2]} look={CHROME_BASE} />
+      <Batched shape="cyl8" position={[0, 0.28, 0]} scale={[0.03, 0.4, 0.03]} look={CHROME_POLE} />
       <Box position={[0, 0.5, 0]} size={[0.48, 0.06, 0.48]} color={DARK} metal={0.2} rough={0.45} />
       <Box position={[0, 0.86, -0.2]} size={[0.48, 0.72, 0.07]} color={DARK} metal={0.18} rough={0.42} />
       <Box position={[0, 0.72, -0.2]} size={[0.4, 0.5, 0.03]} color="#2a2e34" metal={0.1} rough={0.55} />
@@ -67,10 +70,7 @@ export function ExecChair({ position, rotY = 0 }: { position: [number, number, n
 export function MeshChair({ position, rotY = 0 }: { position: [number, number, number]; rotY?: number }) {
   return (
     <group position={position} rotation={[0, rotY, 0]}>
-      <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.18, 0.18, 0.03, 10]} />
-        <meshStandardMaterial color="#3a3d44" metalness={0.55} roughness={0.35} />
-      </mesh>
+      <Batched shape="cyl12" position={[0, 0.08, 0]} rotation={TIP_X} scale={[0.18, 0.03, 0.18]} look={MESH_CHAIR_BASE} />
       <Box position={[0, 0.48, 0]} size={[0.46, 0.05, 0.46]} color="#6b7078" metal={0.08} rough={0.7} />
       <Box position={[0, 0.82, -0.18]} size={[0.44, 0.62, 0.05]} color="#8a9098" metal={0.05} rough={0.72} />
     </group>
@@ -161,10 +161,7 @@ export function GlassDesk({
     <group position={position} rotation={[0, rotY, 0]}>
       {([-w / 2 + 0.08, w / 2 - 0.08] as const).map((x) =>
         ([-d / 2 + 0.08, d / 2 - 0.08] as const).map((z) => (
-          <mesh key={`${x}-${z}`} position={[x, 0.36, z]}>
-            <cylinderGeometry args={[0.03, 0.035, 0.72, 8]} />
-            <meshStandardMaterial color={CHROME} metalness={0.78} roughness={0.22} />
-          </mesh>
+          <Batched key={`${x}-${z}`} shape="cyl8" position={[x, 0.36, z]} scale={[0.0325, 0.72, 0.0325]} look={CHROME_LEG} />
         )),
       )}
       <mesh position={[0, 0.74, 0]}>
@@ -207,18 +204,9 @@ export function PalmPlanter({ position }: { position: [number, number, number] }
   return (
     <group position={position}>
       <Box position={[0, 0.22, 0]} size={[0.55, 0.44, 0.55]} color="#3a3d44" metal={0.15} rough={0.6} />
-      <mesh position={[0, 0.82, 0]}>
-        <sphereGeometry args={[0.28, 8, 6]} />
-        <meshStandardMaterial color="#2f6a3e" roughness={0.78} />
-      </mesh>
-      <mesh position={[0, 1.28, 0]}>
-        <sphereGeometry args={[0.22, 8, 6]} />
-        <meshStandardMaterial color="#3a7a48" roughness={0.78} />
-      </mesh>
-      <mesh position={[0.12, 1.55, 0.04]}>
-        <sphereGeometry args={[0.16, 8, 6]} />
-        <meshStandardMaterial color="#2a6238" roughness={0.8} />
-      </mesh>
+      <Batched shape="sphere" position={[0, 0.82, 0]} scale={0.28} look={PALM_A} />
+      <Batched shape="sphere" position={[0, 1.28, 0]} scale={0.22} look={PALM_B} />
+      <Batched shape="sphere" position={[0.12, 1.55, 0.04]} scale={0.16} look={PALM_C} />
     </group>
   );
 }

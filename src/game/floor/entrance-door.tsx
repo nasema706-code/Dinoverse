@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import type { Group, MeshStandardMaterial } from "three";
+import { NoBatch } from "../batch";
 import type { Collider } from "../districts3d";
 import { Box, CheapGlass, TransmissionGlass } from "./kit";
 
@@ -94,12 +95,14 @@ export function AutoSlidingDoor({ preview = false }: { preview?: boolean }) {
         <meshStandardMaterial ref={ledR} color="#d4af6a" emissive="#d4af6a" emissiveIntensity={0.55} />
       </mesh>
 
-      <group ref={left} position={[panelX(-1, preview ? 0.82 : 0), 0, 0]}>
-        <DoorPanel />
-      </group>
-      <group ref={right} position={[panelX(1, preview ? 0.82 : 0), 0, 0]}>
-        <DoorPanel />
-      </group>
+      <NoBatch>
+        <group ref={left} position={[panelX(-1, preview ? 0.82 : 0), 0, 0]}>
+          <DoorPanel />
+        </group>
+        <group ref={right} position={[panelX(1, preview ? 0.82 : 0), 0, 0]}>
+          <DoorPanel />
+        </group>
+      </NoBatch>
     </group>
   );
 }

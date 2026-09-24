@@ -3,6 +3,7 @@ import { AccumulativeShadows, RandomizedLight, MeshTransmissionMaterial } from "
 import { HqEnvironment, SUN_POS } from "./env";
 import type { Texture } from "three";
 import { DoubleSide } from "three";
+import { Batched } from "../batch";
 import { usePhoto } from "../textures";
 import { useQuality } from "../quality";
 import type { FloorDesk } from "./layout";
@@ -98,17 +99,14 @@ export function Box({
 }) {
   const { settings } = useQuality();
   return (
-    <mesh position={position} castShadow={settings.shadows} receiveShadow={settings.shadows}>
-      <boxGeometry args={size} />
-      <meshStandardMaterial
-        color={color}
-        metalness={metal}
-        roughness={rough}
-        emissive={eInt > 0 ? (emissive ?? color) : "#000000"}
-        emissiveIntensity={eInt}
-        envMapIntensity={metal > 0.45 ? 0.85 : 0.28}
-      />
-    </mesh>
+    <Batched
+      shape="box"
+      position={position}
+      scale={size}
+      look={{ color, metal, rough, emissive, eInt, env: metal > 0.45 ? 0.85 : 0.28 }}
+      castShadow={settings.shadows}
+      receiveShadow={settings.shadows}
+    />
   );
 }
 

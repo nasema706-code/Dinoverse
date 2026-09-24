@@ -1,7 +1,12 @@
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
+import { Batched, type BatchLook } from "../batch";
 import { Box } from "./kit";
+
+const TOWER_CAP: BatchLook = { color: "#0e141c", metal: 0.75, rough: 0.2, env: 1 };
+const BEACON_GREEN: BatchLook = { color: "#3ecf8e", emissive: "#3ecf8e", eInt: 1.6, metal: 0, rough: 1, env: 1 };
+const BEACON_GOLD: BatchLook = { color: "#d4af6a", emissive: "#d4af6a", eInt: 1.6, metal: 0, rough: 1, env: 1 };
 import { useHudTextures } from "./hud-tex";
 import { useQuality } from "../quality";
 
@@ -52,34 +57,19 @@ export function Cityscape() {
   const hud = useHudTextures();
   const { settings } = useQuality();
   const towers = useMemo(() => ringTowers(settings.towers), [settings.towers]);
+  const windows = hud?.windows ?? null;
+  const towerLook = useMemo<BatchLook>(
+    () => ({ color: "#6d7d8c", metal: 0.48, rough: 0.32, map: windows, emissive: "#243044", eInt: 0.16, env: 1 }),
+    [windows],
+  );
 
   return (
     <group>
       {towers.map((t) => (
         <group key={`${t.x.toFixed(1)}-${t.z.toFixed(1)}`} position={[t.x, t.h / 2, t.z]}>
-          <mesh castShadow={settings.shadows}>
-            <boxGeometry args={[t.w, t.h, t.d]} />
-            <meshStandardMaterial
-              color="#6d7d8c"
-              metalness={0.48}
-              roughness={0.32}
-              map={hud?.windows ?? undefined}
-              emissive="#243044"
-              emissiveIntensity={0.16}
-            />
-          </mesh>
-          <mesh position={[0, t.h / 2 + 0.55, 0]}>
-            <boxGeometry args={[t.w * 0.28, 1.1, t.d * 0.28]} />
-            <meshStandardMaterial color="#0e141c" metalness={0.75} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, t.h / 2 + 1.4, 0]}>
-            <sphereGeometry args={[0.12, 8, 6]} />
-            <meshStandardMaterial
-              color={t.h % 2 ? "#3ecf8e" : "#d4af6a"}
-              emissive={t.h % 2 ? "#3ecf8e" : "#d4af6a"}
-              emissiveIntensity={1.6}
-            />
-          </mesh>
+          <Batched shape="box" scale={[t.w, t.h, t.d]} look={towerLook} />
+          <Batched shape="box" position={[0, t.h / 2 + 0.55, 0]} scale={[t.w * 0.28, 1.1, t.d * 0.28]} look={TOWER_CAP} />
+          <Batched shape="sphere" position={[0, t.h / 2 + 1.4, 0]} scale={0.12} look={t.h % 2 ? BEACON_GREEN : BEACON_GOLD} />
         </group>
       ))}
 

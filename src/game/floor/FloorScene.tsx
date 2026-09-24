@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { StaticBatch } from "../batch";
 import { FLOOR_BOUNDS, FLOOR_DESKS } from "./layout";
 import {
   CeilingLight,
@@ -47,7 +48,7 @@ export function FloorScene({ collected, preview = false }: { collected: string[]
   const { minX, maxX, minZ } = FLOOR_BOUNDS;
 
   return (
-    <group>
+    <StaticBatch shadows={settings.shadows}>
       <Lights />
       <Cityscape />
       <PlazaTiles />
@@ -231,6 +232,6 @@ export function FloorScene({ collected, preview = false }: { collected: string[]
       <ShardOrb position={[-12.4, 1.15, 22.2]} taken={collected.includes("canopy-b")} />
       <ShardOrb position={[12.6, 1.15, 8.4]} taken={collected.includes("crater-a")} />
       <ShardOrb position={[-2.2, 1.15, -8.4]} taken={collected.includes("crater-b")} />
-    </group>
+    </StaticBatch>
   );
 }
