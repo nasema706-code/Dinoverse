@@ -56,11 +56,11 @@ const B = { minX: -15, maxX: 15, minZ: -13, maxZ: 13 };
 export const DISTRICTS_3D: Record<WorldId, District3D> = {
   forum: {
     id: "forum",
-    fog: "#b9d6ee",
+    fog: "#7eb8b0",
     fogFar: 175,
-    ambient: "#fff6dd",
-    ground: "#1a1d22",
-    sky: "#8ec4ea",
+    ambient: "#ffe7b8",
+    ground: "#2a5a3a",
+    sky: "#c9dce8",
     indoor: true,
     spawn: FLOOR_SPAWN,
     backdrop: { src: "/life/hq.jpg", position: [0, 8, -48], rotY: 0, w: 40, h: 16 },

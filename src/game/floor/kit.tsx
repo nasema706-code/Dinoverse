@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AccumulativeShadows, RandomizedLight, MeshTransmissionMaterial } from "@react-three/drei";
-import { HqEnvironment, SUN_POS } from "./env";
+import { HqEnvironment, ParadiseGodRays, SUN_POS } from "./env";
 import type { Texture } from "three";
 import { DoubleSide } from "three";
 import { usePhoto } from "../textures";
@@ -358,17 +358,21 @@ export function BoardScreen({
 }
 
 export function Lights(): ReactNode {
-  const { settings } = useQuality();
+  const { settings, level } = useQuality();
+  /** Stronger misty teal — depth from fog/dome ring, never a side plate. */
+  const fogNear = level === "low" ? 14 : level === "mid" ? 18 : 22;
+  const fogFar = Math.min(settings.far - 12, level === "low" ? 68 : level === "mid" ? 92 : 112);
   return (
     <>
       <HqEnvironment />
-      <fog attach="fog" args={["#cfe6f8", Math.max(78, settings.fogNear + 28), Math.min(settings.far - 6, settings.fogFar + 48)]} />
-      <hemisphereLight args={["#fff4d6", "#9db58a", 1.15]} />
-      <ambientLight intensity={settings.extraLights ? 0.95 : 1.08} />
+      <color attach="background" args={["#6eaea6"]} />
+      <fog attach="fog" args={["#5fa39c", fogNear, fogFar]} />
+      <hemisphereLight args={["#ffe7b8", "#3d6a52", level === "low" ? 0.95 : 1.05]} />
+      <ambientLight intensity={settings.extraLights ? 0.72 : 0.88} color="#fff0d4" />
       <directionalLight
         position={SUN_POS}
-        intensity={settings.extraLights ? 5.2 : 4.4}
-        color="#fff3cc"
+        intensity={settings.extraLights ? 4.6 : 3.9}
+        color="#ffdfad"
         castShadow={settings.shadows}
         shadow-mapSize={settings.shadows ? [512, 512] : [256, 256]}
         shadow-bias={-0.00035}
@@ -380,14 +384,15 @@ export function Lights(): ReactNode {
         shadow-camera-top={32}
         shadow-camera-bottom={-32}
       />
-      <directionalLight position={[-28, 18, -14]} intensity={0.42} color="#b7d4ee" />
+      <directionalLight position={[-32, 14, -18]} intensity={0.42} color="#8ec4b8" />
+      <ParadiseGodRays enabled={level !== "low"} />
       {settings.contactShadows ? (
         <AccumulativeShadows
           temporal
           frames={60}
           scale={20}
-          opacity={0.45}
-          color="#3a2e22"
+          opacity={0.4}
+          color="#2a3a28"
           position={[0, 0.026, 0]}
         >
           <RandomizedLight amount={8} radius={8} position={SUN_POS} />

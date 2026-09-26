@@ -77,9 +77,9 @@ export function WorldPreview({
             shadows={false}
             camera={{
               fov: forum ? 52 : 50,
-              position: forum ? [26, 12, 38] : [10, 6.2, 14],
+              position: forum ? [30, 16, 44] : [10, 6.2, 14],
               near: 0.1,
-              far: Math.min(settings.far + 40, forum ? 240 : 90),
+              far: Math.min(settings.far + 80, forum ? 280 : 90),
             }}
             dpr={settings.dpr}
             performance={{ min: 0.7 }}
@@ -89,7 +89,7 @@ export function WorldPreview({
               stencil: false,
               alpha: false,
               toneMapping: THREE.ACESFilmicToneMapping,
-              toneMappingExposure: 1.12,
+              toneMappingExposure: forum ? 0.92 : 1.12,
             }}
             onCreated={({ gl }) => {
               const el = gl.domElement;
@@ -105,11 +105,11 @@ export function WorldPreview({
             <OrbitControls
               enablePan={false}
               minDistance={forum ? 14 : 8}
-              maxDistance={forum ? 64 : 26}
-              maxPolarAngle={1.35}
+              maxDistance={forum ? 78 : 26}
+              maxPolarAngle={1.28}
               autoRotate
               autoRotateSpeed={0.4}
-              target={forum ? [0, 3.2, 6] : [0, 1.4, -2]}
+              target={forum ? [0, 5.5, 4] : [0, 1.4, -2]}
             />
           </Canvas>
         </PreviewBoundary>
