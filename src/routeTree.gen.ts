@@ -16,6 +16,7 @@ import { Route as CrewRouteImport } from './routes/crew'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FossilTokenisationRouteImport } from './routes/fossil-tokenisation'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MemesRouteImport } from './routes/memes'
 import { Route as PlayRouteImport } from './routes/play'
@@ -58,6 +59,11 @@ const FossilTokenisationRoute = FossilTokenisationRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/fossil-tokenisation': typeof FossilTokenisationRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/memes': typeof MemesRoute
   '/play': typeof PlayRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/fossil-tokenisation'
     | '/leaderboard'
+    | '/library'
     | '/login'
     | '/memes'
     | '/play'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/fossil-tokenisation'
     | '/leaderboard'
+    | '/library'
     | '/login'
     | '/memes'
     | '/play'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/fossil-tokenisation'
     | '/leaderboard'
+    | '/library'
     | '/login'
     | '/memes'
     | '/play'
@@ -215,6 +227,7 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   FossilTokenisationRoute: typeof FossilTokenisationRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   MemesRoute: typeof MemesRoute
   PlayRoute: typeof PlayRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -343,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   FossilTokenisationRoute: FossilTokenisationRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   MemesRoute: MemesRoute,
   PlayRoute: PlayRoute,

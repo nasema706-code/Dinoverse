@@ -51,6 +51,7 @@ src/game/floor/      The Floor — desks, windows, sit/use
 src/lib/characters.ts  Rex, Vex, Tria, Ptera
 src/lib/worlds.ts      District copy, inspect lines
 src/lib/store.ts       Character + shards (zustand, persisted)
+public/assets/         Drop new images and videos here
 public/life/           City plates (your photos)
 public/characters/     Guide portraits
 attachments/           Original uploads
