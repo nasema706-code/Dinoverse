@@ -1625,7 +1625,7 @@ export function Explorer3D({
                         key={bootKey}
                       shadows={settings.shadows}
                       style={{ width: "100%", height: "100%", display: "block" }}
-                      camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: settings.far }}
+                      camera={{ fov: FOV_DEFAULT, position: [0, EYE, 24], near: 0.08, far: Math.max(settings.far, 175) }}
                       frameloop="always"
                       dpr={settings.dpr}
                       performance={{ min: 0.85 }}
@@ -1635,7 +1635,7 @@ export function Explorer3D({
                         stencil: false,
                         alpha: false,
                         toneMapping: THREE.ACESFilmicToneMapping,
-                        toneMappingExposure: 1.12,
+                        toneMappingExposure: 1.02,
                       }}
                     >
                         <FloorGlGuard onFail={failFloorBoot} />
