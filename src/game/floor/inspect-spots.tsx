@@ -16,7 +16,6 @@ const FEATURED = new Set([
   "forum-hq-sign",
   "forum-window",
   "forum-pad",
-  "forum-hintze",
   "forum-board",
   "forum-dinose",
 ]);

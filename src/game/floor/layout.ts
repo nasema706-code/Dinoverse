@@ -1,5 +1,5 @@
 import type { Collider } from "../districts3d";
-import { HINTZE_HALL, L2_HEIGHT, MEZZ_COLLIDERS } from "./levels";
+import { L2_HEIGHT, MEZZ_COLLIDERS } from "./levels";
 
 export type FloorDesk = {
   id: string;
@@ -27,7 +27,6 @@ export const FLOOR_BOUNDS = { minX: -24, maxX: 24, minZ: -32, maxZ: 34 };
 export const FLOOR_SPAWN = { x: 0, z: 24, yaw: 0 };
 /** HQ bird on the north roof helipad (L2). */
 export const HELI_PAD = { x: 10.4, z: 27.6, y: L2_HEIGHT };
-export { HINTZE_HALL, HINTZE_LENGTH } from "./levels";
 /** Ptera Drift standing west of the roof helicopter, facing the pad. */
 export const PTERA_PAD = { x: 7.55, z: 25.5, y: L2_HEIGHT, rotY: Math.PI / 2 };
 /** Enzo on the east plaza tiles, outside HQ — west of the helipad stilts. */
@@ -263,7 +262,6 @@ export const FLOOR_INSPECT: { id: string; x: number; z: number; w: number; d: nu
   { id: "forum-stairs", x: -8.9, z: 2.45, w: 3.2, d: 3.2 },
   { id: "forum-pad", x: HELI_PAD.x, z: HELI_PAD.z, w: 4.4, d: 4.4, y: HELI_PAD.y },
   { id: "forum-heli", x: HELI_PAD.x, z: HELI_PAD.z, w: 3.2, d: 2.2, y: HELI_PAD.y },
-  { id: "forum-hintze", x: 14.7, z: 21.6, w: 2.6, d: 3.2, y: HINTZE_HALL.y },
   { id: "forum-hq-sign", x: 0, z: 16.3, w: 5.6, d: 1.4 },
   { id: "forum-directory", x: -6.5, z: 18.6, w: 1.2, d: 0.8 },
   { id: "forum-mezz", x: -14.2, z: 12.4, w: 2.4, d: 2.2 },
