@@ -28,6 +28,9 @@ declare global {
       getKeys?: () => string[];
       getCam?: () => Record<string, number>;
       setKeys: (codes: string[]) => void;
+      setPose?: (x: number, z: number, yaw?: number, level?: "auto" | "ground" | "l2") => void;
+      boardHeli?: () => void;
+      getHeli?: () => { boarded: boolean; x: number; y: number; z: number; yaw: number };
     };
   }
 }

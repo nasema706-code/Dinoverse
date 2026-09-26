@@ -1,6 +1,8 @@
 import { useMemo } from "react";
+import { Batched, StaticBatch, type BatchLook } from "../batch";
 import { CrystalCluster } from "./CrystalCluster";
 import { mulberry32, scatterPoses } from "./seeded";
+import type { Vec3 } from "./types";
 
 const TERRACOTTA = "#A64B29";
 const BURNT = "#D97745";
@@ -9,16 +11,23 @@ const PATH = "#d4894a";
 const CREVICE = "#3a1c12";
 const STRATA = ["#8a3a22", TERRACOTTA, BURNT, "#6b2c18", "#c45a32", "#F2B705", CREVICE];
 
-function RockMat({ color, sunlit = false }: { color: string; sunlit?: boolean }) {
-  return (
-    <meshStandardMaterial
-      color={color}
-      roughness={sunlit ? 0.86 : 0.94}
-      metalness={0.03}
-      emissive={sunlit ? "#F2B705" : "#000000"}
-      emissiveIntensity={sunlit ? 0.055 : 0}
-    />
-  );
+function rock(color: string, sunlit = false): BatchLook {
+  return {
+    color,
+    rough: sunlit ? 0.86 : 0.94,
+    metal: 0.03,
+    emissive: "#F2B705",
+    eInt: sunlit ? 0.055 : 0,
+    env: 1,
+  };
+}
+
+function RockBox({ position, rotation, size, look }: { position: Vec3; rotation?: Vec3; size: Vec3; look: BatchLook }) {
+  return <Batched shape="box" position={position} rotation={rotation} scale={size} look={look} />;
+}
+
+function RockLump({ position, rotation, radius, look }: { position?: Vec3; rotation?: Vec3; radius: number; look: BatchLook }) {
+  return <Batched shape="dodeca" position={position} rotation={rotation} scale={radius} look={look} />;
 }
 
 function inKeepOut(x: number, z: number) {
@@ -28,26 +37,19 @@ function inKeepOut(x: number, z: number) {
   return onBridge || onGate || onPath;
 }
 
+const BOULDER = rock("#8a3a22");
+const SCRUB_TALL: BatchLook = { color: "#C9A227", rough: 0.92, env: 1 };
+const SCRUB_SHORT: BatchLook = { color: "#E4C56A", rough: 0.9, env: 1 };
+
 function Boulder({ scale }: { scale: number }) {
-  return (
-    <mesh scale={scale}>
-      <dodecahedronGeometry args={[0.72, 0]} />
-      <RockMat color="#8a3a22" />
-    </mesh>
-  );
+  return <RockLump radius={0.72 * scale} look={BOULDER} />;
 }
 
 function DesertScrub({ scale }: { scale: number }) {
   return (
     <group scale={scale}>
-      <mesh position={[0, 0.22, 0]}>
-        <coneGeometry args={[0.28, 0.48, 5]} />
-        <meshStandardMaterial color="#C9A227" roughness={0.92} />
-      </mesh>
-      <mesh position={[0.16, 0.16, 0.04]} rotation={[0.5, 0.4, 0]}>
-        <coneGeometry args={[0.12, 0.32, 4]} />
-        <meshStandardMaterial color="#E4C56A" roughness={0.9} />
-      </mesh>
+      <Batched shape="cone5" position={[0, 0.22, 0]} scale={[0.28, 0.48, 0.28]} look={SCRUB_TALL} />
+      <Batched shape="cone4" position={[0.16, 0.16, 0.04]} rotation={[0.5, 0.4, 0]} scale={[0.12, 0.32, 0.12]} look={SCRUB_SHORT} />
     </group>
   );
 }
@@ -82,18 +84,19 @@ function StratifiedCliffs({ side }: { side: -1 | 1 }) {
         <group key={i} position={[stack.x, 0, stack.z]}>
           {stack.layers.map((layer, li) => (
             <group key={li}>
-              <mesh position={[0, layer.y, 0]} rotation={[0, 0, layer.tilt]}>
-                <boxGeometry args={[layer.w, layer.h, layer.d]} />
-                <RockMat color={layer.color} sunlit={layer.sunlit} />
-              </mesh>
+              <RockBox
+                position={[0, layer.y, 0]}
+                rotation={[0, 0, layer.tilt]}
+                size={[layer.w, layer.h, layer.d]}
+                look={rock(layer.color, layer.sunlit)}
+              />
               {li % 3 === 0 ? (
-                <mesh
+                <RockLump
                   position={[stack.x > 0 ? 1.2 : -1.2, layer.y + layer.h * 0.35, 0.8]}
                   rotation={[0.2, 0.4, layer.tilt]}
-                >
-                  <dodecahedronGeometry args={[Math.min(layer.w, layer.h) * 0.38, 0]} />
-                  <RockMat color={layer.color} sunlit={layer.sunlit} />
-                </mesh>
+                  radius={Math.min(layer.w, layer.h) * 0.38}
+                  look={rock(layer.color, layer.sunlit)}
+                />
               ) : null}
             </group>
           ))}
@@ -124,14 +127,8 @@ function ChasmWalls() {
     <group>
       {faces.map((f, i) => (
         <group key={i}>
-          <mesh position={f.left} rotation={[0, 0, 0.18 + f.rot]}>
-            <boxGeometry args={[f.w, f.h, 2.4]} />
-            <RockMat color={f.color} />
-          </mesh>
-          <mesh position={f.right} rotation={[0, 0, -0.18 - f.rot]}>
-            <boxGeometry args={[f.w, f.h, 2.4]} />
-            <RockMat color={CREVICE} />
-          </mesh>
+          <RockBox position={f.left} rotation={[0, 0, 0.18 + f.rot]} size={[f.w, f.h, 2.4]} look={rock(f.color)} />
+          <RockBox position={f.right} rotation={[0, 0, -0.18 - f.rot]} size={[f.w, f.h, 2.4]} look={rock(CREVICE)} />
         </group>
       ))}
     </group>
@@ -190,7 +187,7 @@ export function CanyonGround() {
   );
 
   return (
-    <group>
+    <StaticBatch>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 32]} receiveShadow>
         <planeGeometry args={[52, 48]} />
         <meshStandardMaterial color={GOLD_DIRT} roughness={0.97} metalness={0.02} />
@@ -223,40 +220,22 @@ export function CanyonGround() {
         <meshBasicMaterial color="#3ee0d0" transparent opacity={0.12} depthWrite={false} />
       </mesh>
       <pointLight color="#3ee0d0" intensity={12} distance={28} position={[0, -12, -3]} />
+      {/* One wash per crystal wall stands in for a light on every cluster. */}
+      <pointLight color="#b14bff" intensity={60} distance={70} decay={2} position={[-13.5, 10, 4]} />
+      <pointLight color="#b14bff" intensity={40} distance={55} decay={2} position={[13.5, 9.5, 2]} />
 
       <StratifiedCliffs side={-1} />
       <StratifiedCliffs side={1} />
       <ChasmWalls />
 
-      <mesh position={[-14, 7, 8]} rotation={[0, 0.35, 0.12]}>
-        <boxGeometry args={[8, 18, 7]} />
-        <RockMat color="#8a3a22" />
-      </mesh>
-      <mesh position={[-16, 11, 4]} rotation={[0.04, 0.22, 0.16]}>
-        <boxGeometry args={[6, 12, 5]} />
-        <RockMat color="#A64B29" />
-      </mesh>
-      <mesh position={[-42, 9, 18]} rotation={[0, 0.48, 0.1]}>
-        <boxGeometry args={[18, 26, 12]} />
-        <RockMat color="#8a3a22" />
-      </mesh>
-      <mesh position={[-36, 14, 10]} rotation={[0.05, 0.32, 0.12]}>
-        <boxGeometry args={[10, 16, 8]} />
-        <RockMat color="#A64B29" />
-      </mesh>
-      <mesh position={[-48, 7, 22]} rotation={[0, 0.55, 0.06]}>
-        <boxGeometry args={[14, 18, 9]} />
-        <RockMat color="#6b2c18" />
-      </mesh>
+      <RockBox position={[-14, 7, 8]} rotation={[0, 0.35, 0.12]} size={[8, 18, 7]} look={rock("#8a3a22")} />
+      <RockBox position={[-16, 11, 4]} rotation={[0.04, 0.22, 0.16]} size={[6, 12, 5]} look={rock("#A64B29")} />
+      <RockBox position={[-42, 9, 18]} rotation={[0, 0.48, 0.1]} size={[18, 26, 12]} look={rock("#8a3a22")} />
+      <RockBox position={[-36, 14, 10]} rotation={[0.05, 0.32, 0.12]} size={[10, 16, 8]} look={rock("#A64B29")} />
+      <RockBox position={[-48, 7, 22]} rotation={[0, 0.55, 0.06]} size={[14, 18, 9]} look={rock("#6b2c18")} />
 
-      <mesh position={[-11.2, 0.7, -28]}>
-        <dodecahedronGeometry args={[2.2, 0]} />
-        <RockMat color={TERRACOTTA} />
-      </mesh>
-      <mesh position={[11.2, 0.75, -28]}>
-        <dodecahedronGeometry args={[2.3, 0]} />
-        <RockMat color={BURNT} />
-      </mesh>
+      <RockLump position={[-11.2, 0.7, -28]} radius={2.2} look={rock(TERRACOTTA)} />
+      <RockLump position={[11.2, 0.75, -28]} radius={2.3} look={rock(BURNT)} />
 
       {PATH_SEGMENTS.map((seg, i) => (
         <mesh key={i} position={seg.pos} rotation={[-Math.PI / 2, 0, seg.rot]}>
@@ -272,7 +251,6 @@ export function CanyonGround() {
           color="#7a3cff"
           emissive="#b14bff"
           scale={1.15 + (i % 3) * 0.25}
-          light={8 + (i % 3)}
         />
       ))}
       {CYAN_CHASM.map((p, i) => (
@@ -282,7 +260,6 @@ export function CanyonGround() {
           color="#1ec8c8"
           emissive="#3ee0d0"
           scale={0.85 + (i % 2) * 0.2}
-          light={6}
         />
       ))}
 
@@ -296,6 +273,6 @@ export function CanyonGround() {
           <DesertScrub scale={pose.scale} />
         </group>
       ))}
-    </group>
+    </StaticBatch>
   );
 }

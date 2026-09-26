@@ -12,6 +12,7 @@ import {
   TubeGeometry,
   Vector3,
 } from "three";
+import { Batched, type BatchLook } from "../batch";
 import { Box, CheapGlass, Plant } from "./kit";
 import { useHudTextures } from "./hud-tex";
 import { useQuality } from "../quality";
@@ -23,6 +24,12 @@ const STEP_W = SPIRAL.r1 - SPIRAL.r0;
 const STEP_DEPTH = 0.78;
 const METAL = "#c5d0d8";
 const STONE = "#9aa3ad";
+const TREAD: BatchLook = { color: STONE, metal: 0.22, rough: 0.28, env: 1 };
+const NOSING: BatchLook = { color: "#d4af6a", metal: 0.7, rough: 0.28, eInt: 0.35, env: 1 };
+const RAIL_METAL: BatchLook = { color: METAL, metal: 0.8, rough: 0.22, env: 1 };
+const CHEVRON_LEAD: BatchLook = { color: "#f0d78a", basic: true };
+const CHEVRON_TAIL: BatchLook = { color: "#d4af6a", basic: true };
+const CHEVRON_TILT: [number, number, number] = [-Math.PI / 2, 0, 0];
 
 function steps() {
   return Array.from({ length: STEPS }, (_, i) => {
@@ -140,14 +147,8 @@ function stairSign(text: string, w = 640, h = 180) {
 function StairChevron({ position, rotation }: { position: [number, number, number]; rotation: [number, number, number] }) {
   return (
     <group position={position} rotation={rotation}>
-      <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.16, 0.34, 3]} />
-        <meshBasicMaterial color="#f0d78a" toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 0.025, -0.22]} rotation={[-Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.12, 0.26, 3]} />
-        <meshBasicMaterial color="#d4af6a" toneMapped={false} />
-      </mesh>
+      <Batched shape="cone3" position={[0, 0.02, 0]} rotation={CHEVRON_TILT} scale={[0.16, 0.34, 0.16]} look={CHEVRON_LEAD} />
+      <Batched shape="cone3" position={[0, 0.025, -0.22]} rotation={CHEVRON_TILT} scale={[0.12, 0.26, 0.12]} look={CHEVRON_TAIL} />
     </group>
   );
 }
@@ -222,13 +223,13 @@ function StairWayfinding() {
         const p = spiralPoint(t);
         const r = SPIRAL.r1 + 0.02;
         return (
-          <mesh
+          <Batched
             key={`post-${i}`}
+            shape="cyl6"
             position={[SPIRAL.cx + Math.sin(p.ang) * r, p.y + 0.62, SPIRAL.cz + Math.cos(p.ang) * r]}
-          >
-            <cylinderGeometry args={[0.04, 0.04, 1.15, 6]} />
-            <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
-          </mesh>
+            scale={[0.04, 1.15, 0.04]}
+            look={RAIL_METAL}
+          />
         );
       })}
     </group>
@@ -262,29 +263,17 @@ export function Atrium() {
 
       {stair.map((s) => (
         <group key={s.i} position={[s.x, s.y + 0.07, s.z]} rotation={[0, s.ang, 0]}>
-          <mesh castShadow={settings.shadows} receiveShadow={settings.shadows}>
-            <boxGeometry args={[STEP_W, 0.14, STEP_DEPTH]} />
-            <meshStandardMaterial color={STONE} metalness={0.22} roughness={0.28} />
-          </mesh>
+          <Batched shape="box" scale={[STEP_W, 0.14, STEP_DEPTH]} look={TREAD} />
           {/* Outer edge tip — always visible so the drop reads clearly */}
-          <mesh position={[STEP_W / 2 - 0.04, 0.1, 0]}>
-            <boxGeometry args={[0.08, 0.06, STEP_DEPTH + 0.04]} />
-            <meshStandardMaterial color="#d4af6a" metalness={0.7} roughness={0.28} emissive="#d4af6a" emissiveIntensity={0.35} />
-          </mesh>
+          <Batched shape="box" position={[STEP_W / 2 - 0.04, 0.1, 0]} scale={[0.08, 0.06, STEP_DEPTH + 0.04]} look={NOSING} />
           {settings.atriumDetail ? (
             <>
               <mesh position={[0, 0.58, -STEP_DEPTH * 0.42]}>
                 <boxGeometry args={[STEP_W + 0.1, 1.08, 0.05]} />
                 <CheapGlass opacity={0.26} />
               </mesh>
-              <mesh position={[-STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]}>
-                <boxGeometry args={[0.06, 1.18, 0.06]} />
-                <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
-              </mesh>
-              <mesh position={[STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]}>
-                <boxGeometry args={[0.06, 1.18, 0.06]} />
-                <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
-              </mesh>
+              <Batched shape="box" position={[-STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]} scale={[0.06, 1.18, 0.06]} look={RAIL_METAL} />
+              <Batched shape="box" position={[STEP_W / 2, 0.58, -STEP_DEPTH * 0.42]} scale={[0.06, 1.18, 0.06]} look={RAIL_METAL} />
             </>
           ) : null}
         </group>
@@ -299,13 +288,13 @@ export function Atrium() {
             const p = spiralPoint(t);
             const r = SPIRAL.r0 - 0.06;
             return (
-              <mesh
+              <Batched
                 key={`inner-${i}`}
+                shape="cyl6"
                 position={[SPIRAL.cx + Math.sin(p.ang) * r, p.y + 0.58, SPIRAL.cz + Math.cos(p.ang) * r]}
-              >
-                <cylinderGeometry args={[0.038, 0.038, 1.12, 6]} />
-                <meshStandardMaterial color={METAL} metalness={0.8} roughness={0.22} />
-              </mesh>
+                scale={[0.038, 1.12, 0.038]}
+                look={RAIL_METAL}
+              />
             );
           })}
         </>

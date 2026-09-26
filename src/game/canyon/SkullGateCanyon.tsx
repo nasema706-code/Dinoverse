@@ -4,9 +4,9 @@ import { Link } from "@tanstack/react-router";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import * as THREE from "three";
 import canyonJson from "@/data/skullGateCanyon.json";
-import { detectQuality, readQualityOverride, useQuality } from "../quality";
-import { BoneBridge } from "./BoneBridge";
-import { BoneSpire } from "./BoneSpire";
+import { useQuality } from "../quality";
+import { BONE_BRIDGE, BONE_BRIDGE_LOD, BONE_BRIDGE_LOD_DIST, BoneBridge } from "./BoneBridge";
+import { BONE_SPIRE, BONE_SPIRE_LOD, BONE_SPIRE_LOD_DIST, BoneSpire } from "./BoneSpire";
 import { CanyonBuggy } from "./CanyonBuggy";
 import { CanyonGround } from "./CanyonGround";
 import { CanyonLights } from "./CanyonLights";
@@ -17,7 +17,7 @@ import { Watchtower } from "./Watchtower";
 import { VisionSkyDome } from "../visions/sky-dome";
 import { canyonItem, type CanyonData, type Vec3 } from "./types";
 
-const canyon = canyonJson as CanyonData;
+const canyon = canyonJson as unknown as CanyonData;
 const gate = canyonItem(canyon, "gate");
 const spire = canyonItem(canyon, "spire");
 const bridge = canyonItem(canyon, "bridge");
@@ -30,22 +30,19 @@ const buggy = canyonItem(canyon, "buggy");
 const GATE_NATIVE_H = 4;
 const CUTOUT_NATIVE_H = 0.12;
 
-const SKULL = "/models/skull-gate.glb?v=5";
-const SKULL_LOD = "/models/skull-gate-lod1.glb?v=5";
-const CUTOUT = "/models/sepia-cutout.glb?v=5";
-const CUTOUT_LOD = "/models/sepia-cutout-lod1.glb?v=5";
+const SKULL = "/models/skull-gate.glb?v=6";
+const SKULL_LOD = "/models/skull-gate-lod1.glb?v=6";
+const SKULL_POS: Vec3 = [14, 0, -56];
+const SKULL_LOD_DIST = 60;
+const CUTOUT = "/models/sepia-cutout.glb?v=6";
+const CUTOUT_LOD = "/models/sepia-cutout-lod1.glb?v=6";
+const CUTOUT_LOD_DIST = 70;
 
-/** Low tier must not prefetch full-res twins — only LOD1. */
-const bootQuality =
-  typeof window !== "undefined" ? (readQualityOverride() ?? detectQuality()) : "mid";
-if (typeof window !== "undefined") {
-  preloadCanyonModel(SKULL_LOD);
-  preloadCanyonModel(CUTOUT_LOD);
-  if (bootQuality !== "low") {
-    preloadCanyonModel(SKULL);
-    preloadCanyonModel(CUTOUT);
-  }
-}
+const openingCam = canyon.camera.position;
+preloadCanyonModel(SKULL, { lodUrl: SKULL_LOD, position: SKULL_POS, lodDistance: SKULL_LOD_DIST, camera: openingCam });
+preloadCanyonModel(CUTOUT, { lodUrl: CUTOUT_LOD, position: cutout.position, lodDistance: CUTOUT_LOD_DIST, camera: openingCam });
+preloadCanyonModel(BONE_BRIDGE, { lodUrl: BONE_BRIDGE_LOD, position: bridge.position, lodDistance: BONE_BRIDGE_LOD_DIST, camera: openingCam });
+preloadCanyonModel(BONE_SPIRE, { lodUrl: BONE_SPIRE_LOD, position: spire.position, lodDistance: BONE_SPIRE_LOD_DIST, camera: openingCam });
 
 function AimCamera({ target }: { target: Vec3 }) {
   const { camera } = useThree();
@@ -74,11 +71,11 @@ function CanyonWorld({ flying }: { flying: boolean }) {
         <FittedCanyonModel
           url={SKULL}
           lodUrl={SKULL_LOD}
-          position={[14, 0, -56]}
+          position={SKULL_POS}
           rotation={gate.rotation}
           nativeSize={GATE_NATIVE_H}
           scale={3.6}
-          lodDistance={60}
+          lodDistance={SKULL_LOD_DIST}
         />
       </Suspense>
       <Suspense fallback={null}>
@@ -89,7 +86,7 @@ function CanyonWorld({ flying }: { flying: boolean }) {
           rotation={cutout.rotation}
           nativeSize={CUTOUT_NATIVE_H}
           scale={cutout.scale ?? 70}
-          lodDistance={70}
+          lodDistance={CUTOUT_LOD_DIST}
         />
       </Suspense>
       <Suspense fallback={null}>

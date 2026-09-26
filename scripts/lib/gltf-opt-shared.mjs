@@ -8,6 +8,7 @@ import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import {
   cloneDocument,
+  compactPrimitive,
   draco,
   getGLPrimitiveCount,
   meshopt,
@@ -143,4 +144,34 @@ export async function writeLod1(
     `(−${(reduction * 100).toFixed(0)}%)`,
   );
   return { path: lodPath, bytes: statSync(lodPath).size, tris: after };
+}
+
+/**
+ * Simplify every primitive with meshopt's Permissive mode, which may collapse
+ * across UV/normal seams. Plain `simplify()` stalls on scanned props whose UV
+ * islands lock most vertices (skull-gate stopped at ~79% of its triangles).
+ */
+export async function simplifyAcrossSeams(document, { ratio, error }) {
+  await MeshoptSimplifier.ready;
+  const el = [0, 0, 0];
+  for (const mesh of document.getRoot().listMeshes()) {
+    for (const prim of mesh.listPrimitives()) {
+      const pos = prim.getAttribute("POSITION");
+      const idx = prim.getIndices();
+      if (!pos || !idx) continue;
+      const n = pos.getCount();
+      const positions = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        pos.getElement(i, el);
+        positions.set(el, i * 3);
+      }
+      const indices = new Uint32Array(idx.getArray());
+      const target = Math.floor((indices.length / 3) * ratio) * 3;
+      const [out] = MeshoptSimplifier.simplify(indices, positions, 3, target, error, ["Permissive", "Prune"]);
+      idx.setArray(out.slice());
+      compactPrimitive(prim);
+    }
+  }
+  await document.transform(prune());
+  return triangleCount(document);
 }

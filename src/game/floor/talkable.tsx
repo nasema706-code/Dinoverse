@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, type ReactNode } from "react";
 import type { Group } from "three";
+import { NoBatch } from "../batch";
 import { requestFloorTalk } from "./floor-interact";
 
 function yawToward(dx: number, dz: number, forward: "minusZ" | "plusZ") {
@@ -88,7 +89,7 @@ export function Talkable({
         <capsuleGeometry args={[0.48, 1.12, 3, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      {children}
+      <NoBatch>{children}</NoBatch>
     </group>
   );
 }
