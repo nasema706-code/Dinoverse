@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#041416">
+<meta name="description" content="Enter the DinoVerse in Apex Chomp. A neon jungle maze adventure with dinosaur characters, glowing power-ups, eight worlds, two chapters and a different focus soundtrack in every world.">
+<title>Apex Chomp | DinoVerse</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071516'/%3E%3Cpath d='M9 44 28 10h10l18 34-12 10H20Z' fill='%23f6bd4b'/%3E%3Cpath d='m21 32 8 11 6-11 7 11 7-11' fill='%23071516'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="main.mjs"></script>
+</head>
+<body>
+<svg class="icon-defs" aria-hidden="true"><defs>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 13 8-13 8Z" fill="currentColor"/></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 4 5 9H2v6h3l6 5V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 4 5 9H2v6h3l6 5V4Zm5 5 6 6m0-6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="15" r="1.7" fill="#071317"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 9a3 3 0 1 1 5 2c-1 1-2 1-2 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 0 5M4 4v6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="m5 15 7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<div class="atmosphere" aria-hidden="true"></div>
+<header class="topbar">
+  <a class="brand" href="./" aria-label="Apex Chomp home"><span class="brand-emblem">A</span><span><span class="brand-overline">DinoVerse <span class="brand-divider">/</span> Arcade</span><strong>APEX CHOMP</strong></span></a>
+  <div class="header-actions">
+    <span class="local-save" id="save-label">Progress saved on this device</span>
+    <button class="icon-button" id="sound" aria-label="Mute sound" title="Mute sound"><svg><use href="#i-sound"/></svg></button>
+    <button class="icon-button" id="help" aria-label="How to play" title="How to play"><svg><use href="#i-help"/></svg></button>
+  </div>
+</header>
+<main class="shell">
+  <div class="mobile-tabs" aria-label="Game panels"><button id="show-game" class="selected" aria-pressed="true">Play</button><button id="show-loadout" aria-pressed="false">Characters & worlds</button></div>
+  <div class="stage">
+    <aside class="cover-panel" aria-label="Apex Chomp artwork">
+      <img class="cover-art" src="assets/cover.webp" alt="A cheerful green DinoVerse dinosaur races through neon jungle ruins beneath the Apex Chomp title.">
+      <div id="chapter-cover" class="chapter-cover" hidden><img id="cover-world" src="assets/world-sunken.webp" alt="Sunken Temple"><div class="cover-bottom"><span class="eyebrow">CHAPTER 02 · LOST REALMS</span><p id="cover-world-title">Sunken Temple</p><span id="cover-world-rule" class="cover-detail"></span></div></div>
+    </aside>
+    <section class="play-panel" aria-label="Game">
+      <div class="scoreboard">
+        <div class="lives-area"><span class="sprite avatar" data-sprite="0" aria-hidden="true"></span><div><span class="stat-label">LIVES</span><span id="lives" class="lives-value" aria-label="3 lives">× 3</span></div></div>
+        <div class="stat"><span class="stat-label">SCORE</span><strong id="score">0</strong></div>
+        <div class="stat"><span class="stat-label">BEST</span><strong id="best">0</strong></div>
+        <button class="icon-button pause-button" id="pause" aria-label="Pause game" title="Pause (P or Escape)"><svg><use href="#i-pause"/></svg></button>
+      </div>
+      <div class="maze-frame" id="maze-frame">
+        <canvas id="game" width="672" height="736" tabindex="0" aria-label="Apex Chomp game. Use arrow keys or W A S D to move, P to pause. Touch players can swipe or use the direction buttons."></canvas>
+        <div class="game-overlay" id="overlay">
+          <div class="overlay-card">
+            <div class="world-tag"><span></span><span id="overlay-world">WORLD 01 · JUNGLE RUINS</span></div>
+            <div class="overlay-character sprite" data-sprite="0" aria-hidden="true"></div>
+            <h1 id="overlay-title">Ready to chomp?</h1>
+            <p id="overlay-text">Gather every glow.<br>Outsmart the spirits.</p>
+            <button class="gold-button" id="launch"><span id="launch-text">Enter the jungle</span><svg><use href="#i-play"/></svg></button>
+            <button class="text-button" id="secondary" hidden>Play again</button>
+            <span class="overlay-hint" id="overlay-hint">Arrow keys · WASD · Swipe</span>
+          </div>
+        </div>
+        <div class="game-callout" id="callout" aria-hidden="true"></div>
+        <div class="active-effects" id="active-effects" aria-label="Active power-ups"></div>
+      </div>
+      <div class="run-progress"><div class="world-caption"><span id="world-label">Jungle Ruins</span><span id="orb-count">0 / 224 orbs</span></div><div class="progress-track"><div id="orb-progress"></div></div><div id="mechanic-status" class="mechanic-status">Collect every orb to clear the maze</div></div>
+      <div class="play-controls"><span class="keyboard-hint"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> to move <span>·</span> <kbd>P</kbd> to pause</span><button id="restart" class="text-icon-button"><svg><use href="#i-reset"/></svg> Restart</button></div>
+      <div class="touch-controls" role="group" aria-label="Direction controls"><div class="dpad"><button data-dir="0" class="up" aria-label="Move up"><svg><use href="#i-up"/></svg></button><button data-dir="3" class="left" aria-label="Move left"><svg><use href="#i-up"/></svg></button><span class="dpad-centre" aria-hidden="true"></span><button data-dir="1" class="right" aria-label="Move right"><svg><use href="#i-up"/></svg></button><button data-dir="2" class="down" aria-label="Move down"><svg><use href="#i-up"/></svg></button></div><div class="touch-caption"><span>Tap a direction or swipe the maze.</span></div></div>
+      <div class="world-detail"><div><span id="maze-type">Classic ruins</span><span id="music-label">♫ Canopy Drift</span></div><p id="world-rule">Gather every glow. Outsmart the spirits.</p></div>
+    </section>
+    <aside class="loadout" id="loadout" aria-label="Character and world selection">
+      <section class="chapter-intro" aria-label="Chapters"><div class="chapter-tabs" id="chapter-nav"><button data-chapter="0" aria-pressed="true"><b>01</b> The First Bite</button><button data-chapter="1" aria-pressed="false"><b>02</b> Lost Realms</button></div><div class="chapter-heading"><h2 id="chapter-name">The First Bite</h2><p id="chapter-info">The original expedition</p></div></section>
+      <section class="panel character-panel"><div class="panel-title"><h2>CHARACTER SELECT</h2><span id="skin-count">1 / 4</span></div><div class="skin-grid" id="skins"></div><p class="selection-note" id="skin-note">Classic · The original glow gobbler</p></section>
+      <section class="panel power-panel"><div class="panel-title"><h2>POWER-UPS</h2><span>Find in maze</span></div><div class="power-grid" id="power-ups">
+        <button class="power-card" data-power="bite"><span class="sprite" data-sprite="8"></span><strong>Super bite</strong><span>Chomp spirits</span></button>
+        <button class="power-card" data-power="speed"><span class="sprite" data-sprite="9"></span><strong>Speed boost</strong><span>Move faster</span></button>
+        <button class="power-card" data-power="mega"><span class="sprite" data-sprite="10"></span><strong>Mega score</strong><span>Double points</span></button>
+        <button class="power-card" data-power="magnet"><span class="sprite" data-sprite="11"></span><strong>Magnet</strong><span>Pull in orbs</span></button>
+      </div></section>
+      <section class="panel world-panel"><div class="panel-title"><h2>WORLDS</h2><span id="world-count">1 / 4</span></div><div class="world-grid" id="worlds"></div><p class="selection-note" id="world-note">Clear the maze to discover the next world.</p></section>
+      <button class="chapter-next" id="next-chapter">02 · Preview the next chapter</button>
+      <div class="field-note"><span class="note-number" id="note-number">01</span><p id="tip">The big golden orbs turn the hunters into the hunted.</p></div>
+    </aside>
+  </div>
+  <footer><span>DinoVerse <span class="footer-slash">/</span> Apex Chomp</span><span>Two chapters. One mighty appetite.</span></footer>
+</main>
+<dialog id="help-dialog" aria-labelledby="help-title"><button class="icon-button close-dialog" data-close="help-dialog" aria-label="Close instructions"><svg><use href="#i-close"/></svg></button><span class="eyebrow">SURVIVAL GUIDE</span><h2 id="help-title">Eat the glow.<br>Own the maze.</h2><p>Collect every golden orb to clear a world. You have three lives. Keep away from the spirits — until you find a Super bite orb.</p><div class="help-controls"><div><strong>On a keyboard</strong><span>Arrow keys or WASD to move.<br>P or Escape to pause.</span></div><div><strong>On your phone</strong><span>Swipe anywhere on the maze,<br>or tap the direction buttons.</span></div></div><p>Tap your next direction a little early; your dinosaur will turn at the next opening. You can reverse at any time.</p><div class="help-powers"><div><b>Super bite · 8 seconds</b><span>Chomp spirits for 200, 400, 800, then 1,600 points.</span></div><div><b>Speed boost · 7 seconds</b><span>Race through the ruins at extra speed.</span></div><div><b>Mega score · 10 seconds</b><span>Every point you earn is doubled.</span></div><div><b>Magnet · 10 seconds</b><span>Pull in small golden orbs from nearby corridors.</span></div></div><div class="help-powers"><div><b>Chapter 02 · Lost Realms</b><span>Clear Space Islands to open four new worlds and unlock Triceratops, Stegosaurus, Velociraptor and Ankylosaurus. Each realm has its own maze and mechanic; its rule is shown before you start.</span></div><div><b>Tide Shield · 10 seconds</b><span>Block one spirit collision.</span></div><div><b>Time Freeze · 8 seconds</b><span>Hold spirits in place. Contact still hurts.</span></div><div><b>Phase Veil · 8 seconds</b><span>Pass through spirits safely; walls stay solid.</span></div><div><b>Thunder Stomp · 4 seconds</b><span>Send spirits home and stun them.</span></div></div><p>Every world has its own focus soundtrack and fixed power-up positions. Tap the speaker to mute or enable music and sound effects.</p><p class="fine-print">Unlock Fire at 1,500 points, Ice at 4,500 and Shadow at 9,000 in a single run. Clearing each world unlocks the next. Best scores and unlocks stay on this browser and device.</p><button class="gold-button" data-close="help-dialog">Let's chomp <svg><use href="#i-play"/></svg></button></dialog>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title"><span class="eyebrow">A FRESH ADVENTURE</span><h2 id="confirm-title">Start a new run?</h2><p id="confirm-text">Your best score is saved. This run will start again with three lives.</p><div class="dialog-actions"><button class="quiet-button" id="confirm-cancel">Keep playing</button><button class="gold-button" id="confirm-yes">New run</button></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="announcer" class="sr-only" aria-live="polite"></div>
+</body>
+</html>

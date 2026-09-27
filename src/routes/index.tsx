@@ -94,6 +94,15 @@ function Home() {
                 cta="Play now"
               />
               <ExperienceTile
+                to="/apex-chomp"
+                kicker="Arcade"
+                title="Apex Chomp"
+                body="Neon jungle mazes, dinosaur characters, glowing power-ups and eight worlds."
+                image="/games/apex-chomp/assets/cover.webp"
+                imageAlt="A green dinosaur racing through neon jungle ruins"
+                cta="Play Apex Chomp"
+              />
+              <ExperienceTile
                 to="/memes"
                 kicker="Memes"
                 title="Stamp the city"
@@ -218,7 +227,7 @@ function ExperienceTile({
   preview = false,
   highlight = false,
 }: {
-  to: "/explore" | "/play" | "/memes" | "/canyon" | "/visions" | "/competition";
+  to: "/explore" | "/play" | "/apex-chomp" | "/memes" | "/canyon" | "/visions" | "/competition";
   kicker: string;
   title: string;
   body: string;

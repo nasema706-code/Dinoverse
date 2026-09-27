@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApexChompRouteImport } from './routes/apex-chomp'
 import { Route as CanyonRouteImport } from './routes/canyon'
 import { Route as CompetitionRouteImport } from './routes/competition'
 import { Route as CrewRouteImport } from './routes/crew'
@@ -24,10 +25,16 @@ import { Route as VisionsRouteImport } from './routes/visions'
 import { Route as WorldsRouteImport } from './routes/worlds'
 import { Route as AdminMembersRouteImport } from './routes/admin/members'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApexChompRoute = ApexChompRouteImport.update({
+  id: '/apex-chomp',
+  path: '/apex-chomp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CanyonRoute = CanyonRouteImport.update({
@@ -100,9 +107,15 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/apex-chomp': typeof ApexChompRoute
   '/canyon': typeof CanyonRoute
   '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
@@ -117,9 +130,11 @@ export interface FileRoutesByFullPath {
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/apex-chomp': typeof ApexChompRoute
   '/canyon': typeof CanyonRoute
   '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
@@ -134,10 +149,12 @@ export interface FileRoutesByTo {
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/apex-chomp': typeof ApexChompRoute
   '/canyon': typeof CanyonRoute
   '/competition': typeof CompetitionRoute
   '/crew': typeof CrewRoute
@@ -152,11 +169,13 @@ export interface FileRoutesById {
   '/worlds': typeof WorldsRoute
   '/admin/members': typeof AdminMembersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/apex-chomp'
     | '/canyon'
     | '/competition'
     | '/crew'
@@ -171,9 +190,11 @@ export interface FileRouteTypes {
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
+    | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/apex-chomp'
     | '/canyon'
     | '/competition'
     | '/crew'
@@ -188,9 +209,11 @@ export interface FileRouteTypes {
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
+    | '/api/stripe/webhook'
   id:
     | '__root__'
     | '/'
+    | '/apex-chomp'
     | '/canyon'
     | '/competition'
     | '/crew'
@@ -205,10 +228,12 @@ export interface FileRouteTypes {
     | '/worlds'
     | '/admin/members'
     | '/api/auth/$'
+    | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApexChompRoute: typeof ApexChompRoute
   CanyonRoute: typeof CanyonRoute
   CompetitionRoute: typeof CompetitionRoute
   CrewRoute: typeof CrewRoute
@@ -223,6 +248,7 @@ export interface RootRouteChildren {
   WorldsRoute: typeof WorldsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apex-chomp': {
+      id: '/apex-chomp'
+      path: '/apex-chomp'
+      fullPath: '/apex-chomp'
+      preLoaderRoute: typeof ApexChompRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/canyon': {
@@ -332,11 +365,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApexChompRoute: ApexChompRoute,
   CanyonRoute: CanyonRoute,
   CompetitionRoute: CompetitionRoute,
   CrewRoute: CrewRoute,
@@ -351,6 +392,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorldsRoute: WorldsRoute,
   AdminMembersRoute: AdminMembersRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

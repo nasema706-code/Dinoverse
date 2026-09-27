@@ -164,6 +164,9 @@ export function LaunchHero() {
               <Link to="/play">Play Mushroom Run</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="max-sm:w-full">
+              <Link to="/apex-chomp">Play Apex Chomp</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="max-sm:w-full">
               <a href={TOKEN.buy} target="_blank" rel="noopener noreferrer">
                 Buy
               </a>

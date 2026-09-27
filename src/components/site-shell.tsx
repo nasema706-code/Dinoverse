@@ -32,6 +32,7 @@ function TelegramGlyph({ className }: { className?: string }) {
 const EXPERIENCE = [
   { to: "/competition", label: "Compete" },
   { to: "/play", label: "Play" },
+  { to: "/apex-chomp", label: "Apex Chomp" },
   { to: "/visions", label: "Four Visions" },
   { to: "/canyon", label: "Skull Gate Canyon" },
   { to: "/explore", label: "The Floor" },

@@ -331,6 +331,7 @@ export function SiteNav() {
                     Story
                   </SheetLink>
                   <SheetLink to="/play">Play</SheetLink>
+                  <SheetLink to="/apex-chomp">Apex Chomp</SheetLink>
                   <SheetLink to="/competition" className="font-semibold text-accent hover:text-accent">
                     Compete
                     <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold tracking-wide text-accent-fg uppercase">
