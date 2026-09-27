@@ -281,6 +281,9 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
  * module kick it off immediately (see bottom of file).
  */
 export function ensureDbReady(): Promise<void> {
+  if (dbSource !== "neon" && (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL)) {
+    return Promise.resolve();
+  }
   return getSql().then(() => undefined);
 }
 
