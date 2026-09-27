@@ -98,6 +98,15 @@ export type ApexBoard = {
   } | null;
 };
 
+function publicDbError(err: unknown, fallback: string) {
+  const message = err instanceof Error ? err.message : "";
+  if (message.startsWith("That ") || message.startsWith("Use ") || message.startsWith("The code") || message.startsWith("Too many") || message.startsWith("Sign in") || message.startsWith("Not enough") || message.startsWith("Could not")) {
+    return new Error(message);
+  }
+  console.error(err);
+  return new Error(fallback);
+}
+
 function num(value: unknown) {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -122,6 +131,7 @@ function asAccount(row: {
 }
 
 export const apexBoard = createServerFn({ method: "GET" }).handler(async (): Promise<ApexBoard> => {
+  try {
   const { readApexSession, worldName } = await import("./apex-session.server");
   const { getSql } = await import("@/lib/db");
   const me = await readApexSession();
@@ -213,6 +223,9 @@ export const apexBoard = createServerFn({ method: "GET" }).handler(async (): Pro
       isYou: Boolean(me && row.id === me.id),
     })),
   };
+  } catch (err) {
+    throw publicDbError(err, "The leaderboard is unavailable right now.");
+  }
 });
 
 export const apexRegister = createServerFn({ method: "POST" })
@@ -247,6 +260,7 @@ export const apexLogin = createServerFn({ method: "POST" })
   .middleware([sameSite])
   .validator(authSchema)
   .handler(async ({ data }): Promise<ApexAccount> => {
+    try {
     const { usernameKey, verifyApexPin, writeApexSession } = await import("./apex-session.server");
     const { getSql } = await import("@/lib/db");
     const sql = await getSql();
@@ -286,6 +300,9 @@ export const apexLogin = createServerFn({ method: "POST" })
     `;
     await writeApexSession(row.id, row.username);
     return asAccount(row);
+    } catch (err) {
+      throw publicDbError(err, "Could not sign in.");
+    }
   });
 
 export const apexLogout = createServerFn({ method: "POST" })

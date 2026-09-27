@@ -25,6 +25,20 @@ export const Route = createFileRoute("/apex-chomp")({
   }),
 });
 
+function readableError(err: unknown, fallback: string) {
+  const raw = err instanceof Error ? err.message : "";
+  if (raw.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(raw) as { errorMessage?: string };
+      if (parsed.errorMessage && !/unknown error/i.test(parsed.errorMessage)) return parsed.errorMessage;
+    } catch {
+      // The body was not JSON.
+    }
+    return fallback;
+  }
+  return raw || fallback;
+}
+
 const emptyBoard: ApexBoard = {
   account: null,
   rows: [],
@@ -82,7 +96,7 @@ function ApexChompPage() {
       window.history.replaceState({}, "", "/apex-chomp");
     }
     void pending.then(() => refresh().then(hydrate)).catch((err: unknown) => {
-      setShopError(err instanceof Error ? err.message : "Could not collect those coins.");
+      setShopError(readableError(err, "Could not collect those coins."));
     });
   }, []);
 
@@ -138,7 +152,7 @@ function ApexChompPage() {
       const next = await refresh();
       hydrate(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not sign in.");
+      setError(readableError(err, "Could not sign in."));
     } finally {
       setBusy(false);
     }
@@ -182,7 +196,7 @@ function ApexChompPage() {
       const { url } = await apexCheckout({ data: { packId: packId as "snack" | "feast" | "apex" } });
       window.location.assign(url);
     } catch (err) {
-      setShopError(err instanceof Error ? err.message : "Could not start checkout.");
+      setShopError(readableError(err, "Could not start checkout."));
       setShopBusy("");
     }
   };
@@ -199,7 +213,7 @@ function ApexChompPage() {
       setNotice(`${bought.power} ready. ${bought.charges} held. ${bought.coins.toLocaleString("en-GB")} coins left.`);
       await refresh();
     } catch (err) {
-      setShopError(err instanceof Error ? err.message : "Could not buy that power-up.");
+      setShopError(readableError(err, "Could not buy that power-up."));
     } finally {
       setShopBusy("");
     }

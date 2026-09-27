@@ -92,6 +92,7 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
     const pool = new Pool({ connectionString: databaseUrl });
+    await applyNeonMigrations(pool);
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
       return res.rows as T[];
@@ -101,6 +102,49 @@ function createNeonSql(): Promise<Sql> {
     throw err;
   });
   return globalRef.__pgSqlPromise__;
+}
+
+/** Same files as the PGLite path. Runs on the live database at first query, because a local Netlify build does not see DATABASE_URL. */
+async function applyNeonMigrations(pool: import("pg").Pool): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("select pg_advisory_lock(742001)");
+    await client.query(
+      "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
+    );
+    const doneRows = await client.query<{ name: string }>("select name from _migrations");
+    const done = new Set(doneRows.rows.map((row) => row.name));
+    const migrations = import.meta.glob("/migrations/*.sql", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }) as Record<string, string>;
+    for (const [path, text] of Object.entries(migrations).sort(([a], [b]) => a.localeCompare(b))) {
+      const name = path.split("/").pop() as string;
+      if (done.has(name)) continue;
+      try {
+        await client.query("BEGIN");
+        await client.query(text);
+        await client.query("insert into _migrations (name) values ($1) on conflict (name) do nothing", [name]);
+        await client.query("COMMIT");
+      } catch (err) {
+        try {
+          await client.query("ROLLBACK");
+        } catch {
+          // The connection may already be aborted.
+        }
+        const detail = err instanceof Error ? err.message : "Database setup failed";
+        throw new Error(`Could not prepare hunter accounts. ${detail}`.slice(0, 240));
+      }
+    }
+  } finally {
+    try {
+      await client.query("select pg_advisory_unlock(742001)");
+    } catch {
+      // Unlock is best-effort if the connection already failed.
+    }
+    client.release();
+  }
 }
 
 async function createPgliteSql(): Promise<Sql> {
@@ -225,13 +269,12 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
  * - **PGLite** (preview / no `DATABASE_URL`): open the on-disk DB (`data/pglite`)
  *   so email accounts survive a restart, then apply `migrations/*.sql`.
  *   Idempotent — concurrent callers share one promise.
- * - **Neon**: no-op (pool is created lazily on first query).
+ * - **Neon**: open the pool and apply any pending `migrations/*.sql` on first query.
  *
  * Vite `configureServer` awaits this at dev startup; production imports of this
  * module kick it off immediately (see bottom of file).
  */
 export function ensureDbReady(): Promise<void> {
-  if (dbSource !== "pglite") return Promise.resolve();
   return getSql().then(() => undefined);
 }
 
