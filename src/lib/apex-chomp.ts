@@ -99,10 +99,7 @@ export type ApexBoard = {
 };
 
 function publicDbError(err: unknown, fallback: string) {
-  const message = err instanceof Error ? err.message : "";
-  if (message.startsWith("That ") || message.startsWith("Use ") || message.startsWith("The code") || message.startsWith("Too many") || message.startsWith("Sign in") || message.startsWith("Not enough") || message.startsWith("Could not")) {
-    return new Error(message);
-  }
+  if (err instanceof Error && err.message.length < 200 && !("code" in err)) return err;
   console.error(err);
   return new Error(fallback);
 }

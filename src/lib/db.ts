@@ -230,7 +230,13 @@ async function createSql(): Promise<Sql> {
         "or a server route loader, never from client code.",
     );
   }
-  return dbSource === "neon" ? createNeonSql() : createPgliteSql();
+  if (dbSource === "neon") return createNeonSql();
+  // PGLite needs a writable disk and a lot of memory. On Netlify it fills the
+  // function and the request dies, which the page showed as a raw crash.
+  if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL) {
+    throw new Error("Hunter accounts need a database connection on the live site.");
+  }
+  return createPgliteSql();
 }
 
 /**
@@ -283,7 +289,13 @@ export function ensureDbReady(): Promise<void> {
 const globalBoot = globalThis as typeof globalThis & {
   __pgBootstrapPromise__?: Promise<void>;
 };
-if (typeof window === "undefined" && dbSource === "pglite") {
+if (
+  typeof window === "undefined" &&
+  dbSource === "pglite" &&
+  !process.env.NETLIFY &&
+  !process.env.AWS_LAMBDA_FUNCTION_NAME &&
+  !process.env.VERCEL
+) {
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
     console.error("[db] PGLite bootstrap failed:", err);
