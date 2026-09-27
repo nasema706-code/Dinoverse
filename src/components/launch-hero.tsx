@@ -109,8 +109,12 @@ export function LaunchHero() {
           <div className="flex flex-wrap gap-2">
             <Badge>{TOKEN.kicker}</Badge>
           </div>
-          <h1 className="mt-4 font-display text-[clamp(2rem,10.6vw,4.5rem)] font-medium tracking-tight break-words">
-            {TOKEN.ticker}
+          <h1 className="mt-4 max-w-2xl">
+            <img
+              src="/brand/site-logo.png?v=9"
+              alt={TOKEN.ticker}
+              className="h-auto w-full object-contain object-left"
+            />
           </h1>
           <p className="mt-3 max-w-xl font-display text-[clamp(1.15rem,4.2vw,1.75rem)] font-medium tracking-tight leading-[1.15] text-fg/90">
             {TOKEN.headline}

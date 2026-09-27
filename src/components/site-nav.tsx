@@ -32,14 +32,13 @@ const TOKEN_ITEMS: DropItem[] = [
 
 const MORE_ITEMS: DropItem[] = [
   { to: "/memes", label: "Memes" },
-  { to: "/library", label: "Assets" },
   { to: "/leaderboard", label: "Floor Board" },
   { to: "/fossil-tokenisation", label: "Fossils" },
 ];
 
 const FACT_HASHES = new Set(["token", "buy", "faq", "market"]);
 const CITY_PATHS = new Set(["/explore", "/visions", "/canyon", "/worlds", "/crew"]);
-const MORE_PATHS = new Set(["/memes", "/library", "/leaderboard", "/fossil-tokenisation"]);
+const MORE_PATHS = new Set(["/memes", "/leaderboard", "/fossil-tokenisation"]);
 
 function XGlyph({ className }: { className?: string }) {
   return (
@@ -223,17 +222,14 @@ export function SiteNav() {
           hash=""
           resetScroll
           aria-label="DinoVerse home"
-          className="flex min-w-0 items-center gap-2 sm:gap-2.5"
+          className="flex min-w-0 items-center"
           onClick={() => window.scrollTo({ top: 0 })}
         >
           <img
-            src="/hero.jpg?v=5"
-            alt=""
-            className="size-8 shrink-0 rounded-md border border-gold/35 object-cover object-[center_18%]"
+            src="/brand/site-logo.png?v=9"
+            alt="Dinoverse"
+            className="h-6 w-auto max-w-[5.5rem] object-contain sm:max-w-[6.5rem]"
           />
-          <span className="truncate font-display text-sm font-medium tracking-tight">
-            {TOKEN.ticker}
-          </span>
         </Link>
 
         <DesktopNav />
@@ -344,7 +340,6 @@ export function SiteNav() {
                   <SheetLink to="/visions">Four Visions</SheetLink>
                   <SheetLink to="/canyon">Skull Gate Canyon</SheetLink>
                   <SheetLink to="/memes">Memes</SheetLink>
-                  <SheetLink to="/library">Assets</SheetLink>
                   <SheetLink to="/crew">Crew</SheetLink>
                 </SheetGroup>
                 <SheetGroup title="Token">

@@ -66,7 +66,11 @@ export function SiteShell({
       <footer className="border-t border-border px-4 py-10">
         <div className="mx-auto grid max-w-6xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-lg text-fg">DinoVerse</p>
+            <img
+              src="/brand/site-logo.png?v=9"
+              alt="Dinoverse"
+              className="h-12 w-auto max-w-[12rem] object-contain"
+            />
             <p className="mt-2 max-w-sm text-sm text-muted">
               The bones went on-chain. The dinosaurs never left.
             </p>
