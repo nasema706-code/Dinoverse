@@ -108,10 +108,19 @@ function createNeonSql(): Promise<Sql> {
 async function applyNeonMigrations(pool: import("pg").Pool): Promise<void> {
   const client = await pool.connect();
   try {
-    await client.query("select pg_advisory_lock(742001)");
-    await client.query(
-      "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
-    );
+    try {
+      await client.query("select pg_advisory_lock(742001)");
+      await client.query(
+        "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
+      );
+    } catch (err) {
+      const code = err && typeof err === "object" && "code" in err ? String(err.code) : "";
+      if (code === "42501") {
+        console.warn("[db] Runtime role cannot create tables. Using the schema Netlify already applied.");
+        return;
+      }
+      throw err;
+    }
     const doneRows = await client.query<{ name: string }>("select name from _migrations");
     const done = new Set(doneRows.rows.map((row) => row.name));
     const migrations = import.meta.glob("/migrations/*.sql", {
