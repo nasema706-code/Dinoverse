@@ -73,6 +73,10 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (err?.code === "ENOTFOUND") {
+    console.warn("[migrate] database host is not reachable from this build machine — skipping. The live site applies migrations on the first request.");
+    process.exit(0);
+  }
   console.error("[migrate] failed:", err?.message || err);
   // pg errors carry the context needed to debug a bad SQL file.
   for (const key of ["code", "detail", "hint", "position", "where"]) {
