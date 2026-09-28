@@ -133,6 +133,11 @@ async function applyNeonMigrations(pool: import("pg").Pool): Promise<void> {
         } catch {
           // The connection may already be aborted.
         }
+        const code = err && typeof err === "object" && "code" in err ? String(err.code) : "";
+        if (code === "42501") {
+          console.warn("[db] Runtime role cannot create tables. Waiting for the platform migration.");
+          return;
+        }
         const detail = err instanceof Error ? err.message : "Database setup failed";
         throw new Error(`Could not prepare hunter accounts. ${detail}`.slice(0, 240));
       }
